@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: impex-spot-api
+    env: node
+    plan: free
+    buildCommand: cd server && npm install
+    startCommand: cd server && npm start
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: CORS_ORIGIN
+        value: https://your-frontend-domain.vercel.app
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_USERNAME
+        value: admin
+      - key: ADMIN_PASSWORD
+        value: impexspot2024
+      - key: UPLOAD_DIR
+        value: ../uploads
+      - key: MAX_FILE_SIZE
+        value: 5242880
+      - key: GOOGLE_MAPS_API_KEY
+        value: your-google-maps-api-key
