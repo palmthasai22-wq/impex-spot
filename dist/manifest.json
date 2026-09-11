@@ -1,0 +1,13 @@
+{
+  "name": "ImpEx Spot",
+  "short_name": "ImpEx Spot",
+  "description": "แผนที่สถานการณ์ชุมชนแบบเรียลไทม์",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#2563EB",
+  "theme_color": "#2563EB",
+  "icons": [
+    { "src": "/icons/placeholder.txt", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/placeholder.txt", "sizes": "512x512", "type": "image/png" }
+  ]
+}
