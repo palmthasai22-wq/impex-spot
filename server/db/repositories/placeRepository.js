@@ -9,16 +9,21 @@ class PlaceRepository {
     const params = [status];
     let paramCount = 1;
 
+    // 🔧 แก้: ใช้ category_id ให้ตรงกับฐานข้อมูล
     if (category) {
       paramCount++;
-      sql += ` AND category = $${paramCount}`;
+      sql += ` AND category_id = $${paramCount}`; 
       params.push(category);
     }
     
+    // 🔧 แก้: เช็กจาก verification_count แทน is_verified
     if (verified !== undefined) {
-      paramCount++;
-      sql += ` AND is_verified = $${paramCount}`;
-      params.push(verified);
+      const isVerified = verified === 'true' || verified === true;
+      if (isVerified) {
+        sql += ` AND verification_count > 0`;
+      } else {
+        sql += ` AND verification_count = 0`;
+      }
     }
 
     if (search) {
@@ -61,13 +66,14 @@ class PlaceRepository {
   }
 
   async create(data) {
-    const { title, description, category, lng, lat, createdBy, expiresAt } = data;
+    // 🔧 แก้: เปลี่ยน created_by เป็น session_id และเพิ่ม category_id, lat, lng ให้ตรงฐานข้อมูล
+    const { title, description, category, lng, lat, sessionId, expiresAt } = data;
     const sql = `
-      INSERT INTO places (title, description, category, location, created_by, expires_at)
-      VALUES ($1, $2, $3, ST_SetSRID(ST_MakePoint($4, $5), 4326)::geography, $6, $7)
+      INSERT INTO places (title, description, category_id, lat, lng, location, session_id, expires_at)
+      VALUES ($1, $2, $3, $4, $5, ST_SetSRID(ST_MakePoint($4, $5), 4326)::geography, $6, $7)
       RETURNING *
     `;
-    const params = [title, description, category, lng, lat, createdBy, expiresAt];
+    const params = [title, description, category, lng, lat, sessionId, expiresAt];
     const { rows } = await query(sql, params);
     return rows[0];
   }
@@ -111,8 +117,9 @@ class PlaceRepository {
           ['place', id, sessionId]
         );
         
+        // 🔧 แก้: ใช้ชื่อคอลัมน์ confidence แทน confidence_score และอัปเดต verification_count
         await client.query(
-          'UPDATE places SET confidence_score = confidence_score + 1 WHERE id = $1',
+          'UPDATE places SET confidence = confidence + 1, verification_count = verification_count + 1 WHERE id = $1',
           [id]
         );
       }
@@ -134,7 +141,8 @@ class PlaceRepository {
   }
 
   async countByCategory() {
-    const sql = 'SELECT category, COUNT(*) as count FROM places WHERE status = $1 GROUP BY category';
+    // 🔧 แก้: ใช้ category_id ในการ Grouping
+    const sql = 'SELECT category_id as category, COUNT(*) as count FROM places WHERE status = $1 GROUP BY category_id';
     const { rows } = await query(sql, ['active']);
     return rows;
   }
