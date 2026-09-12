@@ -25,8 +25,8 @@ function validatePayload(args) {
 function init(server) {
   io = new Server(server, {
     cors: {
-      origin: process.env.CLIENT_URL || '*',
-      methods: ['GET', 'POST', 'PUT', 'DELETE'],
+      origin: 'https://impex-spot-webapp.vercel.app',
+      methods: ['GET', 'POST'],
       credentials: true
     },
     transports: ['websocket', 'polling']
