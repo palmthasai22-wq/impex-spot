@@ -57,12 +57,12 @@ export default function LandingHero({ onEnter, onPin }) {
     <div className="flex w-full min-h-screen flex-col overflow-x-hidden bg-transparent">
 
       {/* ===== HERO ===== */}
-      <div className="relative h-[58vh] min-h-[420px] w-full overflow-hidden sm:h-[62vh] sm:min-h-[520px] lg:h-[78vh] lg:min-h-[640px] xl:h-[82vh]">
+      <div className="relative h-[58vh] min-h-[420px] w-full overflow-hidden bg-transparent sm:h-[62vh] sm:min-h-[520px] lg:h-[78vh] lg:min-h-[640px] xl:h-[82vh] max-sm:h-[100svh] max-sm:min-h-[100svh] max-sm:max-w-none max-sm:mx-0 max-sm:rounded-none max-sm:border-0">
         {/* Hero Background — Manhwa illustration */}
         <img
           src="/images/hero_bg.png"
           alt="ImpEx Spot - IMPACT Muang Thong Thani"
-          className="absolute inset-0 h-full w-full object-cover object-center"
+          className="absolute inset-0 h-full w-full object-cover object-center max-sm:object-[15%_center]"
         />
 
         {/* Gradient overlays removed - fully transparent */}
@@ -70,20 +70,20 @@ export default function LandingHero({ onEnter, onPin }) {
         {/* Content */}
         <div className="absolute inset-0 z-10">
           <div className="flex-1" aria-hidden="true" />
-          <div className="absolute right-2 top-3 z-10 sm:right-4 sm:top-4">
-            <img src="/images/mascot.png" alt="ImpEx Spot Mascot" className="h-20 w-20 object-contain sm:h-32 sm:w-32 lg:h-52 lg:w-52 drop-shadow-2xl animate-float" />
+          <div className="absolute right-2 top-3 z-10 sm:right-4 sm:top-4 max-sm:left-3 max-sm:right-auto max-sm:top-3">
+            <img src="/images/mascot.png" alt="ImpEx Spot Mascot" className="h-14 w-14 object-contain drop-shadow-2xl animate-float sm:h-16 sm:w-16 lg:h-40 lg:w-40 max-sm:h-20 max-sm:w-20" />
           </div>
         </div>
 
         {/* CTA Buttons */}
-        <div className="absolute bottom-4 left-1/2 z-20 flex w-full -translate-x-1/2 flex-wrap justify-center gap-3 px-4 sm:bottom-6 sm:px-6">
+        <div className="absolute bottom-4 left-1/2 z-20 flex w-full -translate-x-1/2 flex-wrap justify-center gap-3 px-4 sm:bottom-6 sm:px-6 max-sm:bottom-3 max-sm:w-[88%] max-sm:flex-col max-sm:items-center max-sm:gap-2.5">
           <button onClick={onEnter}
-            className="flex items-center gap-2.5 bg-green-500 hover:bg-green-600 text-white font-bold py-3.5 px-8 rounded-full shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:scale-95 transition-all text-sm sm:text-base">
-            <img src="/images/mascot.png" alt="" className="w-6 h-6 object-contain" />
+            className="flex items-center gap-2.5 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-full shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:scale-95 transition-all text-sm sm:text-base sm:py-3.5 sm:px-8 max-sm:w-full max-sm:justify-center max-sm:py-3 max-sm:px-4">
+            <img src="/images/mascot.png" alt="" className="w-5 h-5 object-contain sm:w-6 sm:h-6 max-sm:w-5 max-sm:h-5" />
             เปิด Map แผนที่
           </button>
           <button onClick={onPin}
-            className="flex items-center gap-2.5 bg-white/35 hover:bg-white/45 text-gray-700 font-bold py-3.5 px-8 rounded-full shadow-md border-2 border-white/40 hover:border-green-300 hover:-translate-y-0.5 active:scale-95 transition-all text-sm sm:text-base backdrop-blur-md">
+            className="flex items-center gap-2.5 bg-white/35 hover:bg-white/45 text-gray-700 font-bold py-3 px-6 rounded-full shadow-md border-2 border-white/40 hover:border-green-300 hover:-translate-y-0.5 active:scale-95 transition-all text-sm sm:text-base sm:py-3.5 sm:px-8 backdrop-blur-md max-sm:w-full max-sm:justify-center max-sm:py-3 max-sm:px-4">
             <span className="text-green-500 text-lg">📍</span>
             ปักหมุดที่คุณรู้ไว้
           </button>
@@ -211,7 +211,7 @@ export default function LandingHero({ onEnter, onPin }) {
         <img
           src="/images/hero.bg2.png?v=6"
           alt="ImpEx Spot community scene"
-          className="block min-h-[120px] w-full h-auto object-contain object-center sm:h-[300px] sm:object-cover lg:h-[360px]"
+        className="block w-full h-auto object-contain object-center"
           decoding="async"
         />
       </div>

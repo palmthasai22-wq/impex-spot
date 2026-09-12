@@ -1,83 +1,275 @@
 const express = require('express');
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const auth = require('../middleware/auth');
-const pinStore = require('../services/pinStore');
-const responderStore = require('../services/responderStore');
+const { requireRole, requirePermission } = require('../middleware/rbac');
+const { auditLog } = require('../middleware/auditLog');
+const { validate, validateParams, validateQuery } = require('../middleware/inputValidator');
+const { loginLimiter, adminApiLimiter } = require('../middleware/rateLimiter');
+const userRepository = require('../db/repositories/userRepository');
+const placeRepository = require('../db/repositories/placeRepository');
+const incidentRepository = require('../db/repositories/incidentRepository');
+const reviewRepository = require('../db/repositories/reviewRepository');
+const flagRepository = require('../db/repositories/flagRepository');
+const verificationRepository = require('../db/repositories/verificationRepository');
+const responderRepository = require('../db/repositories/responderRepository');
+const auditService = require('../services/auditService');
+
+// Sub-routers
+const adminUsers = require('./adminUsers');
+const adminAuditLogs = require('./adminAuditLogs');
 
 const router = express.Router();
 
-router.post('/login', (req, res) => {
-  const username = process.env.ADMIN_USERNAME || 'admin';
-  const password = process.env.ADMIN_PASSWORD || '123456';
-  if (req.body.username !== username || req.body.password !== password) {
-    return res.status(401).json({ error: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' });
+// POST /login - authenticate admin/moderator users
+router.post('/login', loginLimiter, async (req, res, next) => {
+  try {
+    const { username, password } = req.body;
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Username and password required' });
+    }
+
+    const user = await userRepository.findByUsername(username);
+    if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    if (user.role !== 'admin' && user.role !== 'moderator') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    const token = jwt.sign(
+      { id: user.id, username: user.username, role: user.role },
+      process.env.JWT_SECRET || 'fallback-secret',
+      { expiresIn: '12h' }
+    );
+
+    await auditService.logSystemEvent('auth.login', user.id, 'user', user.id, { username });
+
+    res.json({ token, user: { id: user.id, username: user.username, role: user.role } });
+  } catch (error) {
+    next(error);
   }
-  const token = jwt.sign({ username, role: 'admin' }, process.env.JWT_SECRET || 'secret', { expiresIn: '12h' });
-  res.json({ token, user: { username, role: 'admin' } });
 });
 
 router.use(auth);
-router.get('/pins', (req, res) => res.json(pinStore.list({ includeInactive: true })));
+router.use(adminApiLimiter);
 
-router.delete('/pins/:id', (req, res) => {
-  if (!pinStore.get(req.params.id)) return res.status(404).json({ error: 'Pin not found' });
-  pinStore.remove(req.params.id);
-  res.json({ success: true });
-});
+// Mount sub-routers
+router.use('/users', requireRole('admin'), adminUsers);
+router.use('/audit-logs', requireRole('admin'), adminAuditLogs);
 
-router.put('/pins/:id', (req, res) => {
-  const pin = pinStore.update(req.params.id, {
-    title: req.body.title,
-    type: req.body.type,
-    category: req.body.type,
-    customType: req.body.customType,
-    description: req.body.description,
-  });
-  if (!pin) return res.status(404).json({ error: 'Pin not found' });
-  res.json(pin);
-});
+// GET /stats - dashboard statistics
+router.get('/stats', requireRole('admin', 'moderator'), async (req, res, next) => {
+  try {
+    const [
+      placesCount,
+      incidentsCount,
+      reviewsCount,
+      flagsCount,
+      usersCount,
+      activeEmergencies,
+      verifiedPlaces
+    ] = await Promise.all([
+      placeRepository.count(),
+      incidentRepository.count(),
+      reviewRepository.count(),
+      flagRepository.count(),
+      userRepository.count(),
+      incidentRepository.count({ isEmergency: true, status: 'active' }),
+      placeRepository.count({ isVerified: true })
+    ]);
 
-router.put('/pins/:id/status', (req, res) => {
-  const allowed = ['active', 'rejected', 'deleted', 'expired'];
-  if (!allowed.includes(req.body.status)) return res.status(400).json({ error: 'Invalid status' });
-  const pin = pinStore.update(req.params.id, { status: req.body.status });
-  if (!pin) return res.status(404).json({ error: 'Pin not found' });
-  res.json(pin);
-});
-
-router.put('/emergencies/:id/dispatch', (req, res) => {
-  const allowed = ['pending', 'coordinating', 'dispatched', 'acknowledged', 'on_scene', 'resolved'];
-  if (!allowed.includes(req.body.dispatchStatus)) return res.status(400).json({ error: 'Invalid dispatch status' });
-  const pin = pinStore.update(req.params.id, {
-    dispatchStatus: req.body.dispatchStatus,
-    assignedResponderId: req.body.responderId || undefined,
-  });
-  if (!pin) return res.status(404).json({ error: 'Pin not found' });
-  res.json(pin);
-});
-
-router.put('/traffic/:id', (req, res) => {
-  const allowed = ['monitoring', 'responding', 'cleared'];
-  if (!allowed.includes(req.body.trafficStatus)) return res.status(400).json({ error: 'Invalid traffic status' });
-  const pin = pinStore.update(req.params.id, { trafficStatus: req.body.trafficStatus, trafficNote: req.body.trafficNote || '' });
-  if (!pin) return res.status(404).json({ error: 'Pin not found' });
-  res.json(pin);
+    res.json({
+      places: placesCount,
+      incidents: incidentsCount,
+      reviews: reviewsCount,
+      flags: flagsCount,
+      users: usersCount,
+      activeEmergencies,
+      verifiedPlaces
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
-router.get('/responders', (req, res) => res.json(responderStore.list()));
-router.post('/responders', (req, res) => {
-  if (!req.body.name || !req.body.team || !req.body.phone) return res.status(400).json({ error: 'name, team and phone are required' });
-  res.status(201).json(responderStore.create(req.body));
+// --- Places Management ---
+router.get('/places', requireRole('admin', 'moderator'), async (req, res, next) => {
+  try {
+    const places = await placeRepository.list(req.query);
+    res.json(places);
+  } catch (error) {
+    next(error);
+  }
 });
-router.put('/responders/:id', (req, res) => {
-  if (!['available', 'busy', 'offline'].includes(req.body.status)) return res.status(400).json({ error: 'Invalid responder status' });
-  const responder = responderStore.update(req.params.id, { status: req.body.status });
-  if (!responder) return res.status(404).json({ error: 'Responder not found' });
-  res.json(responder);
+
+router.get('/places/:id', requireRole('admin', 'moderator'), async (req, res, next) => {
+  try {
+    const place = await placeRepository.findById(req.params.id);
+    if (!place) return res.status(404).json({ error: 'Place not found' });
+    res.json(place);
+  } catch (error) {
+    next(error);
+  }
 });
-router.delete('/responders/:id', (req, res) => {
-  if (!responderStore.remove(req.params.id)) return res.status(404).json({ error: 'Responder not found' });
-  res.json({ success: true });
+
+router.put('/places/:id', requireRole('admin', 'moderator'), requirePermission('places:update'), auditLog('place.update'), async (req, res, next) => {
+  try {
+    const place = await placeRepository.update(req.params.id, req.body);
+    res.json(place);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.put('/places/:id/status', requireRole('admin', 'moderator'), auditLog('place.updateStatus'), async (req, res, next) => {
+  try {
+    const place = await placeRepository.updateStatus(req.params.id, req.body.status);
+    res.json(place);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.delete('/places/:id', requireRole('admin'), requirePermission('places:delete'), auditLog('place.delete'), async (req, res, next) => {
+  try {
+    await placeRepository.delete(req.params.id);
+    res.json({ message: 'Place deleted' });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// --- Incidents Management ---
+router.get('/incidents', requireRole('admin', 'moderator'), async (req, res, next) => {
+  try {
+    const incidents = await incidentRepository.list(req.query);
+    res.json(incidents);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.put('/incidents/:id', requireRole('admin', 'moderator'), auditLog('incident.update'), async (req, res, next) => {
+  try {
+    const incident = await incidentRepository.update(req.params.id, req.body);
+    res.json(incident);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.put('/incidents/:id/dispatch', requireRole('admin', 'moderator'), auditLog('incident.dispatch'), async (req, res, next) => {
+  try {
+    const incident = await incidentRepository.updateDispatch(req.params.id, req.body);
+    res.json(incident);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.put('/incidents/:id/traffic', requireRole('admin', 'moderator'), auditLog('incident.traffic'), async (req, res, next) => {
+  try {
+    const incident = await incidentRepository.updateTraffic(req.params.id, req.body);
+    res.json(incident);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.delete('/incidents/:id', requireRole('admin'), auditLog('incident.delete'), async (req, res, next) => {
+  try {
+    await incidentRepository.delete(req.params.id);
+    res.json({ message: 'Incident deleted' });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// --- Reviews Management ---
+router.get('/reviews', requireRole('admin', 'moderator'), async (req, res, next) => {
+  try {
+    const reviews = await reviewRepository.list(req.query);
+    res.json(reviews);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.delete('/reviews/:id', requireRole('admin'), auditLog('review.delete'), async (req, res, next) => {
+  try {
+    await reviewRepository.delete(req.params.id);
+    res.json({ message: 'Review deleted' });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// --- Flags Management ---
+router.get('/flags', requireRole('admin', 'moderator'), async (req, res, next) => {
+  try {
+    const flags = await flagRepository.list(req.query);
+    res.json(flags);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.put('/flags/:id', requireRole('admin', 'moderator'), auditLog('flag.resolve'), async (req, res, next) => {
+  try {
+    const flag = await flagRepository.resolve(req.params.id, req.body);
+    res.json(flag);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// --- Verification ---
+router.get('/verification', requireRole('admin', 'moderator'), async (req, res, next) => {
+  try {
+    const verifications = await verificationRepository.listPending(req.query);
+    res.json(verifications);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// --- Responders Management ---
+router.get('/responders', requireRole('admin', 'moderator'), async (req, res, next) => {
+  try {
+    const responders = await responderRepository.list(req.query);
+    res.json(responders);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post('/responders', requireRole('admin'), auditLog('responder.create'), async (req, res, next) => {
+  try {
+    const responder = await responderRepository.create(req.body);
+    res.status(201).json(responder);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.put('/responders/:id', requireRole('admin', 'moderator'), auditLog('responder.update'), async (req, res, next) => {
+  try {
+    const responder = await responderRepository.update(req.params.id, req.body);
+    res.json(responder);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.delete('/responders/:id', requireRole('admin'), auditLog('responder.delete'), async (req, res, next) => {
+  try {
+    await responderRepository.delete(req.params.id);
+    res.json({ message: 'Responder deleted' });
+  } catch (error) {
+    next(error);
+  }
 });
 
 module.exports = router;

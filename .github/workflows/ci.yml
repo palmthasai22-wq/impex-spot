@@ -1,0 +1,44 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgis/postgis:16-3.4-alpine
+        env:
+          POSTGRES_DB: impex_spot_test
+          POSTGRES_USER: impex
+          POSTGRES_PASSWORD: test_password
+        ports: ['5432:5432']
+        options: --health-cmd="pg_isready" --health-interval=10s
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - name: Install server deps
+        run: cd server && npm ci
+      - name: Install client deps
+        run: cd client && npm ci
+      - name: Run migrations
+        run: cd server && node db/migrate.js
+        env:
+          DATABASE_URL: postgres://impex:test_password@localhost:5432/impex_spot_test
+      - name: Run seed
+        run: cd server && node db/seed.js
+        env:
+          DATABASE_URL: postgres://impex:test_password@localhost:5432/impex_spot_test
+      - name: Run tests
+        run: cd server && node tests/admin.test.js
+        env:
+          TEST_API_URL: http://localhost:3001
+          DATABASE_URL: postgres://impex:test_password@localhost:5432/impex_spot_test
+      - name: Build client
+        run: cd client && npm run build
+      - name: Build Docker image
+        run: docker build -t impex-spot:test .

@@ -6,12 +6,22 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      '/api': 'http://localhost:3001',
-      '/uploads': 'http://localhost:3001',
-      '/socket.io': {
-        target: 'http://localhost:3001',
-        ws: true
-      }
-    }
-  }
+      '/api': {
+        target: 'https://impex-spot-api-production.up.railway.app',
+changeOrigin: true,
+secure: false,
+},
+'/uploads': {
+target: 'https://impex-spot-api-production.up.railway.app',
+changeOrigin: true,
+secure: false,
+},
+'/socket.io': {
+target: 'https://impex-spot-api-production.up.railway.app',
+ws: true,
+changeOrigin: true,
+secure: false,
+}
+}
+}
 });

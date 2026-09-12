@@ -1,16 +1,35 @@
-FROM node:18-alpine
+# Stage 1: Build client
+FROM node:20-alpine AS client-builder
+WORKDIR /app/client
+COPY client/package*.json ./
+RUN npm ci
+COPY client/ ./
+RUN npm run build
 
-สร้างพื้นที่สำหรับโปรเจกต์
+# Stage 2: Install server dependencies
+FROM node:20-alpine AS server-deps
+WORKDIR /app/server
+COPY server/package*.json ./
+RUN npm ci --only=production
+
+# Stage 3: Production image
+FROM node:20-alpine AS runner
+RUN apk add --no-cache tini
 WORKDIR /app
 
-ก๊อปปี้โฟลเดอร์ server ทั้งหมดเข้าไปในระบบ
+# Copy server
 COPY server/ ./server/
+COPY --from=server-deps /app/server/node_modules ./server/node_modules
 
-มุดเข้าไปในโฟลเดอร์ server
-WORKDIR /app/server
+# Copy built client
+COPY --from=client-builder /app/client/dist ./client/dist
 
-ติดตั้งไลบรารีทั้งหมด
-RUN npm install
+# Create uploads directory
+RUN mkdir -p uploads && chown -R node:node /app
 
-รันคำสั่งเปิดเซิร์ฟเวอร์
-CMD ["npm", "start"]
+USER node
+ENV NODE_ENV=production
+EXPOSE 3001
+
+ENTRYPOINT ["/sbin/tini", "--"]
+CMD ["node", "server/index.js"]
