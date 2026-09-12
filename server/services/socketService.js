@@ -5,6 +5,7 @@ const { socketAuth } = require('../middleware/socketAuth');
 let io;
 let connectionCount = 0;
 let adminCount = 0;
+let pinStoreInstance = null;
 
 // Rate limiting and state tracking maps
 const rateLimits = new Map();
@@ -157,6 +158,10 @@ function init(server) {
 /**
  * Emit event to all connected clients (usually 'public')
  */
+function setPinStore(store) {
+  pinStoreInstance = store;
+}
+
 function emit(event, data) {
   if (io) {
     io.emit(event, data);
@@ -191,6 +196,7 @@ function getAdminCount() {
 
 module.exports = {
   init,
+  setPinStore,
   emit,
   emitToRoom,
   emitToUser,
