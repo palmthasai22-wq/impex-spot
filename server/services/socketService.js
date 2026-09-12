@@ -1,6 +1,6 @@
 const { Server } = require('socket.io');
 const { socketAuth } = require('../middleware/socketAuth');
-const pinRepo = require('../db/repositories/pinRepository'); // Assuming this exists based on context
+//const pinRepo = require('../db/repositories/pinRepository'); // Assuming this exists based on context
 
 let io;
 let connectionCount = 0;
