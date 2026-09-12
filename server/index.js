@@ -13,8 +13,8 @@ const notificationService = require('./services/notificationService');
 
 // Middleware
 const { sessionMiddleware } = require('./middleware/session');
-const { requestIdMiddleware } = require('./middleware/requestId');
-const { requestLogger } = require('./middleware/requestLogger');
+const requestIdMiddleware = require('./middleware/requestId');
+const requestLogger = require('./middleware/requestLogger');
 const { preventXSS } = require('./middleware/security');
 const { generalApiLimiter } = require('./middleware/rateLimiter');
 
