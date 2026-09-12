@@ -1,11 +1,15 @@
 const { Server } = require('socket.io');
 const { socketAuth } = require('../middleware/socketAuth');
-//const pinRepo = require('../db/repositories/pinRepository'); // Assuming this exists based on context
 
 let io;
 let connectionCount = 0;
 let adminCount = 0;
 let pinStoreInstance = null;
+
+const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:5173,https://impex-spot-webapp.vercel.app')
+  .split(',')
+  .map(origin => origin.trim())
+  .filter(Boolean);
 
 // Rate limiting and state tracking maps
 const rateLimits = new Map();
@@ -26,7 +30,13 @@ function validatePayload(args) {
 function init(server) {
   io = new Server(server, {
     cors: {
-      origin: 'https://impex-spot-webapp.vercel.app',
+      origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+          callback(null, true);
+          return;
+        }
+        callback(new Error('Not allowed by CORS'));
+      },
       methods: ['GET', 'POST'],
       credentials: true
     },
@@ -94,8 +104,8 @@ function init(server) {
 
     // Send initial active pins to the connected client
     try {
-      if (pinRepo && typeof pinRepo.findAll === 'function') {
-        const activePins = await pinRepo.findAll({ is_active: true });
+      if (pinStoreInstance && typeof pinStoreInstance.list === 'function') {
+        const activePins = pinStoreInstance.list({ includeInactive: false });
         socket.emit('pins:initial', activePins);
       }
     } catch (err) {
