@@ -1,6 +1,6 @@
 const express = require('express');
 const responderRepository = require('../db/repositories/responderRepository');
-const { getIo } = require('../socket');
+const socket = require('../services/socketService');
 const auth = require('../middleware/auth');
 
 const router = express.Router();
