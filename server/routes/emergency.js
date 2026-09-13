@@ -1,22 +1,33 @@
 const express = require('express');
-const incidentRepository = require('../db/repositories/incidentRepository');
-const socket = require('../services/socketService');
-const auth = require('../middleware/auth');
+const pinStore = require('../services/pinStore');
 
 const router = express.Router();
 
-router.post('/', auth, async (req, res, next) => {
+// ─── Public: แจ้งเหตุฉุกเฉิน (ไม่ต้อง login) ───
+router.post('/', (req, res) => {
   try {
-    const incident = await incidentRepository.create({
+    const { title, emergencyType, lat, lng } = req.body;
+    if (lat === undefined || lng === undefined) {
+      return res.status(400).json({ error: 'Location (lat, lng) is required' });
+    }
+
+    const sessionId = req.sessionId || req.headers['x-session-id'];
+
+    const pin = pinStore.create({
       ...req.body,
+      title: title || 'เหตุฉุกเฉิน',
+      type: 'emergency',
+      category: 'emergency',
+      status: 'active',
+      sessionId,
       isEmergency: true,
-      reporterId: req.user.id
+      dispatchStatus: 'pending',
     });
-    
-    getIo().emit('emergency_declared', incident);
-    res.status(201).json(incident);
+
+    res.status(201).json(pin);
   } catch (error) {
-    next(error);
+    console.error('Error creating emergency:', error);
+    res.status(500).json({ error: 'Failed to create emergency report' });
   }
 });
 

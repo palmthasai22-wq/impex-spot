@@ -1,5 +1,4 @@
 const jwt = require('jsonwebtoken');
-const userRepo = require('../db/repositories/userRepository');
 
 /**
  * Socket.IO middleware for JWT authentication
@@ -18,19 +17,32 @@ function socketAuth(socket, next) {
   
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
-    // Load user from DB
+    
+    // Try to load user from DB, fall back to decoded token
+    let userRepo;
+    try {
+      userRepo = require('../db/repositories/userRepository');
+    } catch (e) {
+      // DB not available — use decoded token directly
+      socket.user = { id: decoded.id, username: decoded.username, role: decoded.role };
+      socket.role = decoded.role || 'anonymous';
+      return next();
+    }
+
     userRepo.findById(decoded.id).then(user => {
-      if (!user || !user.is_active) {
-        socket.user = null;
-        socket.role = 'anonymous';
+      if (!user || user.is_active === false) {
+        // User not found in DB — fall back to decoded token
+        socket.user = { id: decoded.id, username: decoded.username, role: decoded.role };
+        socket.role = decoded.role || 'anonymous';
       } else {
         socket.user = user;
         socket.role = user.role;
       }
       next();
     }).catch(() => {
-      socket.user = null;
-      socket.role = 'anonymous';
+      // DB error — fall back to decoded token
+      socket.user = { id: decoded.id, username: decoded.username, role: decoded.role };
+      socket.role = decoded.role || 'anonymous';
       next();
     });
   } catch (err) {

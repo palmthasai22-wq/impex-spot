@@ -1,77 +1,109 @@
 const express = require('express');
-const placeRepository = require('../db/repositories/placeRepository');
-const incidentRepository = require('../db/repositories/incidentRepository');
-const reviewRepository = require('../db/repositories/reviewRepository');
-const socket = require('../services/socketService');
-const auth = require('../middleware/auth');
+const pinStore = require('../services/pinStore');
+const socketService = require('../services/socketService');
 
 const router = express.Router();
 
-router.get('/', async (req, res, next) => {
+// ─── Public: ดึงหมุดทั้งหมด (ไม่ต้อง login) ───
+router.get('/', (req, res) => {
   try {
-    const places = await placeRepository.list(req.query);
-    const incidents = await incidentRepository.list(req.query);
-    
-    // Merge and format response for backward compatibility if necessary
-    res.json([...places, ...incidents]);
+    const pins = pinStore.list({ query: req.query });
+    res.json(pins);
   } catch (error) {
-    next(error);
+    console.error('Error fetching pins:', error);
+    res.status(500).json({ error: 'Failed to fetch pins' });
   }
 });
 
-router.post('/', auth, async (req, res, next) => {
+// ─── Public: ปักหมุดใหม่ (ไม่ต้อง login) ───
+router.post('/', (req, res) => {
   try {
-    const { category, type } = req.body;
-    let pin;
-    
-    if (type === 'incident' || category === 'incident') {
-      pin = await incidentRepository.create({ ...req.body, reporterId: req.user.id });
-    } else {
-      pin = await placeRepository.create({ ...req.body, creatorId: req.user.id });
+    const { title, category, type, lat, lng } = req.body;
+    if (!title || (!category && !type)) {
+      return res.status(400).json({ error: 'Title and category are required' });
     }
-    
-    getIo().emit('pin_created', pin);
+    if (lat === undefined || lng === undefined) {
+      return res.status(400).json({ error: 'Location (lat, lng) is required' });
+    }
+
+    const pin = pinStore.create({
+      ...req.body,
+      sessionId: req.sessionId || req.headers['x-session-id'],
+      type: type || category,
+    });
+
     res.status(201).json(pin);
   } catch (error) {
-    next(error);
+    console.error('Error creating pin:', error);
+    res.status(500).json({ error: 'Failed to create pin' });
   }
 });
 
-router.put('/:id/verify', auth, async (req, res, next) => {
+// ─── Public: ยืนยันหมุด (ไม่ต้อง login) ───
+router.put('/:id/verify', (req, res) => {
   try {
-    const { id } = req.params;
-    let result;
-    
-    const place = await placeRepository.findById(id);
-    if (place) {
-      result = await placeRepository.verify(id, req.user.id);
-    } else {
-      const incident = await incidentRepository.findById(id);
-      if (incident) {
-        result = await incidentRepository.verify(id, req.user.id);
-      } else {
-        return res.status(404).json({ error: 'Pin not found' });
-      }
+    const pin = pinStore.get(req.params.id);
+    if (!pin) return res.status(404).json({ error: 'Pin not found' });
+
+    const sessionId = req.sessionId || req.headers['x-session-id'] || 'anonymous';
+
+    // ตรวจว่ายืนยันซ้ำหรือยัง
+    if (!pin.verifications) pin.verifications = [];
+    if (pin.verifications.includes(sessionId)) {
+      return res.status(400).json({ error: 'Already verified by this session' });
     }
-    
-    getIo().emit('pin_verified', { id, verifierId: req.user.id });
-    res.json(result);
+
+    pin.verifications.push(sessionId);
+
+    // คำนวณ confidence ใหม่
+    const base = 40;
+    const verifyBonus = pin.verifications.length * 10;
+    pin.confidence = Math.min(100, base + verifyBonus);
+
+    const updated = pinStore.update(pin.id, {
+      verifications: pin.verifications,
+      confidence: pin.confidence,
+    });
+
+    res.json(updated);
   } catch (error) {
-    next(error);
+    console.error('Error verifying pin:', error);
+    res.status(500).json({ error: 'Failed to verify pin' });
   }
 });
 
-router.put('/:id/review', auth, async (req, res, next) => {
+// ─── Public: เพิ่มรีวิว (ไม่ต้อง login) ───
+router.put('/:id/review', (req, res) => {
   try {
-    const review = await reviewRepository.create({
-      targetId: req.params.id,
-      userId: req.user.id,
-      ...req.body
+    const pin = pinStore.get(req.params.id);
+    if (!pin) return res.status(404).json({ error: 'Pin not found' });
+
+    const { rating, comment } = req.body;
+    const sessionId = req.sessionId || req.headers['x-session-id'] || 'anonymous';
+
+    if (!pin.reviews) pin.reviews = [];
+    pin.reviews.push({
+      sessionId,
+      rating: Number(rating) || 3,
+      comment: comment || '',
+      createdAt: new Date().toISOString(),
     });
-    
-    res.status(201).json(review);
+
+    // คำนวณ average rating
+    const totalRating = pin.reviews.reduce((sum, r) => sum + (r.rating || 0), 0);
+    pin.averageRating = totalRating / pin.reviews.length;
+    pin.reviewRating = pin.averageRating;
+
+    const updated = pinStore.update(pin.id, {
+      reviews: pin.reviews,
+      averageRating: pin.averageRating,
+      reviewRating: pin.averageRating,
+    });
+
+    res.json(updated);
   } catch (error) {
-    next(error);
+    console.error('Error reviewing pin:', error);
+    res.status(500).json({ error: 'Failed to add review' });
   }
 });
 

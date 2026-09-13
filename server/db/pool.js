@@ -27,8 +27,8 @@ if (process.env.DB_SSL === 'true') {
 const pool = new Pool(config);
 
 pool.on('error', (err, client) => {
-  console.error('Unexpected error on idle client', err);
-  process.exit(-1);
+  console.error('[DB Pool] Unexpected error on idle client:', err.message);
+  // Don't crash the server — DB might reconnect
 });
 
 module.exports = {

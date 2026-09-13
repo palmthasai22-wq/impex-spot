@@ -1,42 +1,36 @@
 const express = require('express');
-const responderRepository = require('../db/repositories/responderRepository');
-const socket = require('../services/socketService');
-const auth = require('../middleware/auth');
+const jwt = require('jsonwebtoken');
+const responderStore = require('../services/responderStore');
 
 const router = express.Router();
 
-router.get('/', async (req, res, next) => {
-  try {
-    const responders = await responderRepository.list(req.query);
-    res.json(responders);
-  } catch (error) {
-    next(error);
+const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret';
+
+// Simple auth for responder routes
+const authMiddleware = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Unauthorized' });
   }
+  try {
+    const token = authHeader.split(' ')[1];
+    req.user = jwt.verify(token, JWT_SECRET);
+    next();
+  } catch (err) {
+    return res.status(401).json({ error: 'Invalid token' });
+  }
+};
+
+// ─── GET / ─── ดูรายชื่อ responder (ต้อง login)
+router.get('/', authMiddleware, (req, res) => {
+  res.json(responderStore.list());
 });
 
-router.put('/:id', auth, async (req, res, next) => {
-  try {
-    const responder = await responderRepository.update(req.params.id, req.body);
-    res.json(responder);
-  } catch (error) {
-    next(error);
-  }
-});
-
-router.post('/location', auth, async (req, res, next) => {
-  try {
-    // Permission check for responder location update should ideally be done against the user's responder profile.
-    const { lat, lng, responderId } = req.body;
-    if (!responderId || !lat || !lng) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
-    
-    const responder = await responderRepository.updateLocation(responderId, { lat, lng });
-    getIo().emit('responder_location_updated', { id: responderId, lat, lng });
-    res.json(responder);
-  } catch (error) {
-    next(error);
-  }
+// ─── PUT /:id ─── อัปเดตสถานะ responder
+router.put('/:id', authMiddleware, (req, res) => {
+  const responder = responderStore.update(req.params.id, req.body);
+  if (!responder) return res.status(404).json({ error: 'Responder not found' });
+  res.json(responder);
 });
 
 module.exports = router;
