@@ -1,13 +1,30 @@
 {
-  "name": "ImpEx Spot",
+  "name": "ImpEx Spot - Community Situation Map",
   "short_name": "ImpEx Spot",
-  "description": "แผนที่สถานการณ์ชุมชนแบบเรียลไทม์",
+  "description": "แผนที่สถานการณ์ชุมชน ปักหมุด แจ้งเหตุ แบ่งปันข้อมูล",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#2563EB",
-  "theme_color": "#2563EB",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#16a34a",
+  "lang": "th",
+  "categories": ["social", "navigation", "utilities"],
   "icons": [
-    { "src": "/icons/placeholder.txt", "sizes": "192x192", "type": "image/png" },
-    { "src": "/icons/placeholder.txt", "sizes": "512x512", "type": "image/png" }
+    { "src": "/images/mascot.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/images/mascot.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "เปิดแผนที่",
+      "short_name": "แผนที่",
+      "url": "/?view=map",
+      "icons": [{ "src": "/images/mascot_pin.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "แจ้งเหตุฉุกเฉิน",
+      "short_name": "แจ้งเหตุ",
+      "url": "/?view=emergency",
+      "icons": [{ "src": "/images/mascot_alert.png", "sizes": "96x96" }]
+    }
   ]
 }
