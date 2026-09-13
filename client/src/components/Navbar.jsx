@@ -2,10 +2,11 @@ import React, { useState, useRef, useEffect } from 'react';
 import { FiMenu, FiX } from 'react-icons/fi';
 
 const NAV_LINKS = [
-  { label: 'ทำงานยังไง', id: 'how' },
+  { label: 'Insight Feed', id: 'landing' },
+  { label: 'Kanban Board', id: 'kanban' },
   { label: 'Impact Commu', id: 'commu' },
+  { label: 'ทำงานยังไง', id: 'how' },
   { label: 'คำถามที่เจอบ่อย', id: 'faq' },
-  { label: 'แจ้งปัญหา', id: 'report' },
 ];
 
 const Navbar = ({ onNavigate, currentView }) => {
@@ -38,7 +39,9 @@ const Navbar = ({ onNavigate, currentView }) => {
         <div className="hidden lg:flex items-center gap-6">
           {NAV_LINKS.map(link => (
             <button key={link.id} onClick={() => onNavigate(link.id)}
-              className="text-sm text-gray-500 hover:text-green-600 font-medium transition-colors cursor-pointer">
+              className={`play-btn px-3 py-1.5 text-sm font-medium ${
+                currentView === link.id ? 'bg-green-50 text-green-700' : 'text-gray-500 hover:text-green-600'
+              }`}>
               {link.label}
             </button>
           ))}
@@ -46,11 +49,11 @@ const Navbar = ({ onNavigate, currentView }) => {
 
         {/* Right */}
         <div className="flex items-center gap-2" ref={menuRef}>
-          <button onClick={() => onNavigate('map')}
-            aria-label="เปิดแผนที่"
-            className="bg-green-500 hover:bg-green-600 text-white text-sm lg:text-lg font-black p-2.5 sm:px-4 sm:py-2.5 lg:px-6 rounded-full transition-all hover:shadow-lg active:scale-95 shadow-md hover:shadow-green-500/50 animate-pulse flex items-center gap-2">
-            <img src="/images/mascot_pin.png" alt="" className="w-7 h-7 sm:w-8 sm:h-8 lg:w-10 lg:h-10 object-contain" />
-            <span className="hidden sm:inline">มาดูแผนที่กัน</span>
+          <button onClick={() => onNavigate(currentView === 'kanban' ? 'report' : 'map')}
+            aria-label={currentView === 'kanban' ? 'รายงานใหม่' : 'เปิดแผนที่'}
+            className="play-btn play-btn-primary text-sm lg:text-base p-2.5 sm:px-4 sm:py-2.5 lg:px-5">
+            <img src={currentView === 'kanban' ? '/images/mascot_alert.png' : '/images/mascot_pin.png'} alt="" className="w-7 h-7 sm:w-8 sm:h-8 lg:w-9 lg:h-9 object-contain" />
+            <span className="hidden sm:inline">{currentView === 'kanban' ? 'รายงานใหม่' : 'มาดูแผนที่กัน'}</span>
           </button>
           <button onClick={() => onNavigate('admin')}
             className="hidden lg:block text-xs text-gray-400 hover:text-gray-600 font-medium px-3 py-2 rounded-full hover:bg-gray-100 transition-all">
@@ -72,9 +75,13 @@ const Navbar = ({ onNavigate, currentView }) => {
                   {link.label}
                 </button>
               ))}
+              <button onClick={() => { onNavigate('report'); setMenuOpen(false); }}
+                className="w-full text-left px-4 py-3 text-sm text-gray-600 hover:bg-green-50 hover:text-green-700 transition-colors border-b border-gray-50">
+                แจ้งปัญหา
+              </button>
               <button onClick={() => { onNavigate('admin'); setMenuOpen(false); }}
-                className="w-full text-left px-4 py-3 text-sm text-gray-400 hover:bg-gray-50 transition-colors">
-                🔒 Admin
+                className="flex w-full items-center gap-2 text-left px-4 py-3 text-sm text-gray-400 hover:bg-gray-50 transition-colors">
+                <img src="/images/mascot_ruthan.png" alt="" className="h-5 w-5 object-contain" /> Admin
               </button>
             </div>
           )}

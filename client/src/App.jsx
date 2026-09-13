@@ -13,6 +13,7 @@ import HowPage from './components/HowPage';
 import CommunitiesPage from './components/CommunitiesPage';
 import FAQPage from './components/FAQPage';
 import ReportPage from './components/ReportPage';
+import KanbanPage from './components/KanbanPage';
 import useAuth from './hooks/useAuth';
 
 const MainApp = () => {
@@ -50,6 +51,7 @@ const MainApp = () => {
         {view === 'commu' && <CommunitiesPage onBack={() => setView('landing')} />}
         {view === 'faq' && <FAQPage onBack={() => setView('landing')} />}
         {view === 'report' && <ReportPage onBack={() => setView('landing')} />}
+        {view === 'kanban' && <KanbanPage onNavigate={setView} />}
         {view === 'admin' && (isAdmin
           ? <AdminDashboard token={token} onBack={() => setView('map')} onLogout={logout} />
           : <AdminLogin onLogin={login} />)}
