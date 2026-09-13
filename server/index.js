@@ -74,6 +74,7 @@ try { healthRoutes = require('./routes/health'); } catch (e) {
 try { notificationRoutes = require('./routes/notifications'); } catch (e) { notificationRoutes = express.Router(); }
 
 const app = express();
+app.set('trust proxy', 1);
 const server = http.createServer(app);
 const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:5173,https://impex-spot-webapp.vercel.app')
   .split(',')
