@@ -58,4 +58,9 @@ export const adminLogin = async (credentials) => {
   return res.data;
 };
 
+export const fetchDispatchedResponders = async () => {
+  const res = await api.get('/responder/active');
+  return res.data;
+};
+
 export default api;

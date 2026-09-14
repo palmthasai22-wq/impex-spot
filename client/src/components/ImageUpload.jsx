@@ -1,7 +1,8 @@
 import React, { useRef } from 'react';
 
 export default function ImageUpload({ images = [], onChange }) {
-  const inputRef = useRef(null);
+  const cameraRef = useRef(null);
+  const fileRef = useRef(null);
 
   const handleFiles = (files) => {
     const newImages = [...images];
@@ -18,24 +19,48 @@ export default function ImageUpload({ images = [], onChange }) {
   const handleChange = (e) => handleFiles(e.target.files);
   const removeImage = (i) => onChange(images.filter((_, idx) => idx !== i));
 
+  const isFull = images.length >= 3;
+
   return (
     <div>
-      {/* Drop Zone */}
-      <div
-        onClick={() => inputRef.current?.click()}
-        onDrop={handleDrop}
-        onDragOver={(e) => e.preventDefault()}
-        className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all duration-200 ${
-          images.length >= 3
-            ? 'border-gray-200 bg-gray-50 opacity-50 pointer-events-none'
-            : 'border-brand-300 bg-brand-50/30 hover:bg-brand-50 hover:border-brand-400'
+      {/* Camera Capture — ปุ่มหลัก */}
+      <button
+        type="button"
+        onClick={() => cameraRef.current?.click()}
+        disabled={isFull}
+        className={`w-full flex items-center justify-center gap-2 py-4 rounded-2xl font-bold text-sm transition-all duration-200 mb-2 ${
+          isFull
+            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+            : 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg hover:from-emerald-600 hover:to-green-600 active:scale-[0.98]'
         }`}
       >
-        <span className="text-3xl block mb-2">📷</span>
-        <p className="text-sm text-brand-600 font-medium">ลากรูปมาวาง หรือกดเพื่อเลือก</p>
-        <p className="text-xs text-gray-400 mt-1">JPG, PNG, WebP · สูงสุด 5MB · {images.length}/3 รูป</p>
+        <span className="text-xl">📸</span>
+        ถ่ายรูปเพื่อยืนยัน
+      </button>
+      <input
+        ref={cameraRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={handleChange}
+      />
+
+      {/* File Picker — ปุ่มรอง */}
+      <div
+        onClick={() => !isFull && fileRef.current?.click()}
+        onDrop={handleDrop}
+        onDragOver={(e) => e.preventDefault()}
+        className={`border-2 border-dashed rounded-2xl p-4 text-center cursor-pointer transition-all duration-200 ${
+          isFull
+            ? 'border-gray-200 bg-gray-50 opacity-50 pointer-events-none'
+            : 'border-gray-200 bg-gray-50/50 hover:bg-brand-50/30 hover:border-brand-300'
+        }`}
+      >
+        <p className="text-xs text-gray-500 font-medium">หรือเลือกรูปจากคลัง / ลากมาวาง</p>
+        <p className="text-[10px] text-gray-400 mt-0.5">JPG, PNG, WebP · สูงสุด 5MB · {images.length}/3 รูป</p>
       </div>
-      <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" multiple className="hidden" onChange={handleChange} />
+      <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" multiple className="hidden" onChange={handleChange} />
 
       {/* Previews */}
       {images.length > 0 && (
@@ -54,3 +79,4 @@ export default function ImageUpload({ images = [], onChange }) {
     </div>
   );
 }
+

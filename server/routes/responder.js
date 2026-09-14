@@ -6,6 +6,23 @@ const router = express.Router();
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret';
 
+// ─── GET /active ─── ผู้ใช้ทั่วไปดู responder ที่ถูก dispatch แล้ว (public, no auth)
+router.get('/active', (req, res) => {
+  const all = responderStore.list();
+  const active = all
+    .filter(r => ['dispatched', 'on_scene', 'coordinating', 'acknowledged'].includes(r.status))
+    .map(r => ({
+      id: r.id,
+      name: r.name,
+      role: r.team || 'ทีมช่วยเหลือ',
+      status: r.status,
+      lat: r.lat || null,
+      lng: r.lng || null,
+      phone: r.phone || null,
+    }));
+  res.json(active);
+});
+
 // Simple auth for responder routes
 const authMiddleware = (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -34,3 +51,4 @@ router.put('/:id', authMiddleware, (req, res) => {
 });
 
 module.exports = router;
+

@@ -60,7 +60,7 @@ export default function LandingHero({ onEnter, onPin }) {
       <div className="relative h-[58vh] min-h-[420px] w-full overflow-hidden bg-transparent sm:h-[62vh] sm:min-h-[520px] lg:h-[78vh] lg:min-h-[640px] xl:h-[82vh] max-sm:h-[100svh] max-sm:min-h-[100svh] max-sm:max-w-none max-sm:mx-0 max-sm:rounded-none max-sm:border-0">
         {/* Hero Background — Manhwa illustration */}
         <img
-          src="/images/hero_bg.png"
+          src="/images/07.png"
           alt="ImpEx Spot - IMPACT Muang Thong Thani"
           className="absolute inset-0 h-full w-full object-cover object-center max-sm:object-[15%_center]"
         />
@@ -209,7 +209,7 @@ export default function LandingHero({ onEnter, onPin }) {
       {/* ===== FOOTER CTA ===== */}
       <div className="relative w-full shrink-0 overflow-hidden bg-white">
         <img
-          src="/images/hero.bg2.png?v=6"
+          src="/images/08.png"
           alt="ImpEx Spot community scene"
         className="block w-full h-auto object-contain object-center"
           decoding="async"

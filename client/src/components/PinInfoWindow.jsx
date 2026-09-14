@@ -107,6 +107,33 @@ export default function PinInfoWindow({ pin, onClose }) {
         </p>
       )}
 
+      {/* Responder / Admin Help info for emergency pins */}
+      {(pin.type === 'emergency' || pin.category === 'emergency') && pin.dispatchStatus && pin.dispatchStatus !== 'pending' && (
+        <div className="mb-2.5 rounded-xl border border-blue-100 bg-blue-50 p-2.5">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-sm">🛡️</span>
+            <span className="text-[11px] font-bold text-blue-800">ทีมช่วยเหลือ</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className={`w-2 h-2 rounded-full ${
+              pin.dispatchStatus === 'on_scene' ? 'bg-green-500' :
+              pin.dispatchStatus === 'dispatched' ? 'bg-blue-500' :
+              'bg-yellow-500'
+            }`}></span>
+            <span className="text-[10px] font-semibold text-blue-700">
+              {pin.dispatchStatus === 'on_scene' ? 'ถึงที่เกิดเหตุแล้ว' :
+               pin.dispatchStatus === 'dispatched' ? 'กำลังเดินทาง' :
+               pin.dispatchStatus === 'acknowledged' ? 'ทีมรับทราบแล้ว' :
+               pin.dispatchStatus === 'coordinating' ? 'กำลังประสานงาน' :
+               pin.dispatchStatus === 'resolved' ? 'จัดการเสร็จแล้ว' : pin.dispatchStatus}
+            </span>
+          </div>
+          {pin.assignedResponderName && (
+            <p className="text-[10px] text-blue-600 mt-1">👤 {pin.assignedResponderName}</p>
+          )}
+        </div>
+      )}
+
       {/* Actions */}
       <div className="grid grid-cols-2 gap-1.5 pt-2.5 border-t border-gray-100">
         <button onClick={handleVerify} disabled={isVerifying}

@@ -42,6 +42,7 @@ export const PIN_CATEGORIES = [
   ...PLACE_CATEGORIES,
   ...SHARE_CATEGORIES,
   ...EMERGENCY_CATEGORIES,
+  { id: 'admin_help', label: 'ทีมช่วยเหลือ', emoji: '🛡️', color: '#1E40AF' },
   { id: 'other', label: 'อื่นๆ', emoji: '📌', color: '#6B7280' },
 ];
 
@@ -88,5 +89,6 @@ export const EXPIRY_CONFIG = {
   event: { ms: 24 * 3600000, label: '24 ชั่วโมง' },
   review: { ms: null, label: 'ถาวร' },
   emergency: { ms: null, label: 'จนกว่าจะแก้ไข' },
+  admin_help: { ms: null, label: 'ถาวร' },
   other: { ms: 24 * 3600000, label: '24 ชั่วโมง' },
 };

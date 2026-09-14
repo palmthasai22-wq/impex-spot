@@ -7,6 +7,7 @@ import useGeolocation from '../hooks/useGeolocation';
 import PinInfoWindow from './PinInfoWindow';
 import Free3DMap from './Free3DMap';
 import { PIN_CATEGORIES, MAIN_FEATURES } from '../utils/categories';
+import { fetchDispatchedResponders } from '../utils/api';
 
 const createPinIcon = (category) => {
   const image = category === 'emergency'
@@ -43,6 +44,19 @@ const selectedPinIcon = L.divIcon({
   iconSize: [64, 64],
   iconAnchor: [32, 64],
   popupAnchor: [0, -64],
+});
+
+const adminResponderIcon = L.divIcon({
+  className: 'custom-admin-marker',
+  html: `<div style="width:70px;height:70px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 3px 10px rgba(30,64,175,0.5));animation:pulse 2s ease-in-out infinite;">
+    <div style="position:relative;width:100%;height:100%;">
+      <img src="/images/mascot_star.png" alt="ทีมช่วยเหลือ" style="width:100%;height:100%;object-fit:contain;" onerror="this.parentElement.textContent='🛡️'" />
+      <div style="position:absolute;bottom:-2px;right:-2px;width:20px;height:20px;background:#22c55e;border-radius:50%;border:2px solid white;"></div>
+    </div>
+  </div>`,
+  iconSize: [70, 70],
+  iconAnchor: [35, 70],
+  popupAnchor: [0, -75],
 });
 
 function FlyToUser({ position }) {
@@ -114,10 +128,24 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
   const [show3D, setShow3D] = useState(false);
   const [showActionMenu, setShowActionMenu] = useState(false);
   const [pendingAction, setPendingAction] = useState(null);
+  const [dispatchedResponders, setDispatchedResponders] = useState([]);
 
   useEffect(() => {
     const t = setTimeout(() => setShowWelcome(false), 4000);
     return () => clearTimeout(t);
+  }, []);
+
+  // Real-time: poll dispatched responders every 10s
+  useEffect(() => {
+    const loadResponders = async () => {
+      try {
+        const data = await fetchDispatchedResponders();
+        setDispatchedResponders(Array.isArray(data) ? data : []);
+      } catch { /* API not ready yet — silent */ }
+    };
+    loadResponders();
+    const interval = setInterval(loadResponders, 10000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -286,6 +314,36 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
               </Popup>
               </Marker>
             </React.Fragment>
+          ))}
+          {/* Admin/Responder Markers — real-time */}
+          {dispatchedResponders.filter(r => r.lat && r.lng).map(responder => (
+            <Marker key={`resp-${responder.id || responder._id}`}
+              position={[responder.lat, responder.lng]}
+              icon={adminResponderIcon}>
+              <Popup maxWidth={240} minWidth={200} closeButton={false} className="custom-popup">
+                <div style={{padding:8,fontFamily:'inherit'}}>
+                  <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
+                    <span style={{width:36,height:36,background:'#dbeafe',borderRadius:12,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18}}>🛡️</span>
+                    <div>
+                      <p style={{fontSize:13,fontWeight:800,color:'#1e3a5f',margin:0}}>{responder.name || 'ทีมช่วยเหลือ'}</p>
+                      <p style={{fontSize:10,color:'#64748b',margin:0}}>{responder.role || 'Admin Responder'}</p>
+                    </div>
+                  </div>
+                  <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:6}}>
+                    <span style={{width:8,height:8,borderRadius:'50%',background: responder.status === 'on_scene' ? '#16a34a' : responder.status === 'dispatched' ? '#2563eb' : '#eab308'}}></span>
+                    <span style={{fontSize:11,fontWeight:700,color: responder.status === 'on_scene' ? '#166534' : '#1e40af'}}>
+                      {responder.status === 'on_scene' ? 'ถึงที่เกิดเหตุแล้ว' : responder.status === 'dispatched' ? 'กำลังเดินทาง' : 'รับประสานงาน'}
+                    </span>
+                  </div>
+                  {responder.phone && (
+                    <a href={`tel:${responder.phone}`}
+                      style={{display:'flex',alignItems:'center',justifyContent:'center',gap:6,padding:'8px 12px',borderRadius:12,background:'#2563eb',color:'white',fontSize:12,fontWeight:700,textDecoration:'none',marginTop:6}}>
+                      📞 ติดต่อทีมงาน
+                    </a>
+                  )}
+                </div>
+              </Popup>
+            </Marker>
           ))}
           {selectedPosition && <Marker position={selectedPosition} icon={selectedPinIcon} />}
         </MapContainer>}
