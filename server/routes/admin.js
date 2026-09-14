@@ -148,6 +148,19 @@ router.put('/emergencies/:id/dispatch', (req, res) => {
     assignedResponderId: responderId,
   });
   if (!pin) return res.status(404).json({ error: 'Emergency not found' });
+
+  // อัปเดต responder: ใส่พิกัดจุดเกิดเหตุ + เปลี่ยน status ให้แสดงหมุดบนแผนที่
+  if (responderId && pin.lat && pin.lng) {
+    const newStatus = dispatchStatus === 'resolved' ? 'available' : (dispatchStatus || 'dispatched');
+    const locationUpdate = dispatchStatus === 'resolved'
+      ? { status: newStatus, lat: null, lng: null }
+      : { status: newStatus, lat: pin.lat, lng: pin.lng };
+    const responder = responderStore.update(responderId, locationUpdate);
+    if (responder) {
+      pin.assignedResponderName = responder.name;
+    }
+  }
+
   res.json(pin);
 });
 
