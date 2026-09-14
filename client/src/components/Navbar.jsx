@@ -23,16 +23,8 @@ const Navbar = ({ onNavigate, currentView }) => {
     <nav className="sticky top-0 z-50 shrink-0 bg-white/95 backdrop-blur-lg border-b border-gray-100 shadow-sm">
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 px-3 py-2.5 sm:px-4 sm:py-3">
         {/* Brand */}
-        <button className="flex flex-col items-start text-left cursor-pointer" onClick={() => onNavigate('landing')}>
-          <div className="flex items-center gap-1.5 mb-1 sm:gap-2 sm:mb-1.5">
-            <span className="bg-green-100 text-green-700 text-[10px] sm:text-xs font-black px-2 py-0.5 sm:px-3 sm:py-1 rounded-full whitespace-nowrap">ปักหมุด</span>
-            <span className="bg-red-100 text-red-600 text-[10px] sm:text-xs font-black px-2 py-0.5 sm:px-3 sm:py-1 rounded-full whitespace-nowrap">จุดแจ้ง</span>
-          </div>
-          <div className="flex items-baseline gap-0.5 leading-none">
-            <span className="text-2xl sm:text-3xl lg:text-4xl font-black text-gray-800 tracking-tight">ImpEx</span>
-            <span className="text-2xl sm:text-3xl lg:text-4xl font-black text-green-500 tracking-tight">Spot</span>
-          </div>
-          <span className="mt-1 text-[8px] sm:mt-1.5 sm:text-[10px] lg:text-[11px] font-medium text-gray-500 whitespace-nowrap">วงจรง่ายๆ ที่ให้พื้นที่นี้แม่นขึ้นทุกวัน</span>
+        <button className="flex items-center cursor-pointer" onClick={() => onNavigate('landing')}>
+          <img src="/images/08.png" alt="ImpEx Spot" className="h-12 sm:h-14 lg:h-16 w-auto object-contain" />
         </button>
 
         {/* Desktop Links */}

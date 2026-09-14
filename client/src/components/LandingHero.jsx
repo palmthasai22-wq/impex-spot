@@ -215,16 +215,6 @@ export default function LandingHero({ onEnter, onPin }) {
           decoding="async"
         />
       </div>
-
-      {/* ===== IMAGE 3: FOOTER CTA ===== */}
-      <div className="relative w-full shrink-0 overflow-hidden bg-white">
-        <img
-          src="/images/08.png"
-          alt="ImpEx Spot community scene"
-        className="block w-full h-auto object-contain object-center"
-          decoding="async"
-        />
-      </div>
     </div>
   );
 }
