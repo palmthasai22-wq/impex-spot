@@ -128,7 +128,7 @@ if (typeof requestLogger === 'function') {
 // Session ID (anonymous user tracking)
 // Camera routes validate structured input directly, preserving literal passwords.
 // Mount before generic HTML sanitization and /pins/:id routes.
-require('./services/cameraSetup').mountCameras(app);
+require('./services/cameraSetup').mountCameras(app, server);
 
 app.use(sessionMiddleware);
 

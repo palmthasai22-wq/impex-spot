@@ -3,6 +3,7 @@ const { validateKey } = require('./cameraCrypto');
 const { createCameraAuth } = require('../middleware/cameraAuth');
 const { createCameraRoutes } = require('../routes/cameras');
 const { createMediaClient, startCameraHealth } = require('./cameraMedia');
+const { cameraStreamProxy, attachCameraTunnel } = require('./cameraTransport');
 
 const cameraPaths = /^\/(pins\/cctv(?:\/|$)|streams(?:\/|$)|admin\/(cameras|monitor)(?:\/|$)|internal\/cctv(?:\/|$)|relay\/cctv(?:\/|$))/;
 function cameraErrorHandler(error, req, res, next) {
@@ -12,7 +13,7 @@ function cameraErrorHandler(error, req, res, next) {
   res.set('Cache-Control', 'no-store').status(status).json({ error: status === 413 ? 'Camera request too large' : status === 400 ? 'Invalid camera request' : 'Camera service unavailable' });
 }
 
-function mountCameras(app) {
+function mountCameras(app, server) {
   const matches = cameraPaths;
   app.use(cameraErrorHandler);
   const enabled = process.env.CCTV_ENABLED === 'true';
@@ -27,6 +28,8 @@ function mountCameras(app) {
   const repo = require('../db/repositories/cameraRepository');
   const userRepo = require('../db/repositories/userRepository');
   const media = createMediaClient();
+  if (process.env.CCTV_EDGE_URL) app.use('/streams', cameraStreamProxy(process.env.CCTV_EDGE_URL));
+  if (process.env.CCTV_TUNNEL_HOST && server) attachCameraTunnel(server, { repo, host: process.env.CCTV_TUNNEL_HOST });
   const routes = createCameraRoutes({ repo, media, adminAuth: createCameraAuth({ getUser: id => userRepo.findById(id) }) });
   const limit = rateLimit({ windowMs: 60000, limit: 240, standardHeaders: 'draft-7', legacyHeaders: false });
   app.use('/api', (req, res, next) => {

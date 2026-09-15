@@ -1,5 +1,5 @@
 // Run with Node 20+ and FFmpeg installed, on the camera's LAN.
-// All control and media connections originate here; no inbound relay port exists.
+// All external connections originate here. WSS transport binds only a loopback port for FFmpeg.
 const { spawn } = require('node:child_process');
 const dgram = require('node:dgram');
 const { randomUUID } = require('node:crypto');
@@ -41,7 +41,8 @@ async function main() {
   if (!/^[a-f\d-]{36}$/.test(pinId || '') || !/^[a-f\d]{64}$/.test(token || '')) throw new Error('Set CCTV_PIN_ID and CCTV_RELAY_TOKEN');
   const backend = new URL(process.env.CCTV_BACKEND_URL);
   if (backend.protocol !== 'https:' && !(backend.protocol === 'http:' && ['localhost', '127.0.0.1'].includes(backend.hostname))) throw new Error('Relay control requires HTTPS (HTTP is allowed on loopback for development)');
-  const output = new URL(process.env.CCTV_INGEST_URL);
+  const tunnel = process.env.CCTV_INGEST_URL ? null : await require('./cctv-tunnel.cjs').createTunnel({ backend, pinId, token });
+  const output = new URL(process.env.CCTV_INGEST_URL || tunnel.url);
   if (!['rtsp:', 'rtsps:'].includes(output.protocol)) throw new Error('Set an RTSP(S) ingest URL over a private VPN');
   output.username = pinId;
   output.password = token;
@@ -90,6 +91,7 @@ async function main() {
     } catch { stopVideo(); console.warn('Relay paused: check pairing, consent, and backend availability'); }
     if (!stopped) await new Promise(resolve => setTimeout(resolve, 5000));
   }
+  tunnel?.close();
 }
 if (require.main === module) main().catch(() => { console.error('Relay configuration invalid; check the CCTV setup guide'); process.exitCode = 1; });
 module.exports = { discover };

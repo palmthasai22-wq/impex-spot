@@ -32,4 +32,4 @@ ENV NODE_ENV=production
 EXPOSE 3001
 
 ENTRYPOINT ["/sbin/tini", "--"]
-CMD ["node", "server/index.js"]
+CMD ["sh", "-c", "if [ \"$CCTV_REQUIRE_DATABASE\" = \"true\" ]; then node server/db/installCctv.js || exit 1; fi; exec node server/index.js"]

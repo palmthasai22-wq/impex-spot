@@ -4,7 +4,7 @@
   "description": "ImpEx Spot - Community Situation Map API",
   "main": "index.js",
   "scripts": {
-    "test:cctv": "node --test tests/cctv.test.js tests/cctv.db.test.js",
+    "test:cctv": "node --test tests/cctv.test.js tests/cctv.db.test.js tests/cctv.transport.test.js",
     "start": "node index.js",
     "dev": "nodemon index.js",
     "db:migrate": "node db/migrate.js up",
@@ -15,18 +15,19 @@
     "typecheck": "node --check index.js && node --check routes/placesDb.js && node --check routes/incidentsDb.js && node --check db/migrate.js && node --check db/seed.js && node --check db/repositories/placeRepository.js && node --check db/repositories/incidentRepository.js && node --check db/repositories/anonymousSessionRepository.js && node --check db/repositories/categoryRepository.js"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "cors": "^2.8.5",
-    "socket.io": "^4.7.2",
-    "multer": "^1.4.5-lts.1",
-    "sharp": "^0.33.2",
-    "jsonwebtoken": "^9.0.2",
     "bcryptjs": "^2.4.3",
-    "uuid": "^9.0.0",
-    "express-rate-limit": "^7.1.5",
+    "cors": "^2.8.5",
     "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
     "helmet": "^7.1.0",
-    "pg": "^8.13.1"
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.1",
+    "pg": "^8.13.1",
+    "sharp": "^0.33.2",
+    "socket.io": "^4.7.2",
+    "uuid": "^9.0.0",
+    "ws": "^8.21.3"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"

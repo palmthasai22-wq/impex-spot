@@ -1,0 +1,49 @@
+proxy_cache_path /var/cache/nginx/cctv levels=1:2 keys_zone=cctv:10m max_size=256m inactive=30s;
+limit_req_zone $http_x_real_ip zone=cctv_segments:10m rate=40r/s;
+limit_conn_zone $http_x_real_ip zone=cctv_connections:10m;
+map $request_uri $cctv_pin {
+    default "";
+    "~^/streams/([0-9a-f-]{36})/" $1;
+}
+map $uri $cctv_skip_cache {
+    default 1;
+    ~\.(mp4|m4s|ts)$ 0;
+}
+server {
+    listen 8080;
+    listen [::]:8080;
+    server_name _;
+    resolver [fd12::10] valid=10s ipv6=on;
+    location = /health { return 200 'ok'; }
+    location = /_cctv_consent {
+        internal;
+        set $backend ${CCTV_BACKEND_HOST};
+        proxy_pass http://$backend/api/internal/cctv/playback/$cctv_pin;
+        proxy_pass_request_body off;
+        proxy_set_header Content-Length "";
+        proxy_set_header Authorization "";
+    }
+    location ~ "^/streams/[0-9a-f-]{36}/[a-zA-Z0-9_.-]+\.(m3u8|mp4|m4s|ts)$" {
+        limit_except GET { deny all; }
+        limit_req zone=cctv_segments burst=120 nodelay;
+        limit_req_status 429;
+        limit_conn cctv_connections 32;
+        auth_request /_cctv_consent;
+        rewrite ^/streams/(.*)$ /$1 break;
+        set $media ${CCTV_MEDIA_HOST};
+        proxy_pass http://$media$uri$is_args$args;
+        proxy_set_header Authorization "Bearer ${CCTV_EDGE_TOKEN}";
+        proxy_set_header Cookie "";
+        proxy_cache cctv;
+        proxy_cache_key $uri;
+        proxy_cache_bypass $cctv_skip_cache;
+        proxy_no_cache $cctv_skip_cache;
+        proxy_cache_valid 200 10s;
+        proxy_cache_lock on;
+        proxy_hide_header Cache-Control;
+        add_header Cache-Control "no-store" always;
+        add_header X-Content-Type-Options nosniff always;
+        proxy_read_timeout 15s;
+    }
+    location / { return 404; }
+}
