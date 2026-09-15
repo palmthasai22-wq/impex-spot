@@ -155,24 +155,33 @@ export default function AdminDashboard({ onBack, onLogout, token }) {
   });
 
   const fetchPins = async () => {
+    if (!token) return;
     try {
       const response = await api.get('/admin/pins', { headers: { Authorization: `Bearer ${token}` } });
       setPins(response.data);
     } catch (err) {
+      if (err.response?.status === 401) {
+        toast.error('Session หมดอายุ กรุณา login ใหม่');
+        onLogout();
+        return;
+      }
       toast.error('ไม่สามารถโหลดรายการหมุดได้');
     }
   };
 
   const fetchResponders = async () => {
+    if (!token) return;
     try {
       const response = await api.get('/admin/responders', { headers: { Authorization: `Bearer ${token}` } });
       setResponders(response.data);
     } catch (err) {
+      if (err.response?.status === 401) return; // จัดการใน fetchPins แล้ว
       toast.error('ไม่สามารถโหลดทีมช่วยเหลือได้');
     }
   };
 
   useEffect(() => {
+    if (!token) return;
     fetchPins();
     fetchResponders();
   }, [token]);
