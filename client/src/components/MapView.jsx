@@ -315,6 +315,16 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
                     opacity: 0.85,
                   }} />
               )}
+              {(pin.type || pin.category) === 'cctv' && (
+                <Circle center={[pin.lat, pin.lng]} radius={100} interactive={false}
+                  pathOptions={{
+                    color: '#0284c7',
+                    fillColor: '#38bdf8',
+                    fillOpacity: 0.18,
+                    weight: 2,
+                    opacity: 0.9,
+                  }} />
+              )}
               <Marker position={[pin.lat, pin.lng]}
                 icon={createPinIcon(pin.type || pin.category || 'other')}
                 eventHandlers={{ click: () => setSelectedPin(pin) }}>

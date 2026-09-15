@@ -12,6 +12,19 @@ function createMascotElement(className = '', image = '/images/mascot_impact.png'
   return element;
 }
 
+function createRadiusPolygon(pin, radiusMetres = 100) {
+  const lat = Number(pin.lat);
+  const lng = Number(pin.lng);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  const latitudeRadius = radiusMetres / 111320;
+  const longitudeRadius = radiusMetres / (111320 * Math.max(Math.abs(Math.cos(lat * Math.PI / 180)), 0.01));
+  const coordinates = Array.from({ length: 49 }, (_, index) => {
+    const angle = index / 48 * Math.PI * 2;
+    return [lng + Math.cos(angle) * longitudeRadius, lat + Math.sin(angle) * latitudeRadius];
+  });
+  return { type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [coordinates] } };
+}
+
 export default function Free3DMap({ pins, cameras = [], onCameraClick, userPosition, selectedPosition, limitedBounds, onMapSelect, onPinClick, onReady, onUnavailable }) {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
@@ -145,6 +158,27 @@ export default function Free3DMap({ pins, cameras = [], onCameraClick, userPosit
     if (userPosition) addMarker(userPosition, 'free-map-user');
     if (selectedPosition) addMarker(selectedPosition, 'free-map-selected');
   }, [pins, userPosition, selectedPosition, onPinClick]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapLoaded) return;
+    const data = {
+      type: 'FeatureCollection',
+      features: pins
+        .filter(pin => pin.status === 'active' && (pin.type || pin.category) === 'cctv')
+        .map(pin => createRadiusPolygon(pin))
+        .filter(Boolean),
+    };
+    if (!map.getSource('cctv-pin-radii')) {
+      map.addSource('cctv-pin-radii', { type: 'geojson', data });
+      map.addLayer({
+        id: 'cctv-pin-radii',
+        type: 'fill',
+        source: 'cctv-pin-radii',
+        paint: { 'fill-color': '#38bdf8', 'fill-opacity': 0.18, 'fill-outline-color': '#0284c7' },
+      });
+    } else map.getSource('cctv-pin-radii').setData(data);
+  }, [pins, mapLoaded]);
 
   useEffect(() => {
     const map = mapRef.current;

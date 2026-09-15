@@ -32,7 +32,7 @@ export default function PinForm({ onClose, initialPosition, initialCategory = ''
     try {
       // Upload images if any
       let imageUrls = [];
-      if (formData.images && formData.images.length > 0) {
+      if (formData.category !== 'cctv' && formData.images && formData.images.length > 0) {
         const imagesToUpload = formData.images.map(img => img.file).filter(Boolean);
         if (imagesToUpload.length > 0) {
           imageUrls = await uploadImages(imagesToUpload);
@@ -75,7 +75,7 @@ export default function PinForm({ onClose, initialPosition, initialCategory = ''
       <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
         {cats.map(cat => (
           <button key={cat.id} type="button"
-            onClick={() => { setFormData({...formData, category: cat.id}); }}
+            onClick={() => { setFormData({...formData, category: cat.id, images: cat.id === 'cctv' ? [] : formData.images}); }}
             className={`flex flex-col items-center gap-1.5 p-3 rounded-2xl border-2 transition-all duration-200 active:scale-95 ${
               formData.category === cat.id
                 ? 'border-brand-500 bg-brand-50 shadow-md scale-[1.02]'
@@ -243,12 +243,14 @@ export default function PinForm({ onClose, initialPosition, initialCategory = ''
                 </div>
               )}
 
-              {/* Images */}
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1.5">📷 แนบรูปภาพ</label>
-                <p className="text-[10px] text-gray-400 mb-2">ภาพช่วยเพิ่มความน่าเชื่อถือให้ข้อมูลของคุณ ✨</p>
-                <ImageUpload images={formData.images} onChange={imgs => setFormData({...formData, images: imgs})} />
-              </div>
+              {/* หมุด CCTV ใช้ไอคอนประจำหมวด จึงไม่รับภาพจากผู้ใช้ */}
+              {formData.category !== 'cctv' && (
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1.5">📷 แนบรูปภาพ</label>
+                  <p className="text-[10px] text-gray-400 mb-2">ภาพช่วยเพิ่มความน่าเชื่อถือให้ข้อมูลของคุณ ✨</p>
+                  <ImageUpload images={formData.images} onChange={imgs => setFormData({...formData, images: imgs})} />
+                </div>
+              )}
             </div>
           )}
         </div>
