@@ -480,7 +480,7 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
             onMouseEnter={(e) => {e.currentTarget.style.transform='scale(1.08)'; e.currentTarget.style.boxShadow='0 4px 16px rgba(22,163,74,0.25)'}}
             onMouseLeave={(e) => {e.currentTarget.style.transform='scale(1)'; e.currentTarget.style.boxShadow='0 2px 8px rgba(22,163,74,0.15)'}}>
             <img src="/images/mascot.png" alt="หน้าแรก" style={{width:'clamp(34px, 4.5vw, 50px)',height:'clamp(34px, 4.5vw, 50px)',objectFit:'contain'}} />
-            <span className="map-action-label">หน้าแรก</span>
+            <span className="map-action-label" style={{color:'#15803d',textShadow:'none'}}>หน้าแรก</span>
           </button>
           {/* รู้ทัน */}
           <button className="map-action-button" data-tooltip="รู้ทัน: เลือกพื้นที่" onClick={() => startAreaSelection('pin', 'traffic')} aria-label="เลือกพื้นที่ปักหมุดสถานการณ์" title="เลือกพื้นที่ปักหมุดสถานการณ์"
@@ -490,7 +490,7 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
             onMouseDown={(e) => e.target.style.transform='scale(0.95)'}
             onMouseUp={(e) => {e.target.style.transform='scale(1.08)'}}>
             <img src="/images/mascot.png" alt="รู้ทัน" style={{width:'clamp(34px, 4.5vw, 50px)',height:'clamp(34px, 4.5vw, 50px)',objectFit:'contain'}} />
-            <span className="map-action-label">รู้ทัน</span>
+            <span className="map-action-label" style={{color:'#15803d',textShadow:'none'}}>รู้ทัน</span>
           </button>
           {/* ปักหมุด */}
           <button className={`map-action-button ${showActionMenu ? 'is-open' : ''}`} data-tooltip="ปักหมุด: เลือกพื้นที่" onClick={() => startAreaSelection('pin', 'restroom')} aria-label="เลือกพื้นที่ปักหมุดสถานที่" title="เลือกพื้นที่ปักหมุดสถานที่"
@@ -520,7 +520,7 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
             onMouseDown={(e) => e.target.style.transform='scale(0.95)'}
             onMouseUp={(e) => {e.target.style.transform='scale(1.08)'}}>
             <img src="/images/mascot_share.png" alt="แบ่งปัน" style={{width:'clamp(34px, 4.5vw, 50px)',height:'clamp(34px, 4.5vw, 50px)',objectFit:'contain'}} />
-            <span className="map-action-label">แบ่งปัน</span>
+            <span className="map-action-label" style={{color:'#15803d',textShadow:'none'}}>แบ่งปัน</span>
           </button>
           {/* กรอง */}
           <button className="map-action-button" data-tooltip="กรองหมุด" onClick={onFilter} aria-label="กรองหมุด" title="กรองหมุด"
@@ -530,7 +530,7 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
             onMouseDown={(e) => e.target.style.transform='scale(0.95)'}
             onMouseUp={(e) => {e.target.style.transform='scale(1.08)'}}>
             <img src="/images/mascot_search.png" alt="กรองหมุด" style={{width:'clamp(34px, 4.5vw, 50px)',height:'clamp(34px, 4.5vw, 50px)',objectFit:'contain'}} />
-            <span className="map-action-label">กรองหมุด</span>
+            <span className="map-action-label" style={{color:'#15803d',textShadow:'none'}}>กรองหมุด</span>
           </button>
         </div>
       </div>
