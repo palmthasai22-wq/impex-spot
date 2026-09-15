@@ -4,6 +4,7 @@
   "description": "ImpEx Spot - Community Situation Map API",
   "main": "index.js",
   "scripts": {
+    "test:cctv": "node --test tests/cctv.test.js tests/cctv.db.test.js",
     "start": "node index.js",
     "dev": "nodemon index.js",
     "db:migrate": "node db/migrate.js up",

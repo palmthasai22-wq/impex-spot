@@ -1,0 +1,35 @@
+# Overlay: docker compose -f docker-compose.production.yml -f docker-compose.cctv.yml up -d --build
+services:
+  app:
+    environment:
+      CCTV_ENABLED: 'true'
+      CCTV_ENCRYPTION_KEY: ${CCTV_ENCRYPTION_KEY:?Set a 64-character hex key}
+      CCTV_CONTROL_TOKEN: ${CCTV_CONTROL_TOKEN:?Set a random control token}
+      CCTV_EDGE_TOKEN: ${CCTV_EDGE_TOKEN:?Set a random edge token}
+      MEDIAMTX_API_URL: http://mediamtx:9997
+  mediamtx:
+    image: bluenviron/mediamtx:1.21.0
+    restart: unless-stopped
+    volumes:
+      - ./media/mediamtx.yml:/mediamtx.yml:ro
+    # Bind only to localhost by default. For remote relays bind to a PRIVATE VPN IP.
+    # RTSP must travel inside a VPN; do not expose plaintext ingest to the Internet.
+    ports:
+      - '${CCTV_INGEST_BIND:-127.0.0.1}:8554:8554'
+  cctv-edge:
+    image: nginx:1.28-alpine
+    restart: unless-stopped
+    environment:
+      CCTV_EDGE_TOKEN: ${CCTV_EDGE_TOKEN:?Set a random edge token}
+      CCTV_PLAYER_ORIGIN: ${CCTV_PLAYER_ORIGIN:-}
+      NGINX_ENVSUBST_FILTER: CCTV_EDGE_TOKEN|CCTV_PLAYER_ORIGIN
+    volumes:
+      - ./media/edge.conf.template:/etc/nginx/templates/default.conf.template:ro
+    depends_on:
+      - app
+      - mediamtx
+  nginx:
+    volumes:
+      - ./media/public-streams.conf:/etc/nginx/conf.d/cctv-streams.inc:ro
+    depends_on:
+      - cctv-edge

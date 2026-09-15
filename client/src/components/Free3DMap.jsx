@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Map, Marker, NavigationControl } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import { CAMERA_ICON, coverageCone } from './CameraPin';
 
 const STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty';
 
@@ -11,10 +12,11 @@ function createMascotElement(className = '', image = '/images/mascot_impact.png'
   return element;
 }
 
-export default function Free3DMap({ pins, userPosition, selectedPosition, limitedBounds, onMapSelect, onPinClick, onReady, onUnavailable }) {
+export default function Free3DMap({ pins, cameras = [], onCameraClick, userPosition, selectedPosition, limitedBounds, onMapSelect, onPinClick, onReady, onUnavailable }) {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
   const markersRef = useRef([]);
+  const [mapLoaded, setMapLoaded] = React.useState(false);
   const fallbackTimerRef = useRef(null);
   const [mapError, setMapError] = React.useState('');
   const onMapSelectRef = useRef(onMapSelect);
@@ -51,6 +53,7 @@ export default function Free3DMap({ pins, userPosition, selectedPosition, limite
     });
 
     map.on('load', () => {
+      setMapLoaded(true);
       map.resize();
       const layers = map.getStyle().layers || [];
       const buildingLayer = layers.find(layer => layer.id === 'building-3d' || layer.type === 'fill-extrusion');
@@ -140,6 +143,24 @@ export default function Free3DMap({ pins, userPosition, selectedPosition, limite
     if (userPosition) addMarker(userPosition, 'free-map-user');
     if (selectedPosition) addMarker(selectedPosition, 'free-map-selected');
   }, [pins, userPosition, selectedPosition, onPinClick]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapLoaded) return;
+    const data = { type: 'FeatureCollection', features: cameras.map(camera => ({ type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [coverageCone(camera).map(([lat, lng]) => [lng, lat])] } })) };
+    if (!map.getSource('cctv-cones')) {
+      map.addSource('cctv-cones', { type: 'geojson', data });
+      map.addLayer({ id: 'cctv-cones', type: 'fill', source: 'cctv-cones', paint: { 'fill-color': '#0d9488', 'fill-opacity': 0.18 } });
+    } else map.getSource('cctv-cones').setData(data);
+    const markers = cameras.map(camera => {
+      const element = document.createElement('button');
+      element.type = 'button'; element.className = `cctv-marker ${camera.status === 'online' ? 'is-online' : ''}`;
+      element.innerHTML = CAMERA_ICON; element.setAttribute('aria-label', `CCTV · ${camera.status}`);
+      element.addEventListener('click', event => { event.stopPropagation(); onCameraClick(camera); });
+      return new Marker({ element }).setLngLat([camera.location.lng, camera.location.lat]).addTo(map);
+    });
+    return () => markers.forEach(marker => marker.remove());
+  }, [cameras, onCameraClick, mapLoaded]);
 
   return (
     <div ref={containerRef} className="free-3d-map" aria-label="แผนที่ 3 มิติ">

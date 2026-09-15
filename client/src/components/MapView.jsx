@@ -6,6 +6,9 @@ import usePins from '../hooks/usePins';
 import useGeolocation from '../hooks/useGeolocation';
 import PinInfoWindow from './PinInfoWindow';
 import Free3DMap from './Free3DMap';
+import CameraPin from './CameraPin';
+import LiveViewer from './LiveViewer';
+import useCameras from '../hooks/useCameras';
 import { PIN_CATEGORIES, MAIN_FEATURES } from '../utils/categories';
 import { fetchDispatchedResponders } from '../utils/api';
 
@@ -112,6 +115,9 @@ const getTrafficLevel = (pin) => {
 };
 
 export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFormOpen }) {
+  const { cameras, cameraError } = useCameras();
+  const [showCameras, setShowCameras] = useState(true);
+  const [selectedCamera, setSelectedCamera] = useState(null);
   const { pins, connected, lastRealtimeAt } = usePins();
   const { selectedPin, setSelectedPin, filters } = useAppContext();
   const { lat, lng } = useGeolocation();
@@ -203,6 +209,7 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
 
   return (
     <div style={{ width:'100%', height:'100%', position:'relative', overflow:'hidden', background:'#e8f0ea' }}>
+      {selectedCamera && <div className="cctv-map-viewer"><LiveViewer camera={selectedCamera} onClose={() => setSelectedCamera(null)} /></div>}
 
       {/* ── TOP: Filter Bar (ซ่อนได้) ── */}
       {showFilterBar && (
@@ -260,6 +267,8 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
       <div style={{ position:'absolute', inset:0, zIndex:1, overflow:'hidden' }}>
         {show3D ? (
           <Free3DMap
+            cameras={showCameras ? cameras : []}
+            onCameraClick={setSelectedCamera}
             pins={filteredPins}
             userPosition={lat && lng ? [lat, lng] : defaultCenter}
             selectedPosition={selectedPosition}
@@ -277,6 +286,7 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
           <MapController onReady={setMapInstance} bounds={limitedBounds} pins={filteredPins} />
           <MapClickHandler onSelect={handleMapSelect} />
           {flyTo && <FlyToUser position={flyTo} />}
+          {showCameras && cameras.map(camera => <CameraPin key={camera.id} camera={camera} onSelect={setSelectedCamera} />)}
           {(lat && lng) ? (
             <Marker position={[lat, lng]} icon={userIcon} />
           ) : (
@@ -313,9 +323,9 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
             </React.Fragment>
           ))}
           {/* Admin/Responder Markers — real-time */}
-          {dispatchedResponders.filter(r => r.lat && r.lng).map(responder => (
+          {dispatchedResponders.filter(r => Number.isFinite(Number(r.lat)) && Number.isFinite(Number(r.lng))).map(responder => (
             <Marker key={`resp-${responder.id || responder._id}`}
-              position={[responder.lat, responder.lng]}
+              position={[Number(responder.lat), Number(responder.lng)]}
               icon={adminResponderIcon}>
               <Popup maxWidth={240} minWidth={200} closeButton={false} className="custom-popup">
                 <div style={{padding:8,fontFamily:'inherit'}}>
@@ -361,6 +371,9 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
 
         {/* Pin Count + ปุ่มเปิด Filter กลับ */}
         <div className="map-top-controls" style={{ position:'absolute', top:12, left:12, zIndex:800, display:'flex', gap:8, alignItems:'center', flexWrap:'wrap', rowGap:6, maxWidth:isMobile ? 'calc(100vw - 24px)' : 'none', padding:4, borderRadius:16, background:'rgba(255,255,255,0.78)', backdropFilter:'blur(10px)', boxShadow:'0 3px 12px rgba(15,23,42,0.12)' }}>
+          <button aria-pressed={showCameras} title={cameraError || 'แสดงกล้อง CCTV'} onClick={() => { setShowCameras(value => !value); setSelectedCamera(null); }} style={{ borderRadius:11,padding:'8px 11px',fontSize:11,fontWeight:800,background:showCameras ? '#ccfbf1' : '#f1f5f9',color:'#115e59' }}>
+            CCTV {cameraError ? '· ไม่พร้อมใช้งาน' : cameras.length}
+          </button>
           <div style={{background:'#dcfce7',borderRadius:11,padding:'8px 11px',fontSize:11,fontWeight:800,color:'#15803d',display:'flex',alignItems:'center',gap:6}}>
             <img src="/images/mascot.png" alt="" style={{width:14,height:14,objectFit:'contain'}} />
             {filteredPins.length} หมุด

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AppProvider } from './context/AppContext';
 import { Toaster } from 'react-hot-toast';
 import Navbar from './components/Navbar';
@@ -6,6 +6,7 @@ import MapView from './components/MapView';
 import LandingHero from './components/LandingHero';
 import AdminDashboard from './components/AdminDashboard';
 import AdminLogin from './components/AdminLogin';
+import AdminMonitorGrid from './components/AdminMonitorGrid';
 import PinForm from './components/PinForm';
 import EmergencyForm from './components/EmergencyForm';
 import FilterPanel from './components/FilterPanel';
@@ -17,19 +18,29 @@ import KanbanPage from './components/KanbanPage';
 import useAuth from './hooks/useAuth';
 
 const MainApp = () => {
-  const [view, setView] = useState('landing');
+  const [view, setView] = useState(window.location.pathname === '/admin/cameras' ? 'cameras' : 'landing');
+  useEffect(() => {
+    const onPopState = () => setView(window.location.pathname === '/admin/cameras' ? 'cameras' : 'landing');
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
+  const navigate = next => {
+    if (next === 'cameras') window.history.pushState({}, '', '/admin/cameras');
+    else if (window.location.pathname === '/admin/cameras') window.history.pushState({}, '', '/');
+    setView(next);
+  };
   const [showPinForm, setShowPinForm] = useState(false);
   const [showEmergencyForm, setShowEmergencyForm] = useState(false);
   const [showFilter, setShowFilter] = useState(false);
   const [pinPosition, setPinPosition] = useState(null);
   const [pinCategory, setPinCategory] = useState('');
   const [emergencyPosition, setEmergencyPosition] = useState(null);
-  const { isAdmin, token, login, logout } = useAuth();
+  const { isAdmin, isSuperAdmin, token, login, logout } = useAuth();
 
   return (
     <div className="flex flex-col h-screen w-full overflow-hidden relative">
       {/* Navbar shown on ALL pages */}
-      <Navbar onNavigate={setView} currentView={view} />
+      <Navbar onNavigate={navigate} currentView={view} />
 
       <main className="flex-grow min-h-0 relative w-full overflow-hidden overflow-y-auto">
         {view === 'landing' && (
@@ -53,8 +64,11 @@ const MainApp = () => {
         {view === 'report' && <ReportPage onBack={() => setView('landing')} />}
         {view === 'kanban' && <KanbanPage onNavigate={setView} />}
         {view === 'admin' && (isAdmin
-          ? <AdminDashboard token={token} onBack={() => setView('map')} onLogout={logout} />
+          ? <AdminDashboard token={token} onCameras={() => navigate('cameras')} onBack={() => setView('map')} onLogout={logout} />
           : <AdminLogin onLogin={login} />)}
+        {view === 'cameras' && (isSuperAdmin
+          ? <AdminMonitorGrid token={token} onBack={() => navigate('admin')} onLogout={logout} />
+          : <><p className="p-4 text-center">เข้าสู่ระบบด้วยบัญชีผู้ดูแลกล้อง</p><AdminLogin onLogin={login} /></>)}
       </main>
 
       {showPinForm && <PinForm

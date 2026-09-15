@@ -117,7 +117,7 @@ function CategoriesKanban({ pins }) {
   );
 }
 
-export default function AdminDashboard({ onBack, onLogout, token }) {
+export default function AdminDashboard({ onBack, onLogout, token, onCameras }) {
   const [activeTab, setActiveTab] = useState('overview');
   const [pins, setPins] = useState([]);
   const [selectedPinIds, setSelectedPinIds] = useState([]);
@@ -314,6 +314,7 @@ export default function AdminDashboard({ onBack, onLogout, token }) {
   ];
 
   const SYSTEM_NAV_ITEMS = [
+    { id: 'cctv', label: 'กล้อง CCTV', mascot: '/images/mascot_search.png', accent: 'bg-teal-500/30' },
     { id: 'users', label: 'ผู้ใช้งาน', mascot: '/images/mascot_share.png', accent: 'bg-blue-500/30' },
     { id: 'settings', label: 'ตั้งค่าระบบ', mascot: '/images/mascot_search.png', accent: 'bg-slate-500/30' },
     { id: 'audit', label: 'Audit Log', mascot: '/images/mascot_star.png', accent: 'bg-teal-500/30' },
@@ -366,7 +367,14 @@ export default function AdminDashboard({ onBack, onLogout, token }) {
             <>
               <p className="mt-6 mb-2 px-3 text-[10px] font-black uppercase tracking-[0.15em] text-emerald-400/80">ระบบ</p>
               {SYSTEM_NAV_ITEMS.map(item => (
-                <NavItem key={item.id} active={activeTab === item.id} onClick={() => { setActiveTab(item.id); setSidebarOpen(false); }}
+                <NavItem key={item.id} active={activeTab === item.id} onClick={() => {
+                  if (item.id === 'cctv' && onCameras) {
+                    onCameras();
+                  } else {
+                    setActiveTab(item.id);
+                  }
+                  setSidebarOpen(false);
+                }}
                   mascot={item.mascot} label={item.label} accent={item.accent} />
               ))}
             </>
@@ -407,6 +415,7 @@ export default function AdminDashboard({ onBack, onLogout, token }) {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {onCameras && <button onClick={onCameras} className="rounded-xl border border-emerald-200 px-4 py-2 text-xs font-bold text-emerald-700">CCTV</button>}
             <button onClick={onBack}
               className="group flex items-center gap-2 rounded-xl border border-emerald-200 bg-white px-4 py-2 text-xs font-bold text-emerald-700 transition-all duration-200 hover:bg-emerald-50 hover:border-emerald-300 hover:shadow-sm active:scale-95">
               <MascotIcon src="/images/mascot_pin.png" alt="แผนที่" size="h-5 w-5" />

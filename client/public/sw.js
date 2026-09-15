@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'impex-v2';
+const CACHE_VERSION = 'impex-v3';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`;
 const API_CACHE = `${CACHE_VERSION}-api`;
@@ -35,6 +35,12 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
+
+  // Live authorization must reach the server. Never persist admin secrets or video.
+  if (url.pathname.startsWith('/streams/') || /^\/api\/(admin(?:\/|$)|pins\/cctv(?:\/|$)|streams(?:\/|$)|relay\/cctv(?:\/|$)|internal\/cctv(?:\/|$))/.test(url.pathname)) {
+    event.respondWith(fetch(request, { cache: 'no-store' }));
+    return;
+  }
 
   // API requests: network-first with cache fallback
   if (url.pathname.startsWith('/api/')) {
