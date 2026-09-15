@@ -2,7 +2,8 @@ import React from 'react';
 import { Marker, Polygon } from 'react-leaflet';
 import L from 'leaflet';
 
-export const CAMERA_ICON = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="6" width="13" height="12" rx="3"/><path d="m15 10 7-4v12l-7-4z"/></svg>';
+export const CAMERA_IMAGE = '/images/cctv.png';
+export const CAMERA_ICON = `<img src="${CAMERA_IMAGE}" alt="" aria-hidden="true" />`;
 export function coverageCone(camera) {
   const { lat, lng } = camera.location;
   const origin = [lat, lng];
@@ -19,7 +20,7 @@ export function coverageCone(camera) {
 }
 
 export default function CameraPin({ camera, onSelect }) {
-  const icon = L.divIcon({ className: 'cctv-marker-wrap', html: `<span class="cctv-marker ${camera.status === 'online' ? 'is-online' : ''}">${CAMERA_ICON}</span>`, iconSize: [38, 38], iconAnchor: [19, 19] });
+  const icon = L.divIcon({ className: 'cctv-marker-wrap', html: `<span class="cctv-marker ${camera.status === 'online' ? 'is-online' : ''}">${CAMERA_ICON}</span>`, iconSize: [62, 82], iconAnchor: [31, 82] });
   return <>
     <Polygon positions={coverageCone(camera)} interactive={false} pathOptions={{ color: '#0d9488', weight: 1, fillOpacity: 0.14 }} />
     <Marker position={[camera.location.lat, camera.location.lng]} icon={icon} title={`CCTV · ${camera.status}`} bubblingMouseEvents={false} eventHandlers={{ click: () => onSelect(camera) }} />

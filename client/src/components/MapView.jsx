@@ -371,7 +371,8 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
 
         {/* Pin Count + ปุ่มเปิด Filter กลับ */}
         <div className="map-top-controls" style={{ position:'absolute', top:12, left:12, zIndex:800, display:'flex', gap:8, alignItems:'center', flexWrap:'wrap', rowGap:6, maxWidth:isMobile ? 'calc(100vw - 24px)' : 'none', padding:4, borderRadius:16, background:'rgba(255,255,255,0.78)', backdropFilter:'blur(10px)', boxShadow:'0 3px 12px rgba(15,23,42,0.12)' }}>
-          <button aria-pressed={showCameras} title={cameraError || 'แสดงกล้อง CCTV'} onClick={() => { setShowCameras(value => !value); setSelectedCamera(null); }} style={{ borderRadius:11,padding:'8px 11px',fontSize:11,fontWeight:800,background:showCameras ? '#ccfbf1' : '#f1f5f9',color:'#115e59' }}>
+          <button aria-pressed={showCameras} title={cameraError || 'แสดงกล้อง CCTV'} onClick={() => { setShowCameras(value => !value); setSelectedCamera(null); }} style={{ border:'none',borderRadius:11,padding:'6px 10px',fontSize:11,fontWeight:800,background:showCameras ? '#fce7f3' : '#f1f5f9',color:'#9d174d',display:'flex',alignItems:'center',gap:5,cursor:'pointer' }}>
+            <img src="/images/cctv.png" alt="" aria-hidden="true" style={{width:20,height:24,objectFit:'contain'}} />
             CCTV {cameraError ? '· ไม่พร้อมใช้งาน' : cameras.length}
           </button>
           <div style={{background:'#dcfce7',borderRadius:11,padding:'8px 11px',fontSize:11,fontWeight:800,color:'#15803d',display:'flex',alignItems:'center',gap:6}}>
@@ -514,6 +515,14 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
             onMouseUp={(e) => {e.target.style.transform='scale(1.08)'}}>
             <img src="/images/mascot_pin.png" alt="ปักหมุด" style={{width:'clamp(34px, 4.5vw, 50px)',height:'clamp(34px, 4.5vw, 50px)',objectFit:'contain'}} />
             <span className="map-action-label">ปักหมุด</span>
+          </button>
+          {/* CCTV */}
+          <button className="map-action-button" data-tooltip={showCameras ? 'ซ่อนกล้อง CCTV' : 'แสดงกล้อง CCTV'} onClick={() => { setShowCameras(value => !value); setSelectedCamera(null); }} aria-label={showCameras ? 'ซ่อนหมุดกล้อง CCTV' : 'แสดงหมุดกล้อง CCTV'} aria-pressed={showCameras} title={showCameras ? 'ซ่อนหมุดกล้อง CCTV' : 'แสดงหมุดกล้อง CCTV'}
+            style={{display:'flex',flexDirection:'column',gap:0,alignItems:'center',justifyContent:'center',width:'clamp(52px, 6vw, 64px)',height:'clamp(52px, 6vw, 64px)',borderRadius:18,border:'2px solid #ec4899',cursor:'pointer',background:showCameras ? '#fce7f3' : '#ffffff',color:'#be185d',boxShadow:'0 3px 9px rgba(236,72,153,0.2)',transition:'all 0.2s'}}
+            onMouseEnter={(e) => {e.currentTarget.style.transform='scale(1.08)'; e.currentTarget.style.boxShadow='0 4px 16px rgba(236,72,153,0.35)'}}
+            onMouseLeave={(e) => {e.currentTarget.style.transform='scale(1)'; e.currentTarget.style.boxShadow='0 3px 9px rgba(236,72,153,0.2)'}}>
+            <img src="/images/cctv.png" alt="CCTV" style={{width:'clamp(32px, 4vw, 42px)',height:'clamp(34px, 4.3vw, 44px)',objectFit:'contain'}} />
+            <span className="map-action-label" style={{color:'#be185d',textShadow:'none'}}>CCTV</span>
           </button>
           {/* แจ้งเหตุ */}
           <button className="map-action-button" data-tooltip="แจ้งเหตุ: เลือกพื้นที่" onClick={() => startAreaSelection('emergency')} aria-label="เลือกพื้นที่แจ้งเหตุฉุกเฉิน" title="เลือกพื้นที่แจ้งเหตุฉุกเฉิน"

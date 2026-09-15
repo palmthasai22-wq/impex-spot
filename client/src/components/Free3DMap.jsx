@@ -157,7 +157,7 @@ export default function Free3DMap({ pins, cameras = [], onCameraClick, userPosit
       element.type = 'button'; element.className = `cctv-marker ${camera.status === 'online' ? 'is-online' : ''}`;
       element.innerHTML = CAMERA_ICON; element.setAttribute('aria-label', `CCTV · ${camera.status}`);
       element.addEventListener('click', event => { event.stopPropagation(); onCameraClick(camera); });
-      return new Marker({ element }).setLngLat([camera.location.lng, camera.location.lat]).addTo(map);
+      return new Marker({ element, anchor: 'bottom' }).setLngLat([camera.location.lng, camera.location.lat]).addTo(map);
     });
     return () => markers.forEach(marker => marker.remove());
   }, [cameras, onCameraClick, mapLoaded]);
