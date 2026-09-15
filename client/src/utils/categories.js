@@ -11,6 +11,7 @@ export const SITUATION_CATEGORIES = [
 
 // หมวด: ปักหมุด (สถานที่)
 export const PLACE_CATEGORIES = [
+  { id: 'cctv', label: 'กล้อง CCTV', emoji: '📹', image: '/images/cctv.png', color: '#EC4899' },
   { id: 'restroom', label: 'ห้องน้ำ', emoji: '🚻', color: '#0891B2' },
   { id: 'landmark', label: 'Landmark', emoji: '🏛️', color: '#7C3AED' },
   { id: 'checkin', label: 'จุดเช็คอิน', emoji: '📸', color: '#EC4899' },
@@ -74,6 +75,7 @@ export const EXPIRY_CONFIG = {
   crowded: { ms: 60 * 60000, label: '1 ชั่วโมง' },
   problem: { ms: 24 * 3600000, label: '24 ชั่วโมง' },
   road_closed: { ms: null, label: 'จนกว่าจะเปิด' },
+  cctv: { ms: null, label: 'ถาวร' },
   restroom: { ms: null, label: 'ถาวร' },
   landmark: { ms: null, label: 'ถาวร' },
   checkin: { ms: 8 * 3600000, label: '8 ชั่วโมง' },

@@ -17,6 +17,8 @@ const createPinIcon = (category) => {
     ? '/images/5-transparent.png'
     : category === 'traffic'
       ? '/images/3-transparent.png'
+      : category === 'cctv'
+        ? '/images/cctv.png'
       : '/images/2.png';
   return L.divIcon({
     className: 'custom-pin-marker',
@@ -517,8 +519,8 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
             <span className="map-action-label">ปักหมุด</span>
           </button>
           {/* CCTV */}
-          <button className="map-action-button" data-tooltip={showCameras ? 'ซ่อนกล้อง CCTV' : 'แสดงกล้อง CCTV'} onClick={() => { setShowCameras(value => !value); setSelectedCamera(null); }} aria-label={showCameras ? 'ซ่อนหมุดกล้อง CCTV' : 'แสดงหมุดกล้อง CCTV'} aria-pressed={showCameras} title={showCameras ? 'ซ่อนหมุดกล้อง CCTV' : 'แสดงหมุดกล้อง CCTV'}
-            style={{display:'flex',flexDirection:'column',gap:0,alignItems:'center',justifyContent:'center',width:'clamp(52px, 6vw, 64px)',height:'clamp(52px, 6vw, 64px)',borderRadius:18,border:'2px solid #ec4899',cursor:'pointer',background:showCameras ? '#fce7f3' : '#ffffff',color:'#be185d',boxShadow:'0 3px 9px rgba(236,72,153,0.2)',transition:'all 0.2s'}}
+          <button className="map-action-button" data-tooltip="CCTV: เลือกพื้นที่" onClick={() => startAreaSelection('pin', 'cctv')} aria-label="เลือกพื้นที่ปักหมุดกล้อง CCTV" title="เลือกพื้นที่ปักหมุดกล้อง CCTV"
+            style={{display:'flex',flexDirection:'column',gap:0,alignItems:'center',justifyContent:'center',width:'clamp(52px, 6vw, 64px)',height:'clamp(52px, 6vw, 64px)',borderRadius:18,border:'2px solid #ec4899',cursor:'pointer',background:'#fce7f3',color:'#be185d',boxShadow:'0 3px 9px rgba(236,72,153,0.2)',transition:'all 0.2s'}}
             onMouseEnter={(e) => {e.currentTarget.style.transform='scale(1.08)'; e.currentTarget.style.boxShadow='0 4px 16px rgba(236,72,153,0.35)'}}
             onMouseLeave={(e) => {e.currentTarget.style.transform='scale(1)'; e.currentTarget.style.boxShadow='0 3px 9px rgba(236,72,153,0.2)'}}>
             <img src="/images/cctv.png" alt="CCTV" style={{width:'clamp(32px, 4vw, 42px)',height:'clamp(34px, 4.3vw, 44px)',objectFit:'contain'}} />

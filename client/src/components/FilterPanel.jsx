@@ -31,7 +31,7 @@ export default function FilterPanel({ onClose }) {
             : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'
         }`}
         style={active ? { backgroundColor: cat.color, borderColor: cat.color } : {}}>
-        <span>{cat.emoji}</span> {cat.label}
+        {cat.image ? <img src={cat.image} alt="" className="h-5 w-5 object-contain" /> : <span>{cat.emoji}</span>} {cat.label}
       </button>
     );
   });

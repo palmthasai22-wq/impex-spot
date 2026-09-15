@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { SITUATION_CATEGORIES, PLACE_CATEGORIES, SHARE_CATEGORIES } from '../utils/categories';
+import { SITUATION_CATEGORIES, PLACE_CATEGORIES, SHARE_CATEGORIES, EXPIRY_CONFIG } from '../utils/categories';
 import ImageUpload from './ImageUpload';
 import StarRating from './StarRating';
 import { createPin, uploadImages } from '../utils/api';
@@ -60,7 +60,7 @@ export default function PinForm({ onClose, initialPosition, initialCategory = ''
     }
   };
 
-  const expiry = { label: '30 วัน' };
+  const expiry = EXPIRY_CONFIG[formData.category] || { label: '30 วัน' };
   const selectedCatLabel = [...SITUATION_CATEGORIES,...PLACE_CATEGORIES,...SHARE_CATEGORIES,{id:'other',label:'อื่นๆ',emoji:'📌'}].find(c=>c.id===formData.category);
 
   const renderCategorySection = (title, emoji, desc, cats) => (
@@ -81,7 +81,9 @@ export default function PinForm({ onClose, initialPosition, initialCategory = ''
                 ? 'border-brand-500 bg-brand-50 shadow-md scale-[1.02]'
                 : 'border-gray-100 bg-white hover:border-gray-300 hover:shadow-sm'
             }`}>
-            <span className="text-2xl">{cat.emoji}</span>
+            {cat.image
+              ? <img src={cat.image} alt="" className="h-9 w-9 object-contain" />
+              : <span className="text-2xl">{cat.emoji}</span>}
             <span className="text-[10px] font-semibold leading-tight text-center text-gray-700">{cat.label}</span>
           </button>
         ))}
@@ -130,7 +132,7 @@ export default function PinForm({ onClose, initialPosition, initialCategory = ''
                 </button>
               )}
               {renderCategorySection('สถานการณ์', '🚦', 'รถติด อุบัติเหตุ ปัญหาต่างๆ', SITUATION_CATEGORIES)}
-              {renderCategorySection('สถานที่', '📍', 'ห้องน้ำ จุดชาร์จ ร้านสะดวกซื้อ', PLACE_CATEGORIES)}
+              {renderCategorySection('สถานที่', '📍', 'กล้อง CCTV ห้องน้ำ จุดชาร์จ ร้านสะดวกซื้อ', PLACE_CATEGORIES)}
               {renderCategorySection('แบ่งปัน & รีวิว', '💬', 'ร้านอาหาร ตลาดนัด รีวิว', SHARE_CATEGORIES)}
 
               <button type="button" onClick={() => setFormData({...formData, category: 'other'})}
@@ -153,7 +155,9 @@ export default function PinForm({ onClose, initialPosition, initialCategory = ''
               {/* Selected category */}
               {selectedCatLabel && (
                 <div className="flex items-center gap-3 glass-card p-3 border border-brand-100">
-                  <span className="text-2xl">{selectedCatLabel.emoji}</span>
+                  {selectedCatLabel.image
+                    ? <img src={selectedCatLabel.image} alt="" className="h-10 w-10 object-contain" />
+                    : <span className="text-2xl">{selectedCatLabel.emoji}</span>}
                   <div>
                     <p className="text-xs text-gray-400">ประเภทที่เลือก</p>
                     <p className="font-bold text-sm text-brand-700">{selectedCatLabel.label}</p>

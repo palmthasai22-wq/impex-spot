@@ -43,7 +43,7 @@ export default function PinList({ onSelect }) {
                 >
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0"
                     style={{ backgroundColor: cat.color + '22' }}>
-                    {cat.emoji}
+                    {cat.image ? <img src={cat.image} alt="" className="h-8 w-8 object-contain" /> : cat.emoji}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-gray-800 truncate">{pin.title}</p>

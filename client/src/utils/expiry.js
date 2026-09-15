@@ -3,12 +3,13 @@ export const getExpiryDuration = (type) => {
     traffic: 2 * 60 * 60 * 1000,
     accident: 4 * 60 * 60 * 1000,
     crowded: 3 * 60 * 60 * 1000,
+    cctv: null,
     restaurant: null,
     market: null,
     event: 24 * 60 * 60 * 1000,
     emergency: 12 * 60 * 60 * 1000
   };
-  return durations[type] || 24 * 60 * 60 * 1000;
+  return Object.prototype.hasOwnProperty.call(durations, type) ? durations[type] : 24 * 60 * 60 * 1000;
 };
 
 export const formatTimeRemaining = (expiresAt) => {

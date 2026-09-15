@@ -137,6 +137,8 @@ export default function Free3DMap({ pins, cameras = [], onCameraClick, userPosit
         ? '/images/5-transparent.png'
         : category === 'traffic'
           ? '/images/3-transparent.png'
+          : category === 'cctv'
+            ? '/images/cctv.png'
           : '/images/2.png';
       addMarker([pin.lat, pin.lng], `free-map-pin${image ? ' free-map-emergency' : ''}`, () => onPinClick(pin), image);
     });

@@ -4,6 +4,7 @@ const EXPIRY_MS = {
   problem: 24 * 60 * 60 * 1000,
   accident: 24 * 60 * 60 * 1000,
   emergency: 24 * 60 * 60 * 1000,
+  cctv: null,
 };
 
 let timer;
@@ -24,5 +25,5 @@ module.exports = {
     timer.unref?.();
     expirePins(pinStore);
   },
-  getExpiry(type) { return EXPIRY_MS[type] || 30 * 24 * 60 * 60 * 1000; },
+  getExpiry(type) { return Object.prototype.hasOwnProperty.call(EXPIRY_MS, type) ? EXPIRY_MS[type] : 30 * 24 * 60 * 60 * 1000; },
 };

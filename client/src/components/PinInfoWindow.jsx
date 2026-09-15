@@ -56,14 +56,14 @@ export default function PinInfoWindow({ pin, onClose }) {
       <div className="flex items-start gap-3 mb-3">
         <div className="w-11 h-11 rounded-2xl flex items-center justify-center text-xl flex-shrink-0 shadow-sm"
           style={{backgroundColor: category.color + '18', border: `2px solid ${category.color}40`}}>
-          {category.emoji}
+          {category.image ? <img src={category.image} alt="" className="h-9 w-9 object-contain" /> : category.emoji}
         </div>
         <div className="flex-1 min-w-0">
           <h3 className="font-bold text-sm text-gray-800 leading-tight mb-0.5">{pin.title}</h3>
           <div className="flex items-center gap-2 flex-wrap">
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-semibold"
               style={{backgroundColor: category.color + '15', color: category.color}}>
-              {category.emoji} {category.label}
+              {category.image ? <img src={category.image} alt="" className="h-4 w-4 object-contain" /> : category.emoji} {category.label}
             </span>
             {pin.createdAt && <span className="text-[10px] text-gray-400">{timeAgo(pin.createdAt)}</span>}
           </div>
