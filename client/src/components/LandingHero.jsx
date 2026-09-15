@@ -188,15 +188,15 @@ export default function LandingHero({ onEnter, onPin }) {
         <h2 className="text-center text-xl font-bold text-gray-800 mb-6">ทำไมต้อง ImpEx Spot? 💡</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-3xl mx-auto">
           {[
-            { emoji: '🔓', title: 'ใช้ได้ทันที ไม่ต้อง Login', desc: 'ไม่ต้องสมัคร ไม่ต้องจำรหัส เข้ามาช่วยชุมชนได้เลย!' },
-            { emoji: '🧭', title: 'นำทางด้วย Google Maps', desc: 'กดนำทาง เปิด Google Maps พาไปถึงที่หมายทันที' },
-            { emoji: '✅', title: 'ยืนยันโดยชุมชน', desc: 'ยิ่งมีคนยืนยัน ยิ่งน่าเชื่อถือ!' },
-            { emoji: '⏰', title: 'หมดอายุอัตโนมัติ', desc: 'ข้อมูลเก่าหายไปเอง แผนที่ไม่รก' },
-            { emoji: '🟢', title: 'Responder ช่วยเหลือ', desc: 'เห็น Admin ที่พร้อมช่วยเหลือใกล้คุณ' },
-            { emoji: '📊', title: 'ดูย้อนหลังได้', desc: 'บันทึกทุกรายงาน ค้นหาดูประวัติได้' },
+            { title: 'ใช้ได้ทันที ไม่ต้อง Login', desc: 'ไม่ต้องสมัคร ไม่ต้องจำรหัส เข้ามาช่วยชุมชนได้เลย!', mascot: '/images/mascot.png' },
+            { title: 'นำทางด้วย Google Maps', desc: 'กดนำทาง เปิด Google Maps พาไปถึงที่หมายทันที', mascot: '/images/mascot_ruthan.png' },
+            { title: 'ยืนยันโดยชุมชน', desc: 'ยิ่งมีคนยืนยัน ยิ่งน่าเชื่อถือ!', mascot: '/images/mascot_star.png' },
+            { title: 'หมดอายุอัตโนมัติ', desc: 'ข้อมูลเก่าหายไปเอง แผนที่ไม่รก', mascot: '/images/mascot_alert.png' },
+            { title: 'Responder ช่วยเหลือ', desc: 'เห็น Admin ที่พร้อมช่วยเหลือใกล้คุณ', mascot: '/images/mascot_pin.png' },
+            { title: 'ดูย้อนหลังได้', desc: 'บันทึกทุกรายงาน ค้นหาดูประวัติได้', mascot: '/images/mascot_share.png' },
           ].map((f, i) => (
             <div key={i} className="flex items-start gap-3 p-4 rounded-2xl bg-white/20 backdrop-blur-sm hover:bg-green-400/20 transition-all group border border-white/20 hover:border-green-300/50">
-              <span className="text-2xl group-hover:scale-110 transition-transform flex-shrink-0">{f.emoji}</span>
+              <img src={f.mascot} alt={f.title} className="h-12 w-12 object-contain shrink-0 rounded-xl bg-white/30 p-1 shadow-sm group-hover:scale-110 transition-transform" />
               <div>
                 <h3 className="font-bold text-sm text-gray-800">{f.title}</h3>
                 <p className="text-xs text-gray-400 mt-0.5 leading-relaxed">{f.desc}</p>
