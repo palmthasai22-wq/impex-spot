@@ -137,6 +137,18 @@ test('all JWTs including admins are denied machine relay configuration', async (
   const result = await request(`/relay/cctv/${cameraId}/config`, { token: relayToken });
   assert.equal(result.status, 200); assert.equal(JSON.parse(result.body).credentials.password, 'secret-password');
 });
+test('a single camera found by a newly paired Wi-Fi relay saves its IP automatically', async () => {
+  row = { ...fixture(), camera_ip: encrypt('', `${cameraId}:camera_ip`), verification_status: 'pending', owner_consent: false };
+  const result = await request(`/relay/cctv/${cameraId}/discovery`, {
+    token: relayToken,
+    method: 'POST',
+    body: { devices: [{ camera_ip: '192.168.50.25' }] },
+  });
+  assert.equal(result.status, 204);
+  assert.equal(row.camera_ip, '192.168.50.25');
+  assert.equal(row.connection_type, 'wifi_local');
+  assert.equal(row.owner_consent, false);
+});
 test('media authentication denies anonymous ingest, raw RTSP reads and wrong-purpose secrets', async () => {
   const authenticate = body => request('/internal/cctv/auth', { method: 'POST', body: { path: cameraId, ...body } });
   assert.equal((await authenticate({ action: 'publish', protocol: 'rtsp', user: cameraId, password: relayToken })).status, 204);
@@ -171,6 +183,15 @@ test('token rotation invalidates old machine credentials and stops old playback 
 test('unsafe input, invalid coordinates and unknown fields are rejected', () => {
   for (const body of [{ camera_ip: 'http://host/' }, { public_stream_url: 'rtsp://host' }, { owner_consent: 'false' }, { coverage_direction: 360 }, { lat: 91, lng: 100 }, { lat: 13 }, { rtsp_path: '//other-host' }, { credentials: { username: 'u', password: 'p', port: 0 } }]) assert.throws(() => validateCamera(body));
   assert.doesNotThrow(() => validateCamera({ camera_ip: '192.168.1.2', credentials: { username: 'u', password: '<raw>&secret' } }));
+  assert.doesNotThrow(() => validateCamera({
+    lat: 13.7563, lng: 100.5018,
+    owner_type: 'agency', connection_type: 'wifi_local',
+    camera_ip: '', rtsp_path: '/stream1',
+    verification_status: 'pending', owner_consent: false,
+  }, true));
+  assert.throws(() => validateCamera({ connection_type: 'lan_ip', camera_ip: '' }));
+  assert.throws(() => validateCamera({ connection_type: 'wifi_local', camera_ip: '', verification_status: 'verified' }));
+  assert.throws(() => validateCamera({ connection_type: 'wifi_local', camera_ip: '', owner_consent: true }));
 });
 test('malformed IDs and storage failures do not leak sensitive fields or stack traces', async () => {
   const invalid = await request('/pins/cctv/not-a-uuid'); assert.equal(invalid.status, 400); safe(invalid.body);

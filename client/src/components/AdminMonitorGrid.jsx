@@ -67,10 +67,14 @@ export default function AdminMonitorGrid({ token, onBack, onLogout }) {
     {error && <p className="cctv-notice" role="alert">{error} <button onClick={load}>รีเฟรช</button></p>}
     {editing && <AdminCameraForm key={`${editing.id || 'new'}-${editing.camera_ip || ''}`} camera={editing.id ? editing : undefined} onCancel={() => setEditing(null)} onSave={async body => {
       if (editing.id) await api.put(`/admin/cameras/${editing.id}`, body, config);
-      else await api.post('/admin/cameras', body, config);
+      else {
+        const { data: created } = await api.post('/admin/cameras', body, config);
+        const { data: relay } = await api.post(`/admin/cameras/${created.id}/relay-token`, {}, config);
+        setPairing(relay);
+      }
       setEditing(null); await load();
     }} />}
-    {pairing && <section className="cctv-form"><h2>ตั้งค่า Relay ใกล้กล้อง</h2><p>บันทึกโทเคนนี้บนเครื่อง Relay จะแสดงเพียงครั้งเดียว</p><label>Camera ID<input readOnly value={pairing.pin_id} /></label><label>Relay token<input readOnly value={pairing.relay_token} /></label><button onClick={() => setPairing(null)}>ปิดและซ่อนโทเคน</button></section>}
+    {pairing && <section className="cctv-form"><h2>ตั้งค่า Relay ใกล้กล้อง</h2><p>ระบบบันทึกรายการกล้องแล้ว ให้นำโทเคนนี้ไปเปิด Relay บนเครื่องที่ต่อ Wi-Fi วงเดียวกับกล้อง เมื่อ Relay เริ่มทำงาน ระบบจะค้นหาและบันทึก IP ให้อัตโนมัติ</p><label>Camera ID<input readOnly value={pairing.pin_id} /></label><label>Relay token<input readOnly value={pairing.relay_token} /></label><button onClick={() => setPairing(null)}>ปิดและซ่อนโทเคน</button></section>}
     {discovery && <section className="cctv-form"><h2>ค้นหาและเชื่อมต่อกล้องบน Wi-Fi</h2><p>{discovery.connected ? 'เชื่อมต่อข้อมูลกล้องแล้ว กำลังรอสัญญาณภาพจาก Relay' : discovery.pending ? 'Relay กำลังค้นหา ใช้เวลาประมาณ 10–20 วินาที' : `พบ ${discovery.devices.length} กล้อง${discovery.devices.length > 1 ? ' กรุณาเลือกกล้องที่ต้องการ' : ''}`}</p><div className="cctv-actions">{!discovery.connected && <button disabled={busy} onClick={() => action(() => scanAndConnect(discovery.camera))}>ค้นหาอีกครั้ง</button>}<button onClick={() => setDiscovery(null)}>ปิด</button></div>
       {!discovery.connected && discovery.devices.map(device => <button disabled={busy} key={device.camera_ip} onClick={() => action(() => connectDiscovered(discovery.camera, device))}>{device.camera_ip} · เชื่อมต่อกล้องนี้</button>)}
     </section>}

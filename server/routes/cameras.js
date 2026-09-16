@@ -79,6 +79,13 @@ function createCameraRoutes({ repo, media, adminAuth, controlToken = process.env
       if (!d || !isIP(d.camera_ip || '')) invalid();
       return { camera_ip: d.camera_ip }; // Store no raw XML, URLs, credentials or vendor payloads.
     });
+    const awaitingAutomaticIp = row.connection_type === 'wifi_local'
+      && decrypt(row.camera_ip, `${row.id}:camera_ip`) === ''
+      && row.verification_status === 'pending'
+      && row.owner_consent !== true;
+    if (awaitingAutomaticIp && devices.length === 1) {
+      await repo.save(row.id, { camera_ip: devices[0].camera_ip, connection_type: 'wifi_local', owner_consent: false });
+    }
     await repo.reportDiscovery(row.id, devices);
     res.sendStatus(204);
   }));

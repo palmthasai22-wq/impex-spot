@@ -15,8 +15,13 @@ function validateCamera(body, creating = false) {
     if (key in body && !values.includes(body[key])) invalid();
   }
   if ('owner_consent' in body && typeof body.owner_consent !== 'boolean') invalid();
-  // Bare IP only: the relay constructs the URL, never the public API or media server.
-  if ('camera_ip' in body && (typeof body.camera_ip !== 'string' || !isIP(body.camera_ip))) invalid();
+  // A pending Wi-Fi record may start without an IP. The paired relay discovers it
+  // on the local network; every usable camera record still requires a bare IP.
+  const isPendingWifiDiscovery = body.connection_type === 'wifi_local'
+    && body.camera_ip === ''
+    && (body.verification_status === undefined || body.verification_status === 'pending')
+    && body.owner_consent !== true;
+  if ('camera_ip' in body && (typeof body.camera_ip !== 'string' || (!isIP(body.camera_ip) && !isPendingWifiDiscovery))) invalid();
   if ('rtsp_path' in body && (typeof body.rtsp_path !== 'string' || !body.rtsp_path.startsWith('/') || body.rtsp_path.startsWith('//') || body.rtsp_path.length > 1024 || /[\s#\\]/.test(body.rtsp_path))) invalid();
   if ('credentials' in body) {
     const c = body.credentials;

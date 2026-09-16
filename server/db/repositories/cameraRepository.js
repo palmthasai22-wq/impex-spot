@@ -157,13 +157,14 @@ module.exports = {
   },
   async pair(id, hash) {
     try {
-      return (await db.query("UPDATE cctv_pins SET relay_token_hash=$2, status='offline', media_reset_required=TRUE, revision=revision+1, updated_at=NOW() WHERE id=$1 RETURNING id", [id, hash])).rowCount > 0;
+      return (await db.query("UPDATE cctv_pins SET relay_token_hash=$2, status='offline', discovery_requested=TRUE, media_reset_required=TRUE, revision=revision+1, updated_at=NOW() WHERE id=$1 RETURNING id", [id, hash])).rowCount > 0;
     } catch {
       let cameras = readCamerasFile();
       const c = cameras.find(x => x.id === id);
       if (!c) return false;
       c.relay_token_hash = hash;
       c.status = 'offline';
+      c.discovery_requested = true;
       c.media_reset_required = true;
       c.revision = (c.revision || 1) + 1;
       c.updated_at = new Date().toISOString();
