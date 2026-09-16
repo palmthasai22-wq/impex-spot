@@ -56,6 +56,7 @@ const MainApp = () => {
             onFilter={() => setShowFilter(true)}
             onBack={() => setView('landing')}
             pinFormOpen={showPinForm}
+            isAdmin={isAdmin}
           />
         )}
         {view === 'how' && <HowPage onBack={() => setView('landing')} />}
