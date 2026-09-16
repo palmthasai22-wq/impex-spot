@@ -10,6 +10,7 @@ function publicCamera(row) {
     owner_type: row.owner_type,
     status: row.status,
     public_stream_url: publishable(row) && row.status === 'online' ? `/streams/${row.id}/index.m3u8` : null,
+    external_stream_url: publishable(row) ? (row.external_stream_url || null) : null,
   };
 }
 

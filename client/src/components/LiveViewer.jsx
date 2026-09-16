@@ -9,48 +9,76 @@ export default function LiveViewer({ camera, onClose }) {
   const [loading, setLoading] = useState(true);
   const [volume, setVolume] = useState(0);
   const [retry, setRetry] = useState(0);
+
   useEffect(() => {
     let cancelled = false;
     let hls;
     const video = videoRef.current;
     const controller = new AbortController();
     setError(''); setPlaying(false); setLoading(true);
+
+    const loadHls = async (url) => {
+      if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = url;
+      } else {
+        const { default: Hls } = await import('hls.js');
+        if (cancelled) return;
+        if (!Hls.isSupported()) { setError('เบราว์เซอร์นี้ไม่รองรับวิดีโอสด'); setLoading(false); return; }
+        hls = new Hls({ maxBufferLength: 6, backBufferLength: 0 });
+        hls.on(Hls.Events.ERROR, (_event, info) => {
+          if (info.fatal) { hls.destroy(); video.pause(); setError('สตรีมไม่พร้อมใช้งาน ลองอีกครั้ง'); setLoading(false); }
+        });
+        hls.loadSource(url);
+        hls.attachMedia(video);
+      }
+    };
+
     const load = async () => {
       try {
+        // ── ใช้ external URL ถ้ามี ──
+        if (camera.external_stream_url) {
+          await loadHls(camera.external_stream_url);
+          return;
+        }
+        // ── ใช้ relay ถ้าไม่มี external URL ──
         const { data } = await api.get(`/streams/${camera.id}`, { signal: controller.signal });
         if (cancelled) return;
         const streamPath = data.public_stream_url;
         if (streamPath !== `/streams/${camera.id}/index.m3u8`) throw new Error();
-        // Resolve relative to API host for split frontend/backend deployments.
         const backend = new URL(api.defaults.baseURL, window.location.origin);
         const url = new URL(streamPath, backend.origin).href;
-        if (video.canPlayType('application/vnd.apple.mpegurl')) video.src = url;
-        else {
-          const { default: Hls } = await import('hls.js');
-          if (cancelled) return;
-          if (!Hls.isSupported()) { setError('เบราว์เซอร์นี้ไม่รองรับวิดีโอสด'); setLoading(false); return; }
-          hls = new Hls({ maxBufferLength: 6, backBufferLength: 0 });
-          hls.on(Hls.Events.ERROR, (_event, info) => {
-            if (info.fatal) { hls.destroy(); video.pause(); setError('สตรีมไม่พร้อมใช้งาน ลองอีกครั้ง'); setLoading(false); }
-          });
-          hls.loadSource(url);
-          hls.attachMedia(video);
-        }
+        await loadHls(url);
       } catch {
         if (!cancelled) { setError('กล้องออฟไลน์หรือยังไม่ได้รับอนุญาตให้ออกอากาศ'); setLoading(false); }
       }
     };
+
     load();
-    // Re-check consent while open; edge also checks every playlist and segment.
-    const consentTimer = setInterval(async () => {
-      try { await api.get(`/streams/${camera.id}`, { signal: controller.signal }); }
-      catch { if (!cancelled) { hls?.destroy(); video.pause(); video.removeAttribute('src'); video.load(); setError('การถ่ายทอดสดสิ้นสุดแล้ว'); setLoading(false); } }
-    }, 10000);
-    return () => { cancelled = true; controller.abort(); clearInterval(consentTimer); hls?.destroy(); video.pause(); video.removeAttribute('src'); video.load(); };
-  }, [camera.id, retry]);
+
+    // ตรวจสอบ consent ทุก 10 วินาที (เฉพาะ relay mode)
+    let consentTimer;
+    if (!camera.external_stream_url) {
+      consentTimer = setInterval(async () => {
+        try { await api.get(`/streams/${camera.id}`, { signal: controller.signal }); }
+        catch { if (!cancelled) { hls?.destroy(); video.pause(); video.removeAttribute('src'); video.load(); setError('การถ่ายทอดสดสิ้นสุดแล้ว'); setLoading(false); } }
+      }, 10000);
+    }
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+      if (consentTimer) clearInterval(consentTimer);
+      hls?.destroy();
+      video.pause();
+      video.removeAttribute('src');
+      video.load();
+    };
+  }, [camera.id, camera.external_stream_url, retry]);
+
+  const sourceLabel = camera.external_stream_url ? '🔗 สตรีมจากลิงก์ภายนอก' : '📡 ภาพสด · CCTV';
 
   return <section className="cctv-viewer" aria-label="ภาพสดจากกล้อง CCTV">
-    <header><strong>ภาพสด · CCTV</strong>{onClose && <button aria-label="ปิดภาพสด" onClick={onClose}>✕</button>}</header>
+    <header><strong>{sourceLabel}</strong>{onClose && <button aria-label="ปิดภาพสด" onClick={onClose}>✕</button>}</header>
     <video ref={videoRef} playsInline muted={volume === 0} disablePictureInPicture preload="auto"
       onCanPlay={() => setLoading(false)} onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)}
       onError={() => { setError('ไม่สามารถเล่นภาพสดได้'); setLoading(false); }} />

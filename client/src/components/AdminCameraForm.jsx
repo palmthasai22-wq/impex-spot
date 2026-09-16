@@ -3,7 +3,8 @@ import React, { useState } from 'react';
 export default function AdminCameraForm({ camera, onSave, onCancel }) {
   const [data, setData] = useState({ lat: camera?.location.lat ?? 13.7563, lng: camera?.location.lng ?? 100.5018,
     coverage_direction: camera?.coverage_direction ?? 0, owner_type: camera?.owner_type || 'government',
-    connection_type: 'wifi_local', camera_ip: camera?.camera_ip || '', rtsp_path: camera?.rtsp_path || '/stream1',
+    connection_type: 'lan_ip', camera_ip: camera?.camera_ip || '', rtsp_path: camera?.rtsp_path || '/stream1',
+    external_stream_url: camera?.external_stream_url || '',
     verification_status: camera?.verification_status || 'pending', owner_consent: camera?.owner_consent || false });
   const [credentials, setCredentials] = useState({ username: '', password: '', port: 554 });
   const [replaceCredentials, setReplaceCredentials] = useState(!camera?.id);
@@ -30,6 +31,15 @@ export default function AdminCameraForm({ camera, onSave, onCancel }) {
       <label>การเชื่อมต่อ<input readOnly value="Wi-Fi วงเดียวกับ Relay" /></label>
       <label>IP กล้อง<input readOnly value={data.camera_ip || 'ค้นหาและบันทึกอัตโนมัติ'} /></label>
       <label>RTSP path<input required value={data.rtsp_path} onChange={e => change('rtsp_path', e.target.value)} /></label>
+      <label>URL สตรีมภายนอก (ไม่บังคับ)
+        <input
+          type="url"
+          placeholder="เช่น http://192.168.1.100/stream.m3u8 หรือ https://xxx/live.m3u8"
+          value={data.external_stream_url}
+          onChange={e => change('external_stream_url', e.target.value)}
+        />
+        <small style={{fontSize:'0.72em',color:'#6b7280'}}>กรอก URL นี้เพื่อให้ผู้ชมดูสตรีมโดยตรงจากกล้อง แทนที่จะผ่าน Relay</small>
+      </label>
       {camera?.id ? <label>การตรวจสอบ<select value={data.verification_status} onChange={e => change('verification_status', e.target.value)}><option value="pending">รอตรวจสอบ</option><option value="verified">ตรวจสอบแล้ว</option><option value="rejected">ไม่อนุมัติ</option></select></label> : <label>การตรวจสอบ<input readOnly value="รอตรวจสอบหลังเชื่อมต่อ" /></label>}
     </div>
     {camera?.id && <label className="cctv-check"><input type="checkbox" checked={replaceCredentials} onChange={e => { setReplaceCredentials(e.target.checked); change('owner_consent', false); }} />เปลี่ยนข้อมูลเข้าสู่ระบบกล้อง</label>}
