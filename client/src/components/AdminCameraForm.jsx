@@ -15,10 +15,22 @@ export default function AdminCameraForm({ camera, onSave, onCancel }) {
   const numeric = (key, label, min, max, step = 'any') => <label>{label}<input required type="number" min={min} max={max} step={step} value={data[key]} onChange={e => change(key, e.target.value === '' ? '' : Number(e.target.value))} /></label>;
   return <form className="cctv-form" onSubmit={async event => {
     event.preventDefault(); setBusy(true); setError('');
-    try { await onSave({ ...data, ...(replaceCredentials ? { credentials } : {}) }); }
+    try {
+      const hasExternalUrl = data.external_stream_url && data.external_stream_url.trim() !== '';
+      const body = {
+        ...data,
+        // ถ้าไม่มี external URL ให้ส่ง camera_ip ปกติ; ถ้ามีให้ส่งเป็น '' ได้
+        camera_ip: hasExternalUrl ? (data.camera_ip || '') : data.camera_ip,
+        // ส่ง external_stream_url เป็น null ถ้าว่าง
+        external_stream_url: hasExternalUrl ? data.external_stream_url.trim() : '',
+        ...(replaceCredentials ? { credentials } : {}),
+      };
+      await onSave(body);
+    }
     catch (requestError) {
+      console.error('Save error:', requestError.response?.data);
       setError(requestError.response?.status === 400
-        ? 'ข้อมูลกล้องไม่ถูกต้อง กรุณาตรวจสอบ IP, RTSP path และ port'
+        ? `ข้อมูลกล้องไม่ถูกต้อง: ${requestError.response?.data?.error || 'กรุณาตรวจสอบ URL และข้อมูล'}`
         : 'บันทึกไม่สำเร็จ ตรวจสอบข้อมูลและสิทธิ์ผู้ดูแล');
     }
     finally { setBusy(false); }
