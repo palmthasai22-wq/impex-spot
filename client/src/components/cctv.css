@@ -30,4 +30,5 @@
 @media(max-width:600px) { .cctv-admin { padding:14px; }.cctv-map-viewer { bottom:16px; } }
 
 .cctv-viewer:fullscreen { width: 100vw; height: 100vh; border-radius: 0; display: flex; flex-direction: column; }
-.cctv-viewer:fullscreen .cctv-media-container { height: auto !important; padding-top: 0 !important; flex: 1; }
+.cctv-viewer:fullscreen > div { height: auto !important; padding-top: 0 !important; flex: 1; }
+.cctv-viewer:fullscreen video { flex: 1; height: auto; max-height: 100%; aspect-ratio: auto; border-radius: 0; object-fit: contain; }
