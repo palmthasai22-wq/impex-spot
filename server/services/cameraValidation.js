@@ -23,8 +23,8 @@ function validateCamera(body, creating = false) {
   // ตรวจสอบ external_stream_url
   if ('external_stream_url' in body) {
     if (body.external_stream_url !== '' && body.external_stream_url !== null) {
-      if (typeof body.external_stream_url !== 'string' || body.external_stream_url.length > 2048) invalid();
-      try { new URL(body.external_stream_url); } catch { invalid(); }
+      if (typeof body.external_stream_url !== 'string' || body.external_stream_url.length > 4096) invalid();
+      // ไม่ใช้ new URL() เพื่อให้รับ <iframe> embed code หรือลิงก์ที่ไม่มี http ได้
     }
   }
   // A pending Wi-Fi record may start without an IP. The paired relay discovers it

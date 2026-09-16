@@ -152,7 +152,21 @@ function IframeViewer({ url, onClose }) {
 
 // ── Main export — เลือก viewer ตาม URL type ──
 export default function LiveViewer({ camera, onClose }) {
-  const externalUrl = camera.external_stream_url || null;
+  let externalUrl = camera.external_stream_url || null;
+  
+  // แปลง input ให้เป็น URL ที่ใช้งานได้เสมอ
+  if (externalUrl) {
+    externalUrl = externalUrl.trim();
+    // ถ้าใส่มาเป็น iframe ให้ดึงเฉพาะ src ออกมา
+    const iframeMatch = externalUrl.match(/<iframe.*?src=["'](.*?)["']/i);
+    if (iframeMatch) externalUrl = iframeMatch[1];
+    
+    // ถ้าไม่มี http/https ให้เติมเข้าไปอัตโนมัติ
+    if (!externalUrl.startsWith('http://') && !externalUrl.startsWith('https://')) {
+      externalUrl = 'https://' + externalUrl;
+    }
+  }
+
   const youtubeId = getYouTubeId(externalUrl);
   if (youtubeId) return <YouTubeViewer videoId={youtubeId} onClose={onClose} />;
   

@@ -45,8 +45,8 @@ export default function AdminCameraForm({ camera, onSave, onCancel }) {
       <label>RTSP path<input required value={data.rtsp_path} onChange={e => change('rtsp_path', e.target.value)} /></label>
       <label>URL สตรีมภายนอก (ไม่บังคับ)
         <input
-          type="url"
-          placeholder="เช่น http://192.168.1.100/stream.m3u8 หรือ https://xxx/live.m3u8"
+          type="text"
+          placeholder="เช่น http://... หรือ <iframe src=...> หรือลิงก์ทั่วไป"
           value={data.external_stream_url}
           onChange={e => change('external_stream_url', e.target.value)}
         />
