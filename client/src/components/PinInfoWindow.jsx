@@ -136,7 +136,7 @@ export default function PinInfoWindow({ pin, onClose, onSelectCamera, isAdmin = 
 
       {/* Actions */}
       <div className="grid grid-cols-2 gap-1.5 pt-2.5 border-t border-gray-100">
-        {isAdmin && (pin.type === 'cctv' || pin.category === 'cctv') && pin.external_stream_url ? (
+        {(pin.type === 'cctv' || pin.category === 'cctv') && pin.external_stream_url ? (
           <button onClick={() => { onClose(); onSelectCamera({ id: pin.id || pin._id, location: { lat: pin.lat, lng: pin.lng }, status: 'online', name: pin.title, external_stream_url: pin.external_stream_url }); }}
             className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-semibold bg-rose-50 text-rose-700 hover:bg-rose-100 active:scale-95 transition-all border border-rose-100 col-span-2 mb-1.5">
             ▶️ ดูภาพสด
