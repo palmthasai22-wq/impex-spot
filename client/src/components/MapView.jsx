@@ -288,7 +288,7 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
           <MapController onReady={setMapInstance} bounds={limitedBounds} pins={filteredPins} />
           <MapClickHandler onSelect={handleMapSelect} />
           {flyTo && <FlyToUser position={flyTo} />}
-          {showCameras && cameras.map(camera => <CameraPin key={camera.id} camera={camera} onSelect={setSelectedCamera} />)}
+          {showCameras && (!activeFilter || activeFilter === 'cctv') && cameras.map(camera => <CameraPin key={camera.id} camera={camera} onSelect={setSelectedCamera} />)}
           {(lat && lng) ? (
             <Marker position={[lat, lng]} icon={userIcon} />
           ) : (
@@ -391,7 +391,7 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
           )}
           <div style={{background:'#dcfce7',borderRadius:11,padding:'8px 11px',fontSize:11,fontWeight:800,color:'#15803d',display:'flex',alignItems:'center',gap:6}}>
             <img src="/images/mascot.png" alt="" style={{width:14,height:14,objectFit:'contain'}} />
-            {filteredPins.length} หมุด
+            {filteredPins.length + (showCameras && (!activeFilter || activeFilter === 'cctv') ? cameras.length : 0)} หมุด
           </div>
 
           {/* ปุ่มเปิด filter กลับ (แสดงเมื่อซ่อน) */}
