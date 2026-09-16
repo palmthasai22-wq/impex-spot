@@ -37,6 +37,8 @@ export default function AdminMonitorGrid({ token, onBack, onLogout }) {
     return data;
   };
   const connectDiscovered = async (camera, device) => {
+    if (camera.camera_ip && camera.camera_ip !== device.camera_ip
+      && !window.confirm(`IP ที่บันทึกอยู่คือ ${camera.camera_ip} ต้องการเปลี่ยนเป็น ${device.camera_ip} หรือไม่?`)) return;
     await api.put(`/admin/cameras/${camera.id}`, {
       camera_ip: device.camera_ip,
       connection_type: 'wifi_local',
@@ -75,7 +77,7 @@ export default function AdminMonitorGrid({ token, onBack, onLogout }) {
       setEditing(null); await load();
     }} />}
     {pairing && <section className="cctv-form"><h2>ตั้งค่า Relay ใกล้กล้อง</h2><p>ระบบบันทึกรายการกล้องแล้ว ให้นำโทเคนนี้ไปเปิด Relay บนเครื่องที่ต่อ Wi-Fi วงเดียวกับกล้อง เมื่อ Relay เริ่มทำงาน ระบบจะค้นหาและบันทึก IP ให้อัตโนมัติ</p><label>Camera ID<input readOnly value={pairing.pin_id} /></label><label>Relay token<input readOnly value={pairing.relay_token} /></label><button onClick={() => setPairing(null)}>ปิดและซ่อนโทเคน</button></section>}
-    {discovery && <section className="cctv-form"><h2>ค้นหาและเชื่อมต่อกล้องบน Wi-Fi</h2><p>{discovery.connected ? 'เชื่อมต่อข้อมูลกล้องแล้ว กำลังรอสัญญาณภาพจาก Relay' : discovery.pending ? 'Relay กำลังค้นหา ใช้เวลาประมาณ 10–20 วินาที' : `พบ ${discovery.devices.length} กล้อง${discovery.devices.length > 1 ? ' กรุณาเลือกกล้องที่ต้องการ' : ''}`}</p><div className="cctv-actions">{!discovery.connected && <button disabled={busy} onClick={() => action(() => scanAndConnect(discovery.camera))}>ค้นหาอีกครั้ง</button>}<button onClick={() => setDiscovery(null)}>ปิด</button></div>
+    {discovery && <section className="cctv-form"><h2>ค้นหาและเชื่อมต่อกล้องบน Wi-Fi</h2><p>{discovery.connected ? 'เชื่อมต่อข้อมูลกล้องแล้ว กำลังรอสัญญาณภาพจาก Relay' : discovery.pending ? 'Relay กำลังค้นหา ใช้เวลาประมาณ 10–20 วินาที' : `พบ ${discovery.devices.length} กล้อง${discovery.devices.length > 1 ? ' กรุณาเลือกกล้องที่ต้องการ' : ''}`}</p>{discovery.camera.camera_ip && <p><strong>IP ที่บันทึกอยู่: {discovery.camera.camera_ip}</strong>{!discovery.devices.some(device => device.camera_ip === discovery.camera.camera_ip) && ' · กล้องนี้ไม่ตอบการค้นหา ONVIF แต่ยังเชื่อมต่อด้วย IP ที่บันทึกไว้ได้'}</p>}<div className="cctv-actions">{!discovery.connected && <button disabled={busy} onClick={() => action(() => scanAndConnect(discovery.camera))}>ค้นหาอีกครั้ง</button>}<button onClick={() => setDiscovery(null)}>ปิด</button></div>
       {!discovery.connected && discovery.devices.map(device => <button disabled={busy} key={device.camera_ip} onClick={() => action(() => connectDiscovered(discovery.camera, device))}>{device.camera_ip} · เชื่อมต่อกล้องนี้</button>)}
     </section>}
     {!loading && !error && cameras.length === 0 && <div className="cctv-empty"><h2>ยังไม่มีกล้องในหน้านี้</h2><p>เพิ่มกล้องและตรวจสอบความยินยอมของเจ้าของเพื่อเริ่มเผยแพร่ภาพสด</p></div>}
