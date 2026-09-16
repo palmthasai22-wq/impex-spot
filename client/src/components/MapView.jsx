@@ -329,7 +329,7 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
                 icon={createPinIcon(pin.type || pin.category || 'other')}
                 eventHandlers={{ click: () => setSelectedPin(pin) }}>
               <Popup maxWidth={260} minWidth={260} closeButton={false} className="custom-popup" autoPan={true} autoPanPaddingTopLeft={[50, 50]} autoPanPaddingBottomRight={[50, 280]}>
-                <PinInfoWindow pin={pin} onClose={() => setSelectedPin(null)} />
+                <PinInfoWindow pin={pin} onClose={() => setSelectedPin(null)} onSelectCamera={setSelectedCamera} />
               </Popup>
               </Marker>
             </React.Fragment>

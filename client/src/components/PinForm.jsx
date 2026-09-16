@@ -48,6 +48,7 @@ export default function PinForm({ onClose, initialPosition, initialCategory = ''
         type: formData.category,
         reviewRating: isShareCategory ? Number(formData.reviewRating) : undefined,
         reviewNote: isShareCategory ? formData.reviewNote : undefined,
+        external_stream_url: formData.category === 'cctv' ? formData.external_stream_url : undefined,
       });
       setPins(currentPins => [...currentPins, createdPin]);
       toast.success('🎉 ปักหมุดสำเร็จ! ขอบคุณที่ช่วยชุมชน');
@@ -222,6 +223,16 @@ export default function PinForm({ onClose, initialPosition, initialCategory = ''
                   value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} />
                 <p className="text-[10px] text-gray-400 mt-1 ml-1">💡 ตั้งชื่อให้คนอื่นเข้าใจง่ายนะ</p>
               </div>
+
+              {/* URL สำหรับ CCTV */}
+              {formData.category === 'cctv' && (
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1.5">URL ภาพสด หรือ โค้ด iframe (ไม่บังคับ)</label>
+                  <input type="text" className="input-modern" placeholder="เช่น https://... หรือ <iframe src='...'>"
+                    value={formData.external_stream_url || ''} onChange={e => setFormData({...formData, external_stream_url: e.target.value})} />
+                  <p className="text-[10px] text-gray-400 mt-1 ml-1">💡 หากมีลิงก์ภาพสด ผู้ใช้จะสามารถดูภาพสดจากหมุดนี้ได้ทันที</p>
+                </div>
+              )}
 
               {/* Description */}
               <div>
