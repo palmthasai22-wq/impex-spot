@@ -5,6 +5,16 @@ const dgram = require('node:dgram');
 const { randomUUID } = require('node:crypto');
 const { isIP } = require('node:net');
 
+function describeFfmpegFailure(message) {
+  if (/401|unauthorized/i.test(message)) return 'camera authentication rejected';
+  if (/400|bad request/i.test(message)) return 'camera rejected the RTSP request';
+  if (/connection refused/i.test(message)) return 'stream connection refused';
+  if (/timed out|timeout/i.test(message)) return 'stream connection timed out';
+  if (/could not find codec parameters/i.test(message)) return 'camera stream format unavailable';
+  if (/error writing|broken pipe|av_interleaved_write_frame/i.test(message)) return 'Railway ingest stopped accepting media';
+  return 'media process stopped';
+}
+
 function discover() {
   return new Promise((resolve, reject) => {
     const socket = dgram.createSocket('udp4');
@@ -79,11 +89,25 @@ async function main() {
           input.username = credentials.username;
           input.password = credentials.password;
           // Transcode to browser-compatible H.264/AAC. Never execute connection input in a shell.
-          const processHandle = spawn(process.env.FFMPEG_BIN || 'ffmpeg', ['-nostdin', '-hide_banner', '-loglevel', 'quiet', '-rtsp_transport', 'tcp', '-i', input.href,
-            '-map', '0:v:0', '-map', '0:a?', '-c:v', 'libx264', '-preset', 'veryfast', '-tune', 'zerolatency', '-pix_fmt', 'yuv420p', '-vf', 'scale=trunc(iw/2)*2:trunc(ih/2)*2', '-r', '15', '-g', '30', '-c:a', 'aac', '-f', 'rtsp', '-rtsp_transport', 'tcp', output.href], { stdio: 'ignore', windowsHide: true });
+          // Yoosee firmware can expose RTSP on TCP while only delivering media over UDP.
+          // Keep the Railway ingest leg on TCP, but let deployments override the camera leg.
+          const cameraTransport = process.env.CCTV_CAMERA_RTSP_TRANSPORT || 'udp';
+          if (!['udp', 'tcp'].includes(cameraTransport)) throw new Error('Invalid camera RTSP transport');
+          const processHandle = spawn(process.env.FFMPEG_BIN || 'ffmpeg', ['-nostdin', '-hide_banner', '-loglevel', 'error', '-rtsp_transport', cameraTransport, '-i', input.href,
+            '-map', '0:v:0', '-map', '0:a?', '-c:v', 'libx264', '-preset', 'veryfast', '-tune', 'zerolatency', '-pix_fmt', 'yuv420p', '-vf', 'scale=trunc(iw/2)*2:trunc(ih/2)*2', '-r', '15', '-g', '30', '-c:a', 'aac', '-f', 'rtsp', '-rtsp_transport', 'tcp', output.href], { stdio: ['ignore', 'ignore', 'pipe'], windowsHide: true });
+          let ffmpegError = '';
+          processHandle.stderr.on('data', chunk => {
+            if (ffmpegError.length < 8192) ffmpegError += chunk.toString('utf8').slice(0, 8192 - ffmpegError.length);
+          });
           child = processHandle;
           previous = signature;
-          const clear = () => { if (child === processHandle) { child = undefined; previous = undefined; } };
+          const clear = () => {
+            if (child === processHandle) {
+              child = undefined;
+              previous = undefined;
+              console.warn(`FFmpeg stopped: ${describeFfmpegFailure(ffmpegError)}`);
+            }
+          };
           processHandle.once('error', clear);
           processHandle.once('exit', clear);
         }

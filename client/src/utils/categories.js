@@ -9,9 +9,8 @@ export const SITUATION_CATEGORIES = [
   { id: 'road_closed', label: 'ถนนปิด', emoji: '🛑', color: '#991B1B' },
 ];
 
-// หมวด: ปักหมุด (สถานที่)
+// หมวด: ปักหมุด (สถานที่) — แอดมินเพิ่ม CCTV ผ่านหน้า Admin → กล้อง CCTV
 export const PLACE_CATEGORIES = [
-  { id: 'cctv', label: 'กล้อง CCTV', emoji: '📹', image: '/images/cctv.png', color: '#EC4899' },
   { id: 'restroom', label: 'ห้องน้ำ', emoji: '🚻', color: '#0891B2' },
   { id: 'landmark', label: 'Landmark', emoji: '🏛️', color: '#7C3AED' },
   { id: 'checkin', label: 'จุดเช็คอิน', emoji: '📸', color: '#EC4899' },
@@ -21,6 +20,12 @@ export const PLACE_CATEGORIES = [
   { id: 'meetpoint', label: 'จุดนัดพบ', emoji: '🤝', color: '#0D9488' },
   { id: 'food_delivery', label: 'จุดรับส่งอาหาร', emoji: '🛵', color: '#EA580C' },
   { id: 'atm', label: 'จุดกดเงิน/ATM', emoji: '🏧', color: '#1D4ED8' },
+];
+
+// ประเภทหมุดสำหรับแอดมินเท่านั้น (ไม่แสดงใน PinForm สาธารณะ)
+export const ADMIN_ONLY_CATEGORIES = [
+  { id: 'cctv', label: 'กล้อง CCTV', emoji: '📹', image: '/images/cctv.png', color: '#EC4899' },
+  { id: 'admin_help', label: 'ทีมช่วยเหลือ', emoji: '🛡️', color: '#1E40AF' },
 ];
 
 // หมวด: แบ่งปัน (รีวิว/ร้านค้า)
@@ -37,13 +42,13 @@ export const EMERGENCY_CATEGORIES = [
   { id: 'emergency', label: 'เหตุฉุกเฉิน', emoji: '🚨', color: '#DC2626' },
 ];
 
-// รวมทุกหมวด
+// รวมทุกหมวด (ใช้สำหรับแสดงบนแผนที่ / filter — รวมประเภท admin-only)
 export const PIN_CATEGORIES = [
   ...SITUATION_CATEGORIES,
   ...PLACE_CATEGORIES,
   ...SHARE_CATEGORIES,
   ...EMERGENCY_CATEGORIES,
-  { id: 'admin_help', label: 'ทีมช่วยเหลือ', emoji: '🛡️', color: '#1E40AF' },
+  ...ADMIN_ONLY_CATEGORIES,
   { id: 'other', label: 'อื่นๆ', emoji: '📌', color: '#6B7280' },
 ];
 

@@ -1,8 +1,24 @@
 const express = require('express');
 const pinStore = require('../services/pinStore');
 const socketService = require('../services/socketService');
+const jwt = require('jsonwebtoken');
 
 const router = express.Router();
+
+// ─── ประเภทที่เฉพาะแอดมินเท่านั้น ───
+const ADMIN_ONLY_CATEGORIES = ['cctv', 'admin_help'];
+
+function isAdminToken(req) {
+  try {
+    const auth = req.headers.authorization || '';
+    const token = auth.startsWith('Bearer ') ? auth.slice(7) : null;
+    if (!token) return false;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    return decoded && decoded.role === 'admin';
+  } catch {
+    return false;
+  }
+}
 
 // ─── Public: ดึงหมุดทั้งหมด (ไม่ต้อง login) ───
 router.get('/', (req, res) => {
@@ -24,6 +40,12 @@ router.post('/', (req, res) => {
     }
     if (lat === undefined || lng === undefined) {
       return res.status(400).json({ error: 'Location (lat, lng) is required' });
+    }
+
+    // ── ตรวจสอบประเภทที่เฉพาะแอดมิน ──
+    const resolvedCategory = type || category;
+    if (ADMIN_ONLY_CATEGORIES.includes(resolvedCategory) && !isAdminToken(req)) {
+      return res.status(403).json({ error: 'เฉพาะแอดมินเท่านั้นที่สามารถปักหมุดประเภทนี้ได้' });
     }
 
     const pin = pinStore.create({
