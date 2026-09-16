@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { SITUATION_CATEGORIES, PLACE_CATEGORIES, SHARE_CATEGORIES, EXPIRY_CONFIG } from '../utils/categories';
+import { SITUATION_CATEGORIES, PLACE_CATEGORIES, SHARE_CATEGORIES, ADMIN_ONLY_CATEGORIES, EXPIRY_CONFIG } from '../utils/categories';
 import ImageUpload from './ImageUpload';
 import StarRating from './StarRating';
 import { createPin, uploadImages } from '../utils/api';

@@ -13,7 +13,7 @@ api.interceptors.request.use((config) => {
     config.headers['x-session-id'] = sessionId;
   }
   const token = localStorage.getItem('impex_admin_token');
-  if (token && config.url.includes('/admin')) {
+  if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
