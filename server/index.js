@@ -78,7 +78,7 @@ app.set('trust proxy', 1);
 const server = http.createServer(app);
 const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:5173,https://impex-spot-webapp.vercel.app')
   .split(',')
-  .map(origin => origin.trim())
+  .map(origin => origin.trim().replace(/\/$/, ''))
   .filter(Boolean);
 
 // Initialize Socket.IO
@@ -111,7 +111,8 @@ app.use(cors({
       callback(null, true);
       return;
     }
-    callback(new Error('Not allowed by CORS'));
+    // Return false instead of Error to let cors handle the failure gracefully
+    callback(null, false);
   },
   credentials: true,
 }));
