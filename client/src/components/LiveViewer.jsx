@@ -126,10 +126,43 @@ function HlsViewer({ camera, onClose, externalUrl }) {
   );
 }
 
+// ── Webpage iframe embed ──
+function IframeViewer({ url, onClose }) {
+  return (
+    <section className="cctv-viewer" aria-label="แหล่งภาพภายนอก">
+      <header>
+        <strong>🔗 แหล่งภาพภายนอก</strong>
+        {onClose && <button aria-label="ปิดภาพ" onClick={onClose}>✕</button>}
+      </header>
+      <div style={{ position: 'relative', width: '100%', height: '350px', background: '#000' }}>
+        <iframe
+          src={url}
+          title="แหล่งภาพภายนอก"
+          allowFullScreen
+          sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none' }}
+        />
+      </div>
+      <div className="cctv-controls" style={{ justifyContent: 'center' }}>
+        <span style={{ fontSize: 11, color: '#6b7280' }}>เปิดจากเว็บไซต์ภายนอกโดยตรง</span>
+      </div>
+    </section>
+  );
+}
+
 // ── Main export — เลือก viewer ตาม URL type ──
 export default function LiveViewer({ camera, onClose }) {
   const externalUrl = camera.external_stream_url || null;
   const youtubeId = getYouTubeId(externalUrl);
   if (youtubeId) return <YouTubeViewer videoId={youtubeId} onClose={onClose} />;
+  
+  // ตรวจสอบว่าเป็นลิงก์วิดีโอ/สตรีมโดยตรงหรือไม่
+  const isVideo = externalUrl && (
+    externalUrl.toLowerCase().includes('.m3u8') || 
+    externalUrl.toLowerCase().includes('.mp4') || 
+    externalUrl.toLowerCase().includes('.webm')
+  );
+  
+  if (externalUrl && !isVideo) return <IframeViewer url={externalUrl} onClose={onClose} />;
   return <HlsViewer camera={camera} onClose={onClose} externalUrl={externalUrl} />;
 }
