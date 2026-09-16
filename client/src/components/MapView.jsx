@@ -160,6 +160,7 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
   const filteredPins = pins.filter(pin => {
     if (pin.status !== 'active') return false;
     const t = pin.type || pin.category || 'other';
+    if (t === 'cctv' && !isAdmin) return false;
     if (activeFilter && t !== activeFilter) return false;
     if (filters.types.length > 0 && !filters.types.includes(t)) return false;
     if (filters.verified && (pin.confidence || 0) < 60) return false;
@@ -269,7 +270,7 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
       <div style={{ position:'absolute', inset:0, zIndex:1, overflow:'hidden' }}>
         {show3D ? (
           <Free3DMap
-            cameras={showCameras ? cameras : []}
+            cameras={isAdmin && showCameras ? cameras : []}
             onCameraClick={setSelectedCamera}
             pins={filteredPins}
             userPosition={lat && lng ? [lat, lng] : defaultCenter}
@@ -288,7 +289,7 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
           <MapController onReady={setMapInstance} bounds={limitedBounds} pins={filteredPins} />
           <MapClickHandler onSelect={handleMapSelect} />
           {flyTo && <FlyToUser position={flyTo} />}
-          {showCameras && cameras.map(camera => <CameraPin key={camera.id} camera={camera} onSelect={setSelectedCamera} />)}
+          {isAdmin && showCameras && cameras.map(camera => <CameraPin key={camera.id} camera={camera} onSelect={setSelectedCamera} />)}
           {(lat && lng) ? (
             <Marker position={[lat, lng]} icon={userIcon} />
           ) : (
