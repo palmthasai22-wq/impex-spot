@@ -77,6 +77,7 @@ const MainApp = () => {
         initialPosition={pinPosition}
         initialCategory={pinCategory}
         onEmergency={() => { setShowPinForm(false); setShowEmergencyForm(true); }}
+        isAdmin={isAdmin}
       />}
       {showEmergencyForm && <EmergencyForm initialPosition={emergencyPosition} onClose={() => { setShowEmergencyForm(false); setEmergencyPosition(null); }} />}
       {showFilter && <FilterPanel onClose={() => setShowFilter(false)} />}

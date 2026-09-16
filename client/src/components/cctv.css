@@ -28,3 +28,6 @@
 .cctv-notice { background:#fff1e5;padding:15px;border-radius:12px; }.cctv-status { font-size:11px;padding:3px 8px;border-radius:20px;background:#e2e8f0;margin-left:10px; }
 .cctv-status.online { background:#d1fae5;color:#065f46; }.cctv-status.error { background:#fee2e2;color:#991b1b; }
 @media(max-width:600px) { .cctv-admin { padding:14px; }.cctv-map-viewer { bottom:16px; } }
+
+.cctv-viewer:fullscreen { width: 100vw; height: 100vh; border-radius: 0; display: flex; flex-direction: column; }
+.cctv-viewer:fullscreen .cctv-media-container { height: auto !important; padding-top: 0 !important; flex: 1; }

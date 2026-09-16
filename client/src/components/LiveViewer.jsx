@@ -15,16 +15,30 @@ function getYouTubeId(url) {
   return null;
 }
 
+const toggleFullscreen = (e) => {
+  const container = e.currentTarget.closest('.cctv-viewer');
+  if (!document.fullscreenElement) {
+    if (container.requestFullscreen) container.requestFullscreen();
+    else if (container.webkitRequestFullscreen) container.webkitRequestFullscreen();
+  } else {
+    if (document.exitFullscreen) document.exitFullscreen();
+    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+  }
+};
+
 // ── YouTube iframe embed ──
 function YouTubeViewer({ videoId, onClose }) {
   const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0&rel=0`;
   return (
-    <section className="cctv-viewer" aria-label="ภาพสดจาก YouTube">
+    <section className="cctv-viewer flex flex-col" aria-label="ภาพสดจาก YouTube">
       <header>
         <strong>▶️ YouTube Live</strong>
-        {onClose && <button aria-label="ปิดภาพสด" onClick={onClose}>✕</button>}
+        <div className="flex gap-2">
+          <button aria-label="เต็มจอ" onClick={toggleFullscreen}>🔲</button>
+          {onClose && <button aria-label="ปิดภาพสด" onClick={onClose}>✕</button>}
+        </div>
       </header>
-      <div style={{ position: 'relative', width: '100%', paddingTop: '56.25%', background: '#000' }}>
+      <div className="cctv-media-container" style={{ position: 'relative', width: '100%', paddingTop: '56.25%', background: '#000' }}>
         <iframe
           src={embedUrl}
           title="YouTube Live"
@@ -104,17 +118,23 @@ function HlsViewer({ camera, onClose, externalUrl }) {
   }, [camera.id, externalUrl, retry]);
 
   return (
-    <section className="cctv-viewer" aria-label="ภาพสดจากกล้อง CCTV">
+    <section className="cctv-viewer flex flex-col" aria-label="ภาพสดจากกล้อง CCTV">
       <header>
         <strong>{externalUrl ? '🔗 สตรีมภายนอก' : '📡 ภาพสด · CCTV'}</strong>
-        {onClose && <button aria-label="ปิดภาพสด" onClick={onClose}>✕</button>}
+        <div className="flex gap-2">
+          <button aria-label="เต็มจอ" onClick={toggleFullscreen}>🔲</button>
+          {onClose && <button aria-label="ปิดภาพสด" onClick={onClose}>✕</button>}
+        </div>
       </header>
-      <video ref={videoRef} playsInline muted={volume === 0} disablePictureInPicture preload="auto"
-        onCanPlay={() => setLoading(false)} onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)}
-        onError={() => { setError('ไม่สามารถเล่นภาพสดได้'); setLoading(false); }} />
+      <div className="cctv-media-container flex-1 bg-black">
+        <video ref={videoRef} playsInline muted={volume === 0} disablePictureInPicture preload="auto"
+          className="w-full h-full object-contain bg-black"
+          onCanPlay={() => setLoading(false)} onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)}
+          onError={() => { setError('ไม่สามารถเล่นภาพสดได้'); setLoading(false); }} />
+      </div>
       {loading && !error && <p role="status">กำลังเชื่อมต่อภาพสด…</p>}
       {error && <p role="alert">{error} <button onClick={() => setRetry(n => n + 1)}>ลองอีกครั้ง</button></p>}
-      <div className="cctv-controls">
+      <div className="cctv-controls mt-auto">
         <button disabled={!!error || loading} onClick={async () => {
           if (playing) videoRef.current.pause();
           else { try { await videoRef.current.play(); } catch { setError('กดลองอีกครั้งเพื่อเล่นภาพสด'); } }
@@ -129,12 +149,15 @@ function HlsViewer({ camera, onClose, externalUrl }) {
 // ── Webpage iframe embed ──
 function IframeViewer({ url, onClose }) {
   return (
-    <section className="cctv-viewer" aria-label="แหล่งภาพภายนอก">
+    <section className="cctv-viewer flex flex-col" aria-label="แหล่งภาพภายนอก">
       <header>
         <strong>🔗 แหล่งภาพภายนอก</strong>
-        {onClose && <button aria-label="ปิดภาพ" onClick={onClose}>✕</button>}
+        <div className="flex gap-2">
+          <button aria-label="เต็มจอ" onClick={toggleFullscreen}>🔲</button>
+          {onClose && <button aria-label="ปิดภาพ" onClick={onClose}>✕</button>}
+        </div>
       </header>
-      <div style={{ position: 'relative', width: '100%', height: '350px', background: '#000' }}>
+      <div className="cctv-media-container flex-1" style={{ position: 'relative', width: '100%', height: '350px', background: '#000' }}>
         <iframe
           src={url}
           title="แหล่งภาพภายนอก"
@@ -143,7 +166,7 @@ function IframeViewer({ url, onClose }) {
           style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none' }}
         />
       </div>
-      <div className="cctv-controls" style={{ justifyContent: 'center' }}>
+      <div className="cctv-controls mt-auto" style={{ justifyContent: 'center' }}>
         <span style={{ fontSize: 11, color: '#6b7280' }}>เปิดจากเว็บไซต์ภายนอกโดยตรง</span>
       </div>
     </section>

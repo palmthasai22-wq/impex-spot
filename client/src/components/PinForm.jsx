@@ -7,7 +7,7 @@ import useGeolocation from '../hooks/useGeolocation';
 import { useAppContext } from '../context/AppContext';
 import toast from 'react-hot-toast';
 
-export default function PinForm({ onClose, initialPosition, initialCategory = '', onEmergency }) {
+export default function PinForm({ onClose, initialPosition, initialCategory = '', onEmergency, isAdmin }) {
   const [step, setStep] = useState(1); // 1=category, 2=details
   const [formData, setFormData] = useState({
     title: '', category: initialCategory, customType: '', description: '', images: [], trafficLevel: 'medium', reviewRating: 3, reviewNote: ''
@@ -61,7 +61,7 @@ export default function PinForm({ onClose, initialPosition, initialCategory = ''
   };
 
   const expiry = EXPIRY_CONFIG[formData.category] || { label: '30 วัน' };
-  const selectedCatLabel = [...SITUATION_CATEGORIES,...PLACE_CATEGORIES,...SHARE_CATEGORIES,{id:'other',label:'อื่นๆ',emoji:'📌'}].find(c=>c.id===formData.category);
+  const selectedCatLabel = [...SITUATION_CATEGORIES,...PLACE_CATEGORIES,...SHARE_CATEGORIES,...ADMIN_ONLY_CATEGORIES,{id:'other',label:'อื่นๆ',emoji:'📌'}].find(c=>c.id===formData.category);
 
   const renderCategorySection = (title, emoji, desc, cats) => (
     <div className="mb-5">
@@ -131,8 +131,9 @@ export default function PinForm({ onClose, initialPosition, initialCategory = ''
                   <span className="text-lg font-black text-red-500">→</span>
                 </button>
               )}
+              {isAdmin && renderCategorySection('แอดมินเท่านั้น', '🛡️', 'หมุดพิเศษสำหรับผู้ดูแลระบบ', ADMIN_ONLY_CATEGORIES)}
               {renderCategorySection('สถานการณ์', '🚦', 'รถติด อุบัติเหตุ ปัญหาต่างๆ', SITUATION_CATEGORIES)}
-              {renderCategorySection('สถานที่', '📍', 'กล้อง CCTV ห้องน้ำ จุดชาร์จ ร้านสะดวกซื้อ', PLACE_CATEGORIES)}
+              {renderCategorySection('สถานที่', '📍', 'ห้องน้ำ จุดชาร์จ ร้านสะดวกซื้อ', PLACE_CATEGORIES)}
               {renderCategorySection('แบ่งปัน & รีวิว', '💬', 'ร้านอาหาร ตลาดนัด รีวิว', SHARE_CATEGORIES)}
 
               <button type="button" onClick={() => setFormData({...formData, category: 'other'})}
