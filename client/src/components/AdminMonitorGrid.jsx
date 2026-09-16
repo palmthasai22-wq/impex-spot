@@ -4,6 +4,8 @@ import AdminCameraForm from './AdminCameraForm';
 import LiveViewer from './LiveViewer';
 import './cctv.css';
 
+const connectionLabels = { lan_ip: 'สาย LAN / IP', wifi_local: 'Wi-Fi ภายในเครือข่าย', onvif: 'ONVIF' };
+
 export default function AdminMonitorGrid({ token, onBack, onLogout }) {
   const [cameras, setCameras] = useState([]);
   const [editing, setEditing] = useState(null);
@@ -48,7 +50,7 @@ export default function AdminMonitorGrid({ token, onBack, onLogout }) {
     {!loading && !error && cameras.length === 0 && <div className="cctv-empty"><h2>ยังไม่มีกล้องในหน้านี้</h2><p>เพิ่มกล้องและตรวจสอบความยินยอมของเจ้าของเพื่อเริ่มเผยแพร่ภาพสด</p></div>}
     <div className="cctv-grid">{cameras.map(camera => <article key={camera.id} className="cctv-card">
       {camera.public_stream_url ? <LiveViewer camera={camera} /> : <div className="cctv-placeholder">{camera.owner_consent ? 'กล้องยังไม่ออนไลน์' : 'รอการตรวจสอบและความยินยอม'}</div>}
-      <div className="cctv-card-details"><strong>CCTV · {camera.id.slice(0, 8)}</strong><span className={`cctv-status ${camera.status}`}>{camera.status}</span><p>{camera.owner_type} · {camera.connection_type === 'lan_ip' ? 'เชื่อมต่อด้วย IP' : camera.connection_type}</p><p>Relay: {camera.relay_last_seen_at ? new Date(camera.relay_last_seen_at).toLocaleString('th-TH') : 'ยังไม่เชื่อมต่อ'}</p><div className="cctv-actions">
+      <div className="cctv-card-details"><strong>CCTV · {camera.id.slice(0, 8)}</strong><span className={`cctv-status ${camera.status}`}>{camera.status}</span><p>{camera.owner_type} · {connectionLabels[camera.connection_type] || camera.connection_type}</p><p>Relay: {camera.relay_last_seen_at ? new Date(camera.relay_last_seen_at).toLocaleString('th-TH') : 'ยังไม่เชื่อมต่อ'}</p><div className="cctv-actions">
         <button disabled={busy} onClick={() => setEditing(camera)}>แก้ไข</button>
         <button disabled={busy} onClick={() => action(async () => { await api.post(`/admin/cameras/${camera.id}/health`, {}, config); })}>ตรวจสอบ</button>
         <button disabled={busy} onClick={() => action(async () => { if (camera.relay_paired && !window.confirm('สร้างโทเคนใหม่จะยกเลิก Relay เดิม ต้องการดำเนินการต่อ?')) return; const { data } = await api.post(`/admin/cameras/${camera.id}/relay-token`, {}, config); setPairing(data); })}>จับคู่ Relay</button>

@@ -21,6 +21,7 @@
 .cctv-card-details { padding:16px; }.cctv-placeholder { aspect-ratio:16/9;display:grid;place-items:center;background:#dfeae5;color:#46695f; }
 .cctv-form { padding:22px;background:white;border:1px solid #c9ddd5;border-radius:16px;margin:16px 0; }
 .cctv-form label { display:flex;flex-direction:column;gap:5px;font-size:13px; }.cctv-form input,.cctv-form select { border:1px solid #adc9be;border-radius:8px;padding:9px;min-width:0;width:100%;background:white;color:#173e37; }
+.cctv-form small { color:#64748b;font-size:11px;line-height:1.35; }
 .cctv-fields { display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:16px; }
 .cctv-form .cctv-check { flex-direction:row;align-items:flex-start;margin:16px 0;gap:10px; }.cctv-check input { width:18px;height:18px;flex-shrink:0; }
 .cctv-consent { background:#eff8f1;padding:14px;border-radius:10px; }.cctv-empty { padding:48px 20px;text-align:center; }
