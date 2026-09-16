@@ -32,6 +32,7 @@ async function install() {
       // A previously scaffolded table may predate stream revision tracking.
       await client.query('ALTER TABLE cctv_pins ADD COLUMN IF NOT EXISTS revision INTEGER NOT NULL DEFAULT 1');
       await client.query('ALTER TABLE cctv_pins ADD COLUMN IF NOT EXISTS media_reset_required BOOLEAN NOT NULL DEFAULT TRUE');
+      await client.query('ALTER TABLE cctv_pins ADD COLUMN IF NOT EXISTS external_stream_url TEXT');
       console.log('CCTV migration already present');
     }
     await client.query('CREATE TABLE IF NOT EXISTS schema_migrations(version VARCHAR(255) PRIMARY KEY, applied_at TIMESTAMPTZ DEFAULT NOW())');

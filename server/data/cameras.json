@@ -1,0 +1,23 @@
+[
+  {
+    "coverage_direction": 0,
+    "verification_status": "pending",
+    "owner_consent": false,
+    "status": "offline",
+    "revision": 2,
+    "created_at": "2026-09-16T06:12:39.665Z",
+    "lat": 13,
+    "lng": 100,
+    "owner_type": "government",
+    "connection_type": "lan_ip",
+    "rtsp_path": "v1.zJQ9NBbJYd2CKLC5.1H8raf6/fe4X9wwtaWTCNQ==.vgES7cPIoOuMww==",
+    "external_stream_url": "https://www.youtube.com/live/mk9qaS5MXEA",
+    "id": "2897c1c0-b82c-4c7a-bb50-43c2c26c7671",
+    "consent_confirmed_by": null,
+    "consent_confirmed_at": null,
+    "credentials": "v1.+r6JcWAh19UUJt7T.vonojiOIxKckG9SKjhUZ0w==.+Rsvm71HJuucwGgJPHgEY6dsv9uBdwsbCbKiYMy31nA86tN99QFPkw==",
+    "media_reset_required": true,
+    "updated_at": "2026-09-16T06:12:39.667Z",
+    "last_health_check_at": "2026-09-16T06:13:51.308Z"
+  }
+]

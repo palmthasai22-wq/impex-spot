@@ -27,6 +27,15 @@ function mountCameras(app, server) {
   }
   const repo = require('../db/repositories/cameraRepository');
   const userRepo = require('../db/repositories/userRepository');
+  
+  // Auto-migrate database column if using PostgreSQL
+  try {
+    const { pool } = require('../db/pool');
+    if (pool) {
+      pool.query('ALTER TABLE cctv_pins ADD COLUMN IF NOT EXISTS external_stream_url TEXT').catch(() => {});
+    }
+  } catch (e) { /* ignore if pool not available */ }
+
   const media = createMediaClient();
   if (process.env.CCTV_EDGE_URL) app.use('/streams', cameraStreamProxy(process.env.CCTV_EDGE_URL));
   if (process.env.CCTV_TUNNEL_HOST && server) attachCameraTunnel(server, { repo, host: process.env.CCTV_TUNNEL_HOST });
