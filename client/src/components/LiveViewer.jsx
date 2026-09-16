@@ -2,7 +2,46 @@ import React, { useEffect, useRef, useState } from 'react';
 import api from '../utils/api';
 import './cctv.css';
 
-export default function LiveViewer({ camera, onClose }) {
+// ── ตรวจจับ YouTube URL และดึง video ID ──
+function getYouTubeId(url) {
+  if (!url) return null;
+  try {
+    const u = new URL(url);
+    if (u.hostname.includes('youtube.com') && u.searchParams.get('v')) return u.searchParams.get('v');
+    if (u.hostname.includes('youtube.com') && u.pathname.startsWith('/live/')) return u.pathname.split('/live/')[1].split('?')[0];
+    if (u.hostname === 'youtu.be') return u.pathname.slice(1).split('?')[0];
+    if (u.hostname.includes('youtube.com') && u.pathname.startsWith('/embed/')) return u.pathname.split('/embed/')[1].split('?')[0];
+  } catch { /* invalid URL */ }
+  return null;
+}
+
+// ── YouTube iframe embed ──
+function YouTubeViewer({ videoId, onClose }) {
+  const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0&rel=0`;
+  return (
+    <section className="cctv-viewer" aria-label="ภาพสดจาก YouTube">
+      <header>
+        <strong>▶️ YouTube Live</strong>
+        {onClose && <button aria-label="ปิดภาพสด" onClick={onClose}>✕</button>}
+      </header>
+      <div style={{ position: 'relative', width: '100%', paddingTop: '56.25%', background: '#000' }}>
+        <iframe
+          src={embedUrl}
+          title="YouTube Live"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none' }}
+        />
+      </div>
+      <div className="cctv-controls" style={{ justifyContent: 'center' }}>
+        <span style={{ fontSize: 11, color: '#6b7280' }}>ควบคุมผ่านตัวเล่น YouTube โดยตรง</span>
+      </div>
+    </section>
+  );
+}
+
+// ── HLS / Relay viewer ──
+function HlsViewer({ camera, onClose, externalUrl }) {
   const videoRef = useRef(null);
   const [error, setError] = useState('');
   const [playing, setPlaying] = useState(false);
@@ -35,19 +74,13 @@ export default function LiveViewer({ camera, onClose }) {
 
     const load = async () => {
       try {
-        // ── ใช้ external URL ถ้ามี ──
-        if (camera.external_stream_url) {
-          await loadHls(camera.external_stream_url);
-          return;
-        }
-        // ── ใช้ relay ถ้าไม่มี external URL ──
+        if (externalUrl) { await loadHls(externalUrl); return; }
         const { data } = await api.get(`/streams/${camera.id}`, { signal: controller.signal });
         if (cancelled) return;
         const streamPath = data.public_stream_url;
         if (streamPath !== `/streams/${camera.id}/index.m3u8`) throw new Error();
         const backend = new URL(api.defaults.baseURL, window.location.origin);
-        const url = new URL(streamPath, backend.origin).href;
-        await loadHls(url);
+        await loadHls(new URL(streamPath, backend.origin).href);
       } catch {
         if (!cancelled) { setError('กล้องออฟไลน์หรือยังไม่ได้รับอนุญาตให้ออกอากาศ'); setLoading(false); }
       }
@@ -55,9 +88,8 @@ export default function LiveViewer({ camera, onClose }) {
 
     load();
 
-    // ตรวจสอบ consent ทุก 10 วินาที (เฉพาะ relay mode)
     let consentTimer;
-    if (!camera.external_stream_url) {
+    if (!externalUrl) {
       consentTimer = setInterval(async () => {
         try { await api.get(`/streams/${camera.id}`, { signal: controller.signal }); }
         catch { if (!cancelled) { hls?.destroy(); video.pause(); video.removeAttribute('src'); video.load(); setError('การถ่ายทอดสดสิ้นสุดแล้ว'); setLoading(false); } }
@@ -65,31 +97,39 @@ export default function LiveViewer({ camera, onClose }) {
     }
 
     return () => {
-      cancelled = true;
-      controller.abort();
+      cancelled = true; controller.abort();
       if (consentTimer) clearInterval(consentTimer);
-      hls?.destroy();
-      video.pause();
-      video.removeAttribute('src');
-      video.load();
+      hls?.destroy(); video.pause(); video.removeAttribute('src'); video.load();
     };
-  }, [camera.id, camera.external_stream_url, retry]);
+  }, [camera.id, externalUrl, retry]);
 
-  const sourceLabel = camera.external_stream_url ? '🔗 สตรีมจากลิงก์ภายนอก' : '📡 ภาพสด · CCTV';
+  return (
+    <section className="cctv-viewer" aria-label="ภาพสดจากกล้อง CCTV">
+      <header>
+        <strong>{externalUrl ? '🔗 สตรีมภายนอก' : '📡 ภาพสด · CCTV'}</strong>
+        {onClose && <button aria-label="ปิดภาพสด" onClick={onClose}>✕</button>}
+      </header>
+      <video ref={videoRef} playsInline muted={volume === 0} disablePictureInPicture preload="auto"
+        onCanPlay={() => setLoading(false)} onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)}
+        onError={() => { setError('ไม่สามารถเล่นภาพสดได้'); setLoading(false); }} />
+      {loading && !error && <p role="status">กำลังเชื่อมต่อภาพสด…</p>}
+      {error && <p role="alert">{error} <button onClick={() => setRetry(n => n + 1)}>ลองอีกครั้ง</button></p>}
+      <div className="cctv-controls">
+        <button disabled={!!error || loading} onClick={async () => {
+          if (playing) videoRef.current.pause();
+          else { try { await videoRef.current.play(); } catch { setError('กดลองอีกครั้งเพื่อเล่นภาพสด'); } }
+        }}>{playing ? 'หยุดชั่วคราว' : 'เล่นภาพสด'}</button>
+        <label>เสียง <input aria-label="ระดับเสียง" type="range" min="0" max="1" step="0.05" value={volume}
+          onChange={e => { const v = Number(e.target.value); setVolume(v); videoRef.current.volume = v; }} /></label>
+      </div>
+    </section>
+  );
+}
 
-  return <section className="cctv-viewer" aria-label="ภาพสดจากกล้อง CCTV">
-    <header><strong>{sourceLabel}</strong>{onClose && <button aria-label="ปิดภาพสด" onClick={onClose}>✕</button>}</header>
-    <video ref={videoRef} playsInline muted={volume === 0} disablePictureInPicture preload="auto"
-      onCanPlay={() => setLoading(false)} onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)}
-      onError={() => { setError('ไม่สามารถเล่นภาพสดได้'); setLoading(false); }} />
-    {loading && !error && <p role="status">กำลังเชื่อมต่อภาพสด…</p>}
-    {error && <p role="alert">{error} <button onClick={() => setRetry(n => n + 1)}>ลองอีกครั้ง</button></p>}
-    <div className="cctv-controls">
-      <button disabled={!!error || loading} onClick={async () => {
-        if (playing) videoRef.current.pause();
-        else { try { await videoRef.current.play(); } catch { setError('กดลองอีกครั้งเพื่อเล่นภาพสด'); } }
-      }}>{playing ? 'หยุดชั่วคราว' : 'เล่นภาพสด'}</button>
-      <label>เสียง <input aria-label="ระดับเสียง" type="range" min="0" max="1" step="0.05" value={volume} onChange={event => { const value = Number(event.target.value); setVolume(value); videoRef.current.volume = value; }} /></label>
-    </div>
-  </section>;
+// ── Main export — เลือก viewer ตาม URL type ──
+export default function LiveViewer({ camera, onClose }) {
+  const externalUrl = camera.external_stream_url || null;
+  const youtubeId = getYouTubeId(externalUrl);
+  if (youtubeId) return <YouTubeViewer videoId={youtubeId} onClose={onClose} />;
+  return <HlsViewer camera={camera} onClose={onClose} externalUrl={externalUrl} />;
 }
