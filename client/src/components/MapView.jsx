@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, ZoomControl, useMap, Circle, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import { useAppContext } from '../context/AppContext';
@@ -9,8 +9,10 @@ import Free3DMap from './Free3DMap';
 import CameraPin from './CameraPin';
 import LiveViewer from './LiveViewer';
 import useCameras from '../hooks/useCameras';
+import useTrafficFlow from '../hooks/useTrafficFlow';
 import { PIN_CATEGORIES, MAIN_FEATURES } from '../utils/categories';
 import { fetchDispatchedResponders } from '../utils/api';
+import { TRAFFIC_LEVELS, connectCctvToDetec, getTrafficLevel as getAiTrafficLevel, hasTrafficCoordinates, trafficNodeId } from '../utils/traffic';
 
 const createPinIcon = (category) => {
   const image = category === 'emergency'
@@ -51,6 +53,18 @@ const selectedPinIcon = L.divIcon({
   popupAnchor: [0, -64],
 });
 
+const createTrafficIcon = (node) => {
+  const level = getAiTrafficLevel(node);
+  const traffic = TRAFFIC_LEVELS[level];
+  return L.divIcon({
+    className: 'ai-traffic-marker',
+    html: `<div title="${traffic.label}" style="width:42px;height:42px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:${traffic.color};border:3px solid white;box-shadow:0 4px 14px rgba(15,23,42,.35);display:flex;align-items:center;justify-content:center"><span style="transform:rotate(45deg);font-size:18px">🚦</span></div>`,
+    iconSize: [42, 42],
+    iconAnchor: [21, 42],
+    popupAnchor: [0, -44],
+  });
+};
+
 const adminResponderIcon = L.divIcon({
   className: 'custom-admin-marker',
   html: `<div style="width:90px;height:90px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 3px 10px rgba(22,163,74,0.5));animation:bounce 2s ease-in-out infinite;">
@@ -72,7 +86,7 @@ function MapClickHandler({ onSelect }) {
   return null;
 }
 
-function MapController({ onReady, bounds, pins }) {
+function MapController({ onReady, bounds, pins, trafficNodes = [] }) {
   const map = useMap();
   const hasFocusedPins = useRef(false);
 
@@ -85,11 +99,16 @@ function MapController({ onReady, bounds, pins }) {
   }, [bounds, map]);
 
   useEffect(() => {
-    if (hasFocusedPins.current || pins.length === 0) return;
+    if (hasFocusedPins.current || (pins.length === 0 && trafficNodes.length === 0)) return;
 
-    const positions = pins
-      .filter(pin => Number.isFinite(Number(pin.lat)) && Number.isFinite(Number(pin.lng)))
-      .map(pin => [Number(pin.lat), Number(pin.lng)]);
+    const positions = [
+      ...pins
+        .filter(pin => Number.isFinite(Number(pin.lat)) && Number.isFinite(Number(pin.lng)))
+        .map(pin => [Number(pin.lat), Number(pin.lng)]),
+      ...trafficNodes
+        .filter(hasTrafficCoordinates)
+        .map(node => [Number(node.lat), Number(node.lng)]),
+    ];
     if (positions.length === 0) return;
 
     hasFocusedPins.current = true;
@@ -98,7 +117,7 @@ function MapController({ onReady, bounds, pins }) {
     } else {
       map.fitBounds(L.latLngBounds(positions), { padding: [40, 40], maxZoom: 14 });
     }
-  }, [map, pins]);
+  }, [map, pins, trafficNodes]);
 
   return null;
 }
@@ -118,6 +137,7 @@ const getTrafficLevel = (pin) => {
 
 export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFormOpen, isAdmin = false }) {
   const { cameras, cameraError } = useCameras();
+  const { trafficNodes, detecCameras, trafficError, trafficUpdatedAt } = useTrafficFlow();
   const [showCameras, setShowCameras] = useState(true);
   const [selectedCamera, setSelectedCamera] = useState(null);
   const { pins, connected, lastRealtimeAt } = usePins();
@@ -134,6 +154,10 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
   const [showActionMenu, setShowActionMenu] = useState(false);
   const [pendingAction, setPendingAction] = useState(null);
   const [dispatchedResponders, setDispatchedResponders] = useState([]);
+  const linkedCameras = useMemo(
+    () => cameras.map(camera => connectCctvToDetec(camera, detecCameras, trafficNodes)),
+    [cameras, detecCameras, trafficNodes]
+  );
 
   useEffect(() => {
     const t = setTimeout(() => setShowWelcome(false), 4000);
@@ -165,6 +189,15 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
     if (filters.verified && (pin.confidence || 0) < 60) return false;
     return true;
   });
+  const linkedPins = useMemo(
+    () => filteredPins.map(pin => {
+      const type = pin.type || pin.category;
+      return type === 'cctv' || type === 'traffic'
+        ? connectCctvToDetec(pin, detecCameras, trafficNodes)
+        : pin;
+    }),
+    [filteredPins, detecCameras, trafficNodes]
+  );
 
   const defaultCenter = [13.9127, 100.5534];
   const quickFilters = MAIN_FEATURES.filter(f => f.categories.length > 0);
@@ -269,9 +302,10 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
       <div style={{ position:'absolute', inset:0, zIndex:1, overflow:'hidden' }}>
         {show3D ? (
           <Free3DMap
-            cameras={showCameras ? cameras : []}
+            cameras={showCameras ? linkedCameras : []}
+            trafficNodes={trafficNodes}
             onCameraClick={setSelectedCamera}
-            pins={filteredPins}
+            pins={linkedPins}
             userPosition={lat && lng ? [lat, lng] : defaultCenter}
             selectedPosition={selectedPosition}
             limitedBounds={limitedBounds}
@@ -285,22 +319,51 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
           zoomControl={false} attributionControl={false}>
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap' />
           <ZoomControl position="bottomleft" />
-          <MapController onReady={setMapInstance} bounds={limitedBounds} pins={filteredPins} />
+          <MapController onReady={setMapInstance} bounds={limitedBounds} pins={linkedPins} trafficNodes={trafficNodes} />
           <MapClickHandler onSelect={handleMapSelect} />
           {flyTo && <FlyToUser position={flyTo} />}
-          {showCameras && cameras.map(camera => <CameraPin key={camera.id} camera={camera} onSelect={setSelectedCamera} />)}
+          {showCameras && linkedCameras.map(camera => <CameraPin key={camera.id} camera={camera} onSelect={setSelectedCamera} />)}
+
+          {/* 🚦 AI Traffic Nodes from Detec */}
+          {trafficNodes.filter(hasTrafficCoordinates).map((node, index) => {
+            const level = getAiTrafficLevel(node);
+            const traffic = TRAFFIC_LEVELS[level];
+            return <React.Fragment key={`ai-traffic-${trafficNodeId(node, index)}`}>
+            <Circle center={[Number(node.lat), Number(node.lng)]} radius={120} interactive={false}
+              pathOptions={{
+                color: traffic.color, fillColor: traffic.color, fillOpacity: 0.2, weight: 3,
+              }} />
+            <Marker position={[Number(node.lat), Number(node.lng)]} icon={createTrafficIcon(node)}>
+              <Popup>
+                <div style={{textAlign: 'center', fontFamily: 'Kanit'}}>
+                  <strong style={{fontSize:'14px'}}>{node.name || `Camera ${node.camera_id}`}</strong>
+                  <div style={{margin: '8px 0', padding: '4px', borderRadius: '4px', background: traffic.background, color: traffic.text}}>
+                    <strong>{traffic.emoji} {traffic.label} · Jam Index {Number(node.jam_index || 0)}%</strong>
+                  </div>
+                  <span>จำนวนรถ: {Number(node.current_vehicles || 0)} คัน</span><br/>
+                  {(node.average_speed ?? node.avg_speed) != null && <><span>ความเร็วเฉลี่ย: {Number(node.average_speed ?? node.avg_speed).toFixed(1)} {node.speed_unit || 'px/window'}</span><br/></>}
+                  <span style={{fontSize: '10px', color: '#666'}}>{node.active === false ? '⚪ กล้องไม่ได้ประมวลผล' : '🤖 AI วิเคราะห์แบบ Real-time'}</span>
+                </div>
+              </Popup>
+            </Marker>
+            </React.Fragment>;
+          })}
+
           {(lat && lng) ? (
             <Marker position={[lat, lng]} icon={userIcon} />
           ) : (
             <Marker position={defaultCenter} icon={userIcon} />
           )}
-          {filteredPins.map(pin => (
+          {linkedPins.map(pin => {
+            const aiTraffic = pin.ai_traffic ? TRAFFIC_LEVELS[getAiTrafficLevel(pin.ai_traffic)] : null;
+            const pinTraffic = aiTraffic || trafficColors[getTrafficLevel(pin)];
+            return (
             <React.Fragment key={pin.id}>
               {(pin.type || pin.category) === 'traffic' && (
                 <Circle center={[pin.lat, pin.lng]} radius={90}
                   pathOptions={{
-                    color: trafficColors[getTrafficLevel(pin)].color,
-                    fillColor: trafficColors[getTrafficLevel(pin)].color,
+                    color: pinTraffic.color,
+                    fillColor: pinTraffic.color,
                     fillOpacity: 0.2,
                     weight: 3,
                   }} />
@@ -318,8 +381,8 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
               {(pin.type || pin.category) === 'cctv' && (
                 <Circle center={[pin.lat, pin.lng]} radius={100} interactive={false}
                   pathOptions={{
-                    color: '#0284c7',
-                    fillColor: '#38bdf8',
+                    color: aiTraffic?.color || '#0284c7',
+                    fillColor: aiTraffic?.color || '#38bdf8',
                     fillOpacity: 0.18,
                     weight: 2,
                     opacity: 0.9,
@@ -333,7 +396,8 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
               </Popup>
               </Marker>
             </React.Fragment>
-          ))}
+            );
+          })}
           {/* Admin/Responder Markers — real-time */}
           {dispatchedResponders.filter(r => Number.isFinite(Number(r.lat)) && Number.isFinite(Number(r.lng))).map(responder => (
             <Marker key={`resp-${responder.id || responder._id}`}
@@ -391,7 +455,7 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
           )}
           <div style={{background:'#dcfce7',borderRadius:11,padding:'8px 11px',fontSize:11,fontWeight:800,color:'#15803d',display:'flex',alignItems:'center',gap:6}}>
             <img src="/images/mascot.png" alt="" style={{width:14,height:14,objectFit:'contain'}} />
-            {filteredPins.length} หมุด
+            {linkedPins.length} หมุด
           </div>
 
           {/* ปุ่มเปิด filter กลับ (แสดงเมื่อซ่อน) */}
@@ -472,7 +536,7 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
         )}
 
         {/* Empty State */}
-        {filteredPins.length === 0 && !showWelcome && (
+        {linkedPins.length === 0 && !showWelcome && (
           <div style={{position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)',zIndex:800,textAlign:'center',pointerEvents:'none'}}>
             <div style={{background:'rgba(255,255,255,0.90)',borderRadius:24,padding:24,boxShadow:'0 4px 20px rgba(0,0,0,0.08)',maxWidth:220,backdropFilter:'blur(10px)'}}>
               <img src="/images/mascot_ruthan.png" alt="" style={{width:56,height:56,objectFit:'contain',margin:'0 auto 8px',display:'block'}} className="animate-float" />
@@ -482,6 +546,12 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
           </div>
         )}
       </div>
+
+      {trafficError && (
+        <div role="status" style={{position:'absolute',left:12,bottom:74,zIndex:880,background:'rgba(127,29,29,.92)',color:'#fff',padding:'7px 11px',borderRadius:10,fontSize:11,fontWeight:700}}>
+          {trafficError}{trafficUpdatedAt ? ` · แสดงข้อมูลล่าสุด ${trafficUpdatedAt.toLocaleTimeString('th-TH')}` : ''}
+        </div>
+      )}
 
       {/* ── BOTTOM: Action Bar (ใหญ่ขึ้น + ปุ่มย้อนกลับ) ── */}
       <div className="map-action-dock" style={{ position:'absolute', right:'16px', top:'50%', transform:'translateY(-50%)', zIndex:900 }}>

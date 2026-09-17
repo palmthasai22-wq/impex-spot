@@ -1,7 +1,7 @@
 const { isIP } = require('node:net');
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 function invalid() { const error = new Error('Invalid camera input'); error.status = 400; throw error; }
-const allowed = new Set(['lat', 'lng', 'coverage_direction', 'owner_type', 'connection_type', 'camera_ip', 'rtsp_path', 'credentials', 'verification_status', 'owner_consent', 'external_stream_url']);
+const allowed = new Set(['lat', 'lng', 'coverage_direction', 'owner_type', 'connection_type', 'camera_ip', 'rtsp_path', 'credentials', 'verification_status', 'owner_consent', 'external_stream_url', 'detec_camera_id']);
 
 function validateCamera(body, creating = false) {
   if (!body || typeof body !== 'object' || Array.isArray(body) || Object.keys(body).some(k => !allowed.has(k))) invalid();
@@ -27,6 +27,11 @@ function validateCamera(body, creating = false) {
       // ไม่ใช้ new URL() เพื่อให้รับ <iframe> embed code หรือลิงก์ที่ไม่มี http ได้
     }
   }
+  if ('detec_camera_id' in body && body.detec_camera_id !== null && body.detec_camera_id !== '') {
+    const detecId = Number(body.detec_camera_id);
+    if (!Number.isInteger(detecId) || detecId < 1) invalid();
+    body.detec_camera_id = detecId;
+  }
   // A pending Wi-Fi record may start without an IP. The paired relay discovers it
   // on the local network; every usable camera record still requires a bare IP.
   const isPendingWifiDiscovery = body.connection_type === 'wifi_local'
@@ -44,5 +49,4 @@ function validateCamera(body, creating = false) {
   return body;
 }
 module.exports = { UUID, invalid, validateCamera };
-
 

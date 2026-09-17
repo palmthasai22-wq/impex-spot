@@ -33,6 +33,7 @@ function mountCameras(app, server) {
     const { pool } = require('../db/pool');
     if (pool) {
       pool.query('ALTER TABLE cctv_pins ADD COLUMN IF NOT EXISTS external_stream_url TEXT').catch(() => {});
+      pool.query('ALTER TABLE cctv_pins ADD COLUMN IF NOT EXISTS detec_camera_id INTEGER').catch(() => {});
     }
   } catch (e) { /* ignore if pool not available */ }
 

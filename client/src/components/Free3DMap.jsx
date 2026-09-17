@@ -1,7 +1,8 @@
 import React, { useEffect, useRef } from 'react';
-import { Map, Marker, NavigationControl } from 'maplibre-gl';
+import { Map, Marker, NavigationControl, Popup } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { CAMERA_ICON, coverageCone } from './CameraPin';
+import { TRAFFIC_LEVELS, getTrafficLevel, hasTrafficCoordinates } from '../utils/traffic';
 
 const STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty';
 
@@ -9,6 +10,23 @@ function createMascotElement(className = '', image = '/images/mascot_impact.png'
   const element = document.createElement('div');
   element.className = `free-map-mascot ${className}`;
   element.innerHTML = `<img src="${image}" alt="หมุด" />`;
+  return element;
+}
+
+function createTrafficElement(node) {
+  const traffic = TRAFFIC_LEVELS[getTrafficLevel(node)];
+  const element = document.createElement('button');
+  element.type = 'button';
+  element.setAttribute('aria-label', `${traffic.label} ${node.name || ''}`.trim());
+  Object.assign(element.style, {
+    width: '38px', height: '38px', borderRadius: '50% 50% 50% 0', transform: 'rotate(-45deg)',
+    background: traffic.color, border: '3px solid white', boxShadow: '0 4px 14px rgba(15,23,42,.35)',
+    cursor: 'pointer', fontSize: '17px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+  });
+  const icon = document.createElement('span');
+  icon.textContent = '🚦';
+  icon.style.transform = 'rotate(45deg)';
+  element.appendChild(icon);
   return element;
 }
 
@@ -25,7 +43,7 @@ function createRadiusPolygon(pin, radiusMetres = 100) {
   return { type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [coordinates] } };
 }
 
-export default function Free3DMap({ pins, cameras = [], onCameraClick, userPosition, selectedPosition, limitedBounds, onMapSelect, onPinClick, onReady, onUnavailable }) {
+export default function Free3DMap({ pins, cameras = [], trafficNodes = [], onCameraClick, userPosition, selectedPosition, limitedBounds, onMapSelect, onPinClick, onReady, onUnavailable }) {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
   const markersRef = useRef([]);
@@ -157,7 +175,25 @@ export default function Free3DMap({ pins, cameras = [], onCameraClick, userPosit
     });
     if (userPosition) addMarker(userPosition, 'free-map-user');
     if (selectedPosition) addMarker(selectedPosition, 'free-map-selected');
-  }, [pins, userPosition, selectedPosition, onPinClick]);
+
+    trafficNodes.filter(hasTrafficCoordinates).forEach(node => {
+      const traffic = TRAFFIC_LEVELS[getTrafficLevel(node)];
+      const popupContent = document.createElement('div');
+      const title = document.createElement('strong');
+      title.textContent = node.name || `Camera ${node.camera_id}`;
+      const detail = document.createElement('div');
+      const speed = node.average_speed ?? node.avg_speed;
+      detail.textContent = `${traffic.emoji} ${traffic.label} · Jam Index ${Number(node.jam_index || 0)}% · ${Number(node.current_vehicles || 0)} คัน${speed == null ? '' : ` · ${Number(speed).toFixed(1)} ${node.speed_unit || 'px/window'}`}`;
+      detail.style.cssText = `margin-top:6px;color:${traffic.text}`;
+      popupContent.append(title, detail);
+      const marker = new Marker({ element: createTrafficElement(node), anchor: 'bottom' })
+        .setLngLat([Number(node.lng), Number(node.lat)])
+        .setPopup(new Popup({ offset: 28 }).setDOMContent(popupContent))
+        .addTo(map);
+      marker.getElement().addEventListener('click', event => event.stopPropagation());
+      markersRef.current.push(marker);
+    });
+  }, [pins, trafficNodes, userPosition, selectedPosition, onPinClick]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -190,8 +226,10 @@ export default function Free3DMap({ pins, cameras = [], onCameraClick, userPosit
     } else map.getSource('cctv-cones').setData(data);
     const markers = cameras.map(camera => {
       const element = document.createElement('button');
-      element.type = 'button'; element.className = `cctv-marker ${camera.status === 'online' ? 'is-online' : ''}`;
-      element.innerHTML = CAMERA_ICON; element.setAttribute('aria-label', `CCTV · ${camera.status}`);
+      const aiTraffic = camera.ai_traffic ? TRAFFIC_LEVELS[getTrafficLevel(camera.ai_traffic)] : null;
+      element.type = 'button'; element.className = `cctv-marker ${camera.status === 'online' ? 'is-online' : ''} ${aiTraffic ? 'has-ai-traffic' : ''}`;
+      if (aiTraffic) element.style.boxShadow = `0 0 0 4px ${aiTraffic.color}, 0 6px 18px rgba(15,23,42,.35)`;
+      element.innerHTML = CAMERA_ICON; element.setAttribute('aria-label', camera.detec_camera_id ? `CCTV + Detec ${aiTraffic?.label || ''}` : `CCTV · ${camera.status}`);
       element.addEventListener('click', event => { event.stopPropagation(); onCameraClick(camera); });
       return new Marker({ element, anchor: 'bottom' }).setLngLat([camera.location.lng, camera.location.lat]).addTo(map);
     });

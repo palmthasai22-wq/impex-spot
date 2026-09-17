@@ -20,6 +20,7 @@ CREATE TABLE cctv_pins (
   consent_confirmed_by UUID REFERENCES users(id),
   consent_confirmed_at TIMESTAMPTZ,
   external_stream_url TEXT,
+  detec_camera_id INTEGER,
   reported_by UUID REFERENCES users(id) ON DELETE SET NULL,
   relay_token_hash TEXT,
   media_reset_required BOOLEAN NOT NULL DEFAULT TRUE,

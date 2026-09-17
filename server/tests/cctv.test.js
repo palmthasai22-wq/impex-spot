@@ -73,7 +73,7 @@ function safe(body) {
 
 test('public DTO has an exact allowlist and derives a safe stream URL', () => {
   const result = publicCamera(row);
-  assert.deepEqual(Object.keys(result).sort(), ['id', 'location', 'coverage_direction', 'owner_type', 'status', 'public_stream_url'].sort());
+  assert.deepEqual(Object.keys(result).sort(), ['id', 'location', 'coverage_direction', 'owner_type', 'status', 'public_stream_url', 'external_stream_url', 'detec_camera_id'].sort());
   safe(JSON.stringify(result));
   assert.equal(result.public_stream_url, `/streams/${cameraId}/index.m3u8`);
   assert.equal(adminCamera(row).camera_ip, '192.168.50.2');
@@ -183,6 +183,9 @@ test('token rotation invalidates old machine credentials and stops old playback 
 test('unsafe input, invalid coordinates and unknown fields are rejected', () => {
   for (const body of [{ camera_ip: 'http://host/' }, { public_stream_url: 'rtsp://host' }, { owner_consent: 'false' }, { coverage_direction: 360 }, { lat: 91, lng: 100 }, { lat: 13 }, { rtsp_path: '//other-host' }, { credentials: { username: 'u', password: 'p', port: 0 } }]) assert.throws(() => validateCamera(body));
   assert.doesNotThrow(() => validateCamera({ camera_ip: '192.168.1.2', credentials: { username: 'u', password: '<raw>&secret' } }));
+  assert.doesNotThrow(() => validateCamera({ detec_camera_id: 12 }));
+  assert.throws(() => validateCamera({ detec_camera_id: 0 }));
+  assert.throws(() => validateCamera({ detec_camera_id: 1.5 }));
   assert.doesNotThrow(() => validateCamera({
     lat: 13.7563, lng: 100.5018,
     owner_type: 'agency', connection_type: 'wifi_local',

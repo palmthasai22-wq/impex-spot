@@ -6,6 +6,7 @@ import StarRating from './StarRating';
 import { PIN_CATEGORIES } from '../utils/categories';
 import { verifyPin } from '../utils/api';
 import toast from 'react-hot-toast';
+import { TRAFFIC_LEVELS, getTrafficLevel } from '../utils/traffic';
 
 export default function PinInfoWindow({ pin, onClose, onSelectCamera, isAdmin = false }) {
   const category = PIN_CATEGORIES.find(c => c.id === (pin.type || pin.category)) || PIN_CATEGORIES[PIN_CATEGORIES.length - 1];
@@ -14,6 +15,9 @@ export default function PinInfoWindow({ pin, onClose, onSelectCamera, isAdmin = 
   const averageRating = Number(pin.averageRating || pin.reviewRating || 0);
   const [isVerifying, setIsVerifying] = useState(false);
   const [expandedImage, setExpandedImage] = useState(null);
+  const aiTraffic = pin.ai_traffic || null;
+  const aiLevel = aiTraffic ? getTrafficLevel(aiTraffic) : null;
+  const aiStyle = aiLevel ? TRAFFIC_LEVELS[aiLevel] : null;
 
   useEffect(() => {
     if (!expandedImage) return undefined;
@@ -89,6 +93,23 @@ export default function PinInfoWindow({ pin, onClose, onSelectCamera, isAdmin = 
       {/* Description */}
       {pin.description && (
         <p className="text-xs text-gray-500 mb-3 line-clamp-3 leading-relaxed bg-gray-50 p-2.5 rounded-xl">{pin.description}</p>
+      )}
+
+      {/* Live traffic analysis linked from Detec by camera ID or nearby GPS. */}
+      {aiTraffic && aiStyle && (
+        <div className="mb-3 rounded-xl border p-2.5" style={{backgroundColor: aiStyle.background, borderColor: `${aiStyle.color}55`, color: aiStyle.text}}>
+          <div className="flex items-center justify-between gap-2">
+            <strong className="text-xs">{aiStyle.emoji} {aiStyle.label}</strong>
+            <strong className="text-xs">Jam Index {Number(aiTraffic.jam_index || 0)}%</strong>
+          </div>
+          <div className="mt-1.5 grid grid-cols-2 gap-1 text-[10px] font-medium">
+            <span>รถ {Number(aiTraffic.current_vehicles || 0)} คัน</span>
+            <span>เร็วเฉลี่ย {Number(aiTraffic.average_speed ?? aiTraffic.avg_speed ?? 0).toFixed(1)} {aiTraffic.speed_unit || 'px/window'}</span>
+          </div>
+          <p className="mt-1 text-[9px] opacity-75">
+            {aiTraffic.active === false ? 'Detec ยังไม่ได้ประมวลผล' : `Detec กล้อง #${aiTraffic.camera_id} · อัปเดตสด`}
+          </p>
+        </div>
       )}
 
       {/* Images */}

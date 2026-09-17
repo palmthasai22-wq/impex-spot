@@ -1,6 +1,7 @@
 import React from 'react';
 import { Marker, Polygon } from 'react-leaflet';
 import L from 'leaflet';
+import { TRAFFIC_LEVELS, getTrafficLevel } from '../utils/traffic';
 
 export const CAMERA_IMAGE = '/images/cctv.png';
 export const CAMERA_ICON = `<img src="${CAMERA_IMAGE}" alt="" aria-hidden="true" />`;
@@ -20,9 +21,14 @@ export function coverageCone(camera) {
 }
 
 export default function CameraPin({ camera, onSelect }) {
-  const icon = L.divIcon({ className: 'cctv-marker-wrap', html: `<span class="cctv-marker ${camera.status === 'online' ? 'is-online' : ''}">${CAMERA_ICON}</span>`, iconSize: [62, 82], iconAnchor: [31, 82] });
+  const traffic = camera.ai_traffic ? TRAFFIC_LEVELS[getTrafficLevel(camera.ai_traffic)] : null;
+  const aiStyle = traffic ? `style="--ai-traffic-color:${traffic.color};box-shadow:0 0 0 4px ${traffic.color},0 6px 18px rgba(15,23,42,.35)"` : '';
+  const icon = L.divIcon({ className: 'cctv-marker-wrap', html: `<span class="cctv-marker ${camera.status === 'online' ? 'is-online' : ''} ${traffic ? 'has-ai-traffic' : ''}" ${aiStyle}>${CAMERA_ICON}</span>`, iconSize: [62, 82], iconAnchor: [31, 82] });
+  const title = camera.detec_camera_id
+    ? `CCTV + Detec #${camera.detec_camera_id}${traffic ? ` · ${traffic.label}` : ''}`
+    : `CCTV · ${camera.status}`;
   return <>
     <Polygon positions={coverageCone(camera)} interactive={false} pathOptions={{ color: '#0d9488', weight: 1, fillOpacity: 0.14 }} />
-    <Marker position={[camera.location.lat, camera.location.lng]} icon={icon} title={`CCTV · ${camera.status}`} bubblingMouseEvents={false} eventHandlers={{ click: () => onSelect(camera) }} />
+    <Marker position={[camera.location.lat, camera.location.lng]} icon={icon} title={title} bubblingMouseEvents={false} eventHandlers={{ click: () => onSelect(camera) }} />
   </>;
 }

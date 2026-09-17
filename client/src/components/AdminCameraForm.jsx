@@ -5,6 +5,7 @@ export default function AdminCameraForm({ camera, onSave, onCancel }) {
     coverage_direction: camera?.coverage_direction ?? 0, owner_type: camera?.owner_type || 'government',
     connection_type: 'lan_ip', camera_ip: camera?.camera_ip || '', rtsp_path: camera?.rtsp_path || '/stream1',
     external_stream_url: camera?.external_stream_url || '',
+    detec_camera_id: camera?.detec_camera_id || '',
     verification_status: camera?.verification_status || 'pending', owner_consent: camera?.owner_consent || false });
   const [credentials, setCredentials] = useState({ username: '', password: '', port: 554 });
   const [replaceCredentials, setReplaceCredentials] = useState(!camera?.id);
@@ -46,11 +47,16 @@ export default function AdminCameraForm({ camera, onSave, onCancel }) {
       <label>URL สตรีมภายนอก (ไม่บังคับ)
         <input
           type="text"
-          placeholder="เช่น http://... หรือ <iframe src=...> หรือลิงก์ทั่วไป"
+          placeholder="เช่น https://detec-production.up.railway.app/live/{uuid}"
           value={data.external_stream_url}
           onChange={e => change('external_stream_url', e.target.value)}
         />
-        <small style={{fontSize:'0.72em',color:'#6b7280'}}>กรอก URL นี้เพื่อให้ผู้ชมดูสตรีมโดยตรงจากกล้อง แทนที่จะผ่าน Relay</small>
+        <small style={{fontSize:'0.72em',color:'#6b7280'}}>วาง URL จอมอนิเตอร์ที่คัดลอกจาก Detec เพื่อแสดงเฉพาะภาพวิเคราะห์แบบเต็มจอ</small>
+      </label>
+      <label>Detec Camera ID (ไม่บังคับ)
+        <input type="number" min="1" step="1" placeholder="เช่น 12" value={data.detec_camera_id}
+          onChange={e => change('detec_camera_id', e.target.value === '' ? '' : Number(e.target.value))} />
+        <small style={{fontSize:'0.72em',color:'#6b7280'}}>ระบุ ID กล้องจาก detec เพื่อเชื่อมภาพ AI และสถานะจราจรกับหมุดนี้ หากเว้นว่างระบบจะจับคู่จาก GPS ภายใน 150 เมตร</small>
       </label>
       {camera?.id ? <label>การตรวจสอบ<select value={data.verification_status} onChange={e => change('verification_status', e.target.value)}><option value="pending">รอตรวจสอบ</option><option value="verified">ตรวจสอบแล้ว</option><option value="rejected">ไม่อนุมัติ</option></select></label> : <label>การตรวจสอบ<input readOnly value="รอตรวจสอบหลังเชื่อมต่อ" /></label>}
     </div>

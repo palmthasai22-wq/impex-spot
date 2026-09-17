@@ -11,6 +11,7 @@ function publicCamera(row) {
     status: row.status,
     public_stream_url: publishable(row) && row.status === 'online' ? `/streams/${row.id}/index.m3u8` : null,
     external_stream_url: publishable(row) ? (row.external_stream_url || null) : null,
+    detec_camera_id: row.detec_camera_id == null ? null : Number(row.detec_camera_id),
   };
 }
 

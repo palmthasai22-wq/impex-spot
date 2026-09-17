@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import api from '../utils/api';
+import { getDetecApiUrl } from '../utils/detecApi';
+import { TRAFFIC_LEVELS, getTrafficLevel } from '../utils/traffic';
 import './cctv.css';
 
 // ── ตรวจจับ YouTube URL และดึง video ID ──
@@ -170,8 +172,47 @@ function IframeViewer({ url, onClose }) {
   );
 }
 
+function DetecViewer({ camera, onClose }) {
+  const [error, setError] = useState('');
+  const detec = camera.detec_camera || {};
+  const traffic = camera.ai_traffic ? TRAFFIC_LEVELS[getTrafficLevel(camera.ai_traffic)] : null;
+  const isViewOnly = !detec.url && detec.embed_url;
+  const monitorUrl = detec.public_id ? `${getDetecApiUrl()}/live/${detec.public_id}` : null;
+  const source = isViewOnly ? detec.embed_url : monitorUrl || `${getDetecApiUrl()}/api/streams/${camera.detec_camera_id}`;
+
+  return (
+    <section className="cctv-viewer" aria-label="ภาพสด CCTV ที่วิเคราะห์ด้วย Detec">
+      <header>
+        <strong>🤖 CCTV + Detec #{camera.detec_camera_id}</strong>
+        <div className="flex items-center gap-2">
+          {traffic && <span style={{background:traffic.background,color:traffic.text,borderRadius:999,padding:'3px 8px',fontSize:11}}>{traffic.emoji} {traffic.label}</span>}
+          <button aria-label="เต็มจอ" onClick={toggleFullscreen}>🔲</button>
+          {onClose && <button aria-label="ปิดภาพสด" onClick={onClose}>✕</button>}
+        </div>
+      </header>
+      <div style={{position:'relative',width:'100%',height:350,background:'#000',display:'flex',alignItems:'center',justifyContent:'center'}}>
+        {(isViewOnly && detec.embed_mode === 'iframe') || monitorUrl ? (
+          <iframe src={source} title={`Detec camera ${camera.detec_camera_id}`} allow="autoplay; fullscreen; picture-in-picture" allowFullScreen
+            sandbox="allow-scripts allow-same-origin allow-presentation" referrerPolicy="no-referrer"
+            style={{position:'absolute',inset:0,width:'100%',height:'100%',border:'none'}} />
+        ) : (
+          <img src={source} alt={`Detec camera ${camera.detec_camera_id}`} referrerPolicy="no-referrer"
+            onLoad={() => setError('')} onError={() => setError('Detec ยังไม่สามารถเปิดภาพจากกล้องนี้ได้')}
+            style={{width:'100%',height:'100%',objectFit:'contain'}} />
+        )}
+        {error && <p role="alert" style={{position:'absolute',background:'rgba(0,0,0,.75)',color:'#fff',padding:12,borderRadius:10}}>{error}</p>}
+      </div>
+      <div className="cctv-controls" style={{justifyContent:'center',gap:14}}>
+        <span>Jam Index: {Number(camera.ai_traffic?.jam_index || 0)}%</span>
+        <span>รถ: {Number(camera.ai_traffic?.current_vehicles || 0)} คัน</span>
+      </div>
+    </section>
+  );
+}
+
 // ── Main export — เลือก viewer ตาม URL type ──
 export default function LiveViewer({ camera, onClose }) {
+  if (camera.detec_camera_id) return <DetecViewer camera={camera} onClose={onClose} />;
   let externalUrl = camera.external_stream_url || null;
   
   // แปลง input ให้เป็น URL ที่ใช้งานได้เสมอ

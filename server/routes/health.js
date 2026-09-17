@@ -8,4 +8,12 @@ router.get('/', (req, res) => {
   });
 });
 
+router.get('/live', (req, res) => {
+  res.status(200).json({ status: 'ok', check: 'live' });
+});
+
+router.get('/ready', (req, res) => {
+  res.status(200).json({ status: 'ok', check: 'ready' });
+});
+
 module.exports = router;
