@@ -116,19 +116,26 @@ router.post('/events/sync', async (req, res) => {
       'Challenger Hall 1': { lat: 13.9119432, lng: 100.5461693 },
       'Challenger Hall 2': { lat: 13.9130753, lng: 100.5465568 },
       'Challenger Hall 3': { lat: 13.9141292, lng: 100.5469934 },
+      'Challenger Hall 1-3': { lat: 13.9130753, lng: 100.5467751 },
       'Challenger Hall 2-3': { lat: 13.91360225, lng: 100.5467751 },
       'IMPACT Arena': { lat: 13.911465, lng: 100.5483697 },
+      'อิมแพ็ค อารีน่า เมืองทองธานี': { lat: 13.911465, lng: 100.5483697 },
       'Exhibition Center Hall 5': { lat: 13.9122509, lng: 100.54815 },
       'Exhibition Center Hall 6': { lat: 13.9128676, lng: 100.54849 },
       'Exhibition Center Hall 5-6': { lat: 13.91255925, lng: 100.54832 },
       'Exhibition Center Hall 7': { lat: 13.9134843, lng: 100.54883 },
       'Exhibition Center Hall 8': { lat: 13.914101, lng: 100.54916 },
+      'ศูนย์แสดงสินค้า อิมแพ็ค เมืองทองธานี': { lat: 13.913, lng: 100.548 },
       'IMPACT Forum Hall 4': { lat: 13.9161526, lng: 100.5471676 },
     };
 
     function getVenueLocation(venueName) {
       const normalized = String(venueName || '').trim().toLowerCase();
-      const entry = Object.entries(VENUE_LOCATIONS).find(([name]) => name.toLowerCase() === normalized);
+      const entry = Object.entries(VENUE_LOCATIONS).find(([name]) => 
+        name.toLowerCase() === normalized || 
+        normalized.includes(name.toLowerCase()) || 
+        name.toLowerCase().includes(normalized)
+      );
       return entry ? entry[1] : null;
     }
 
