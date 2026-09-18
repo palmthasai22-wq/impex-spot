@@ -156,13 +156,14 @@ router.post('/events/sync', async (req, res) => {
     };
 
     function getVenueLocation(venueName) {
-      const normalized = String(venueName || '').trim().toLowerCase();
-      const entry = Object.entries(VENUE_LOCATIONS).find(([name]) => 
-        name.toLowerCase() === normalized || 
-        normalized.includes(name.toLowerCase()) || 
-        name.toLowerCase().includes(normalized)
-      );
-      return entry ? entry[1] : null;
+      const normalized = String(venueName || '').replace(/\s+/g, ' ').trim().toLowerCase();
+      const entry = Object.entries(VENUE_LOCATIONS).find(([name]) => {
+        const normName = name.replace(/\s+/g, ' ').trim().toLowerCase();
+        return normName === normalized || 
+               normalized.includes(normName) || 
+               normName.includes(normalized);
+      });
+      return entry?.[1] || null;
     }
 
     $('.eb-event-item-grid-default-layout').each((i, el) => {

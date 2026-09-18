@@ -50,12 +50,13 @@ export const VENUE_LOCATIONS = {
 };
 
 export function getVenueLocation(venueName) {
-  const normalized = String(venueName || '').trim().toLowerCase();
-  const entry = Object.entries(VENUE_LOCATIONS).find(([name]) => 
-    name.toLowerCase() === normalized || 
-    normalized.includes(name.toLowerCase()) || 
-    name.toLowerCase().includes(normalized)
-  );
+  const normalized = String(venueName || '').replace(/\s+/g, ' ').trim().toLowerCase();
+  const entry = Object.entries(VENUE_LOCATIONS).find(([name]) => {
+    const normName = name.replace(/\s+/g, ' ').trim().toLowerCase();
+    return normName === normalized || 
+           normalized.includes(normName) || 
+           normName.includes(normalized);
+  });
   return entry?.[1] || null;
 }
 

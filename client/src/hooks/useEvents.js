@@ -8,7 +8,7 @@ export default function useEvents() {
     let active = true; let timer;
     const load = async () => {
       try {
-        const { data } = await api.get('/events');
+        const { data } = await api.get('/events?_cb=' + Date.now());
         if (active) { setEvents(Array.isArray(data) ? data : []); setEventError(''); }
       } catch { if (active) setEventError('ยังโหลดปฏิทินงานไม่ได้'); }
       if (active) timer = setTimeout(load, 60000);
