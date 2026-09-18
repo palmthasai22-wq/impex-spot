@@ -11,7 +11,7 @@ const aliases = {
   medium: 'yellow', moderate: 'yellow', slow: 'yellow',
   high: 'red', heavy: 'red', congested: 'red', jammed: 'red',
   waiting: 'blue', stopped: 'blue', signal: 'blue', traffic_light: 'blue', signal_wait: 'blue', red_light: 'blue',
-  flow: 'green', slow: 'yellow', jam: 'red', unknown: 'gray', unavailable: 'gray', offline: 'gray',
+  flow: 'green', jam: 'red', unknown: 'gray', unavailable: 'gray', offline: 'gray',
 };
 
 export function getTrafficLevel(node = {}) {

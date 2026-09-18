@@ -259,7 +259,7 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
   return (
     <div style={{ width:'100%', height:'100%', position:'relative', overflow:'hidden', background:'#e8f0ea' }}>
       {selectedCamera && <div className="cctv-map-viewer"><LiveViewer camera={selectedCamera} onClose={() => setSelectedCamera(null)} /></div>}
-      <MapExplorerControls cameras={searchableCameras} events={events} onSelect={focusResult} selectedDate={selectedDate} onDate={date=>{setSelectedDate(date);setNearbyCameraIds([]);}} pollingSeconds={pollingSeconds} onPolling={setPollingSeconds} />
+      <MapExplorerControls cameras={searchableCameras} events={events} pins={linkedPins} onSelect={focusResult} selectedDate={selectedDate} onDate={date=>{setSelectedDate(date);setNearbyCameraIds([]);}} pollingSeconds={pollingSeconds} onPolling={setPollingSeconds} />
 
       {/* ── TOP: Filter Bar (ซ่อนได้) ── */}
       {showFilterBar && (
@@ -494,7 +494,7 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
             <img className="area-limit-icon" src="/images/mascot_impact.png" alt="" aria-hidden="true" />
             <span>{limitedBounds ? 'ปลดล็อกพื้นที่' : 'จำกัดพื้นที่นี้'}</span>
           </button>
-          <button onClick={() => setShow3D(value => !value)}
+          <button className="map-dimension-button" onClick={() => setShow3D(value => !value)}
             aria-label={show3D ? 'ใช้แผนที่ 2 มิติ' : 'ใช้แผนที่ 3 มิติ'}
             title={show3D ? 'เปลี่ยนเป็นแผนที่ 2 มิติ' : 'เปิดแผนที่ 3 มิติ'}
             style={{background:show3D ? '#dcfce7' : '#e0e7ff',borderRadius:11,padding:'8px 11px',fontSize:11,fontWeight:800,color:show3D ? '#166534' : '#3730a3',border:'none',cursor:'pointer',display:'flex',alignItems:'center',gap:4}}>
@@ -502,7 +502,7 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
           </button>
         </div>
 
-        <div className="traffic-legend" style={{position:'absolute',top:isMobile ? 74 : 12,right:isMobile ? 'auto' : 12,left:isMobile ? 12 : 'auto',zIndex:800,background:'rgba(255,255,255,0.92)',borderRadius:12,padding:showLegend?'8px 10px':'4px',boxShadow:'0 2px 10px rgba(0,0,0,0.1)',backdropFilter:'blur(8px)',fontSize:10,fontWeight:700,color:'#374151',maxWidth:isMobile ? 'calc(100vw - 24px)' : 'none'}}>
+        <div className={`traffic-legend ${showLegend ? 'is-open' : ''}`} style={{position:'absolute',top:isMobile ? 74 : 12,right:isMobile ? 'auto' : 12,left:isMobile ? 12 : 'auto',zIndex:800,background:'rgba(255,255,255,0.92)',borderRadius:12,padding:showLegend?'8px 10px':'4px',boxShadow:'0 2px 10px rgba(0,0,0,0.1)',backdropFilter:'blur(8px)',fontSize:10,fontWeight:700,color:'#374151',maxWidth:isMobile ? 'calc(100vw - 24px)' : 'none'}}>
           <button aria-label="คำอธิบายสัญลักษณ์" aria-expanded={showLegend} onClick={()=>setShowLegend(v=>!v)} style={{width:44,height:44,border:0,borderRadius:10,background:'#f1f5f9',fontSize:18,fontWeight:900,cursor:'pointer'}}>?</button>
           {showLegend&&<div style={{display:'flex',gap:8,alignItems:'center',whiteSpace:'nowrap',padding:'6px 4px 2px',overflowX:'auto'}}>
             {Object.entries(TRAFFIC_LEVELS).map(([level, item]) => (
