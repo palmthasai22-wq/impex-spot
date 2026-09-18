@@ -554,7 +554,7 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
         )}
 
         {/* Empty State */}
-        {linkedPins.length === 0 && !showWelcome && (
+        {linkedPins.length === 0 && linkedCameras.length === 0 && visibleEvents.length === 0 && !showWelcome && (
           <div style={{position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)',zIndex:800,textAlign:'center',pointerEvents:'none'}}>
             <div style={{background:'rgba(255,255,255,0.90)',borderRadius:24,padding:24,boxShadow:'0 4px 20px rgba(0,0,0,0.08)',maxWidth:220,backdropFilter:'blur(10px)'}}>
               <img src="/images/mascot_ruthan.png" alt="" style={{width:56,height:56,objectFit:'contain',margin:'0 auto 8px',display:'block'}} className="animate-float" />

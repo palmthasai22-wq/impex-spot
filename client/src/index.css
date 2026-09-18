@@ -682,3 +682,18 @@
 @media(max-width:640px){.map-explorer{top:8px;width:calc(100% - 16px)}.map-explorer-row{padding:5px}.mobile-tool-toggle{display:block}.map-search{display:none;position:absolute;top:56px;left:0;right:0}.map-search.open{display:block}.map-search-results{top:48px}.calendar-toggle span,.polling-control{display:none}.calendar-toggle{width:44px;padding:0}.mini-calendar{top:58px;width:min(310px,calc(100vw - 16px))}.map-top-controls{top:68px!important}.traffic-legend{top:122px!important}.realtime-status{top:170px!important}.event-admin-grid{grid-template-columns:1fr}.event-admin-row{grid-template-columns:1fr}.event-admin-list article{flex-direction:column}.event-admin-list article>div:last-child{justify-content:flex-end}.leaflet-popup{margin-bottom:8px}.event-popup .leaflet-popup-content-wrapper,.camera-popup .leaflet-popup-content-wrapper{border-radius:20px 20px 0 0!important}}
 @media(max-width:640px){.leaflet-popup.event-popup,.leaflet-popup.camera-popup,.leaflet-popup.custom-popup{position:fixed!important;left:8px!important;right:8px!important;bottom:8px!important;top:auto!important;transform:none!important;width:auto!important;margin:0!important;z-index:1000}.leaflet-popup.event-popup .leaflet-popup-content-wrapper,.leaflet-popup.camera-popup .leaflet-popup-content-wrapper,.leaflet-popup.custom-popup .leaflet-popup-content-wrapper{max-height:58vh!important;border-radius:22px!important;overflow:auto}.leaflet-popup.event-popup .leaflet-popup-tip-container,.leaflet-popup.camera-popup .leaflet-popup-tip-container,.leaflet-popup.custom-popup .leaflet-popup-tip-container{display:none}}
 @media(min-width:641px){.map-top-controls{top:78px!important}.traffic-legend{top:78px!important}}
+
+/* แถบค้นหาแบบกระชับ — ไม่บังแผนที่บนเดสก์ท็อป */
+@media(min-width:641px){
+  .map-explorer{width:min(620px,calc(100% - 32px));}
+  .map-explorer-row{gap:6px;padding:5px;border-radius:15px;}
+  .map-search{max-width:330px;min-width:240px;}
+  .map-search input{height:40px;padding:0 12px;border-radius:11px;font-size:13px;}
+  .calendar-toggle{height:40px;padding:0 10px;border-radius:11px;font-size:12px;}
+  .polling-control{height:40px;padding:0 8px;border-radius:11px;font-size:11px;}
+  .polling-control select{max-width:86px;font-size:11px;}
+  .map-search-results{top:45px;}
+  .mini-calendar{top:58px;}
+  .map-top-controls{top:70px!important;}
+  .traffic-legend{top:70px!important;}
+}
