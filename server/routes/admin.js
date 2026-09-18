@@ -115,7 +115,7 @@ router.post('/events/sync', async (req, res) => {
     $('.eb-event-item-grid-default-layout').each((i, el) => {
       let title = $(el).find('.eb-event-title').text().trim();
       let venue = $(el).find('.eb-event-location').text().trim();
-      let posterUrl = $(el).find('.eb-event-thumb img').attr('src');
+      let posterUrl = $(el).find('img.eb-event-thumb').attr('src') || $(el).find('.eb-event-thumb-container img').attr('src');
       let link = $(el).find('.eb-event-title a').attr('href');
       
       if (title && venue) {
