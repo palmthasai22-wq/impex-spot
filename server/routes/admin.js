@@ -96,6 +96,67 @@ router.use(authMiddleware);
 
 // ปฏิทินงาน IMPACT — แอดมินเพิ่ม/แก้ไขข้อมูลที่ตรวจสอบจากแหล่งทางการได้
 router.get('/events', (_req, res) => res.json(eventStore.list()));
+router.post('/events/sync', async (req, res) => {
+  try {
+    const axios = require('axios');
+    const cheerio = require('cheerio');
+    const https = require('https');
+    
+    // IMPACT website is usually utf-8 but just in case
+    const { data } = await axios.get('https://www.impact.co.th/th/visitors/event-calendar', {
+      httpsAgent: new https.Agent({ rejectUnauthorized: false }),
+      responseType: 'text',
+      responseEncoding: 'utf8'
+    });
+    
+    const $ = cheerio.load(data);
+    const results = [];
+    
+    $('.eb-event-item-grid-default-layout').each((i, el) => {
+      let title = $(el).find('.eb-event-title').text().trim();
+      let venue = $(el).find('.eb-event-location').text().trim();
+      let posterUrl = $(el).find('.eb-event-thumb img').attr('src');
+      let link = $(el).find('.eb-event-title a').attr('href');
+      
+      if (title && venue) {
+        if (link && !link.startsWith('http')) link = 'https://www.impact.co.th' + link;
+        if (posterUrl && !posterUrl.startsWith('http')) posterUrl = 'https://www.impact.co.th' + posterUrl;
+        
+        results.push({
+          eventName: title.substring(0, 180),
+          eventType: 'exhibition_public',
+          startDate: new Date().toISOString().split('T')[0], // Default date to today, admin can edit
+          endDate: new Date().toISOString().split('T')[0],
+          startTime: '10:00',
+          endTime: '20:00',
+          venueName: venue,
+          lat: 13.9145,
+          lng: 100.5545,
+          organizer: '',
+          sourceUrl: link || 'https://www.impact.co.th/th/visitors/event-calendar',
+          posterUrl: posterUrl || '',
+          hideWhenEnded: false
+        });
+      }
+    });
+    
+    // Add scraped events to the store (simple approach: just add all, though it might cause duplicates)
+    // To prevent duplicates, only add if eventName doesn't exist
+    const existing = eventStore.list().map(e => e.eventName);
+    let added = 0;
+    for (const e of results) {
+      if (!existing.includes(e.eventName)) {
+        eventStore.create(e);
+        added++;
+      }
+    }
+    
+    res.json({ success: true, totalFound: results.length, added });
+  } catch (err) {
+    console.error('Sync error:', err);
+    res.status(500).json({ error: 'Failed to scrape IMPACT website' });
+  }
+});
 router.post('/events', (req, res) => {
   try { res.status(201).json(eventStore.create(req.body)); }
   catch (error) { res.status(400).json({ error: error.message }); }

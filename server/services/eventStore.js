@@ -23,13 +23,14 @@ function validate(body) {
     startDate: text('startDate'), endDate: text('endDate'),
     startTime: text('startTime') || '00:00', endTime: text('endTime') || '23:59',
     venueName: text('venueName'), lat: Number(body.lat), lng: Number(body.lng),
-    organizer: text('organizer'), sourceUrl: text('sourceUrl'), hideWhenEnded: body.hideWhenEnded === true,
+    organizer: text('organizer'), sourceUrl: text('sourceUrl'), posterUrl: text('posterUrl'), hideWhenEnded: body.hideWhenEnded === true,
   };
   if (!event.eventName || event.eventName.length > 180 || !TYPES.has(event.eventType)) throw new Error('Invalid event');
   if (!DATE.test(event.startDate) || !DATE.test(event.endDate) || event.endDate < event.startDate) throw new Error('Invalid event date');
   if (!TIME.test(event.startTime) || !TIME.test(event.endTime) || !event.venueName) throw new Error('Invalid event time or venue');
   if (!Number.isFinite(event.lat) || event.lat < -90 || event.lat > 90 || !Number.isFinite(event.lng) || event.lng < -180 || event.lng > 180) throw new Error('Invalid event location');
   if (event.sourceUrl && !/^https?:\/\//i.test(event.sourceUrl)) throw new Error('Invalid source URL');
+  if (event.posterUrl && !/^(https?:\/\/|\/)/i.test(event.posterUrl)) throw new Error('Invalid poster URL');
   return event;
 }
 

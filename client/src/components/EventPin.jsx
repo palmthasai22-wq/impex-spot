@@ -10,6 +10,7 @@ export default function EventPin({ event, now, highlighted, nearbyCount, onNearb
   return <Marker ref={node=>registerMarker?.(event.id,node)} position={[event.lat,event.lng]} icon={icon} opacity={status==='ended'?0.45:1}>
     <Popup minWidth={270} className="event-popup"><div className="event-popup-card">
       <div className={`event-status ${status}`}>{status==='live'?'🔴 LIVE กำลังจัดอยู่':status==='soon'?'🟡 เริ่มภายใน 24 ชม.':status==='ended'?'จบงานแล้ว':'งานที่กำลังจะมาถึง'}</div>
+      {event.posterUrl && <img src={event.posterUrl} alt={event.eventName} className="event-poster" />}
       <h3>{event.eventName}</h3><p>{type.emoji} {type.label}</p><p>🗓️ {formatEventRange(event)}</p><p>📍 {event.venueName}</p>{event.organizer&&<p>ผู้จัด: {event.organizer}</p>}
       <button onClick={()=>onNearby(event)}>📹 ดูกล้องใกล้จุดนี้ ({nearbyCount})</button>
       {event.sourceUrl&&<a href={event.sourceUrl} target="_blank" rel="noreferrer">ดูแหล่งข้อมูลทางการ ↗</a>}
