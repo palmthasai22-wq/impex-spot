@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
+import LiveViewer from './LiveViewer';
 
 export default function AdminCameraForm({ camera, onSave, onCancel }) {
-  const [data, setData] = useState({ lat: camera?.location.lat ?? 13.7563, lng: camera?.location.lng ?? 100.5018,
+  const [data, setData] = useState({ name: camera?.name || '', camera_category: camera?.camera_category || 'แยกหลัก', ai_detection_url: camera?.ai_detection_url || '', lat: camera?.location.lat ?? 13.9126, lng: camera?.location.lng ?? 100.5530,
     coverage_direction: camera?.coverage_direction ?? 0, owner_type: camera?.owner_type || 'government',
     connection_type: 'lan_ip', camera_ip: camera?.camera_ip || '', rtsp_path: camera?.rtsp_path || '/stream1',
     external_stream_url: camera?.external_stream_url || '',
@@ -11,6 +12,7 @@ export default function AdminCameraForm({ camera, onSave, onCancel }) {
   const [replaceCredentials, setReplaceCredentials] = useState(!camera?.id);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [preview, setPreview] = useState(false);
   const change = (key, value) => setData(old => ({ ...old, [key]: value,
     ...(['camera_ip', 'rtsp_path', 'connection_type', 'owner_type', 'verification_status'].includes(key) ? { owner_consent: false } : {}) }));
   const numeric = (key, label, min, max, step = 'any') => <label>{label}<input required type="number" min={min} max={max} step={step} value={data[key]} onChange={e => change(key, e.target.value === '' ? '' : Number(e.target.value))} /></label>;
@@ -39,6 +41,8 @@ export default function AdminCameraForm({ camera, onSave, onCancel }) {
     <h2>{camera?.id ? 'แก้ไขกล้อง' : 'เพิ่มกล้อง CCTV'}</h2>
     <p className="cctv-form-help">เชื่อมต่อผ่าน Wi-Fi วงเดียวกับเครื่อง Relay ระบบจะค้นหาและบันทึก IP กล้องให้อัตโนมัติ</p>
     <div className="cctv-fields">
+      <label>ชื่อกล้อง/สถานที่<input required maxLength="160" placeholder="เช่น แยกหน้าเมืองทองธานี" value={data.name} onChange={e => change('name', e.target.value)} /></label>
+      <label>หมวดหมู่ย่อย<select value={data.camera_category} onChange={e => change('camera_category', e.target.value)}><option>ทางเข้า-ออก</option><option>แยกหลัก</option><option>ลานจอดรถ</option><option>หน้าอาคาร/ฮอลล์</option><option>จุดทั่วไป</option></select></label>
       {numeric('lat', 'ละติจูด', -90, 90)}{numeric('lng', 'ลองจิจูด', -180, 180)}{numeric('coverage_direction', 'ทิศทางกล้อง (0° = เหนือ)', 0, 359, 1)}
       <label>เจ้าของ<select value={data.owner_type} onChange={e => change('owner_type', e.target.value)}><option value="government">ภาครัฐ</option><option value="business">ธุรกิจ</option><option value="household">ครัวเรือน</option><option value="agency">หน่วยงาน</option></select></label>
       <label>การเชื่อมต่อ<input readOnly value="Wi-Fi วงเดียวกับ Relay" /></label>
@@ -58,8 +62,16 @@ export default function AdminCameraForm({ camera, onSave, onCancel }) {
           onChange={e => change('detec_camera_id', e.target.value === '' ? '' : Number(e.target.value))} />
         <small style={{fontSize:'0.72em',color:'#6b7280'}}>ระบุ ID กล้องจาก detec เพื่อเชื่อมภาพ AI และสถานะจราจรกับหมุดนี้ หากเว้นว่างระบบจะจับคู่จาก GPS ภายใน 150 เมตร</small>
       </label>
+      <label>URL API วิเคราะห์จราจร (ไม่บังคับ)
+        <input type="text" placeholder="https://.../traffic หรือ mock:random" value={data.ai_detection_url} onChange={e => change('ai_detection_url', e.target.value)} />
+        <small style={{fontSize:'0.72em',color:'#6b7280'}}>แยกจาก URL ภาพสด รองรับ API ที่คืน status/เปอร์เซ็นต์ หรือใช้ mock:random เพื่อทดลองสีหมุด</small>
+      </label>
       {camera?.id ? <label>การตรวจสอบ<select value={data.verification_status} onChange={e => change('verification_status', e.target.value)}><option value="pending">รอตรวจสอบ</option><option value="verified">ตรวจสอบแล้ว</option><option value="rejected">ไม่อนุมัติ</option></select></label> : <label>การตรวจสอบ<input readOnly value="รอตรวจสอบหลังเชื่อมต่อ" /></label>}
     </div>
+    {data.external_stream_url && <div className="cctv-preview-box">
+      <button type="button" onClick={() => setPreview(value => !value)}>{preview ? 'ซ่อนพรีวิว' : '▶ พรีวิวภาพสดก่อนบันทึก'}</button>
+      {preview && <LiveViewer camera={{ ...data, status:'online' }} />}
+    </div>}
     {camera?.id && <label className="cctv-check"><input type="checkbox" checked={replaceCredentials} onChange={e => { setReplaceCredentials(e.target.checked); change('owner_consent', false); }} />เปลี่ยนข้อมูลเข้าสู่ระบบกล้อง</label>}
     {replaceCredentials && <div className="cctv-fields">
       <label>ชื่อผู้ใช้กล้อง<input autoComplete="off" value={credentials.username} onChange={e => { setCredentials(c => ({ ...c, username: e.target.value })); change('owner_consent', false); }} /></label>

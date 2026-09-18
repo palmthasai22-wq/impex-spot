@@ -3,6 +3,7 @@ export const TRAFFIC_LEVELS = {
   yellow: { color: '#eab308', background: '#fef9c3', text: '#854d0e', emoji: '🟡', label: 'ชะลอตัว' },
   red: { color: '#ef4444', background: '#fee2e2', text: '#991b1b', emoji: '🔴', label: 'ติดขัด' },
   blue: { color: '#3b82f6', background: '#dbeafe', text: '#1e40af', emoji: '🔵', label: 'รอสัญญาณไฟ' },
+  gray: { color: '#64748b', background: '#f1f5f9', text: '#334155', emoji: '⚪', label: 'ไม่ทราบสถานะ' },
 };
 
 const aliases = {
@@ -10,11 +11,12 @@ const aliases = {
   medium: 'yellow', moderate: 'yellow', slow: 'yellow',
   high: 'red', heavy: 'red', congested: 'red', jammed: 'red',
   waiting: 'blue', stopped: 'blue', signal: 'blue', traffic_light: 'blue', signal_wait: 'blue', red_light: 'blue',
+  flow: 'green', slow: 'yellow', jam: 'red', unknown: 'gray', unavailable: 'gray', offline: 'gray',
 };
 
 export function getTrafficLevel(node = {}) {
   const raw = String(node.density_level ?? node.traffic_level ?? node.status ?? 'green').toLowerCase().trim();
-  return TRAFFIC_LEVELS[raw] ? raw : aliases[raw] || 'green';
+  return TRAFFIC_LEVELS[raw] ? raw : aliases[raw] || 'gray';
 }
 
 export function hasTrafficCoordinates(node = {}) {

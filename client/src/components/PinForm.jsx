@@ -6,12 +6,14 @@ import { createPin, uploadImages } from '../utils/api';
 import useGeolocation from '../hooks/useGeolocation';
 import { useAppContext } from '../context/AppContext';
 import toast from 'react-hot-toast';
+import LiveViewer from './LiveViewer';
 
 export default function PinForm({ onClose, initialPosition, initialCategory = '', onEmergency, isAdmin }) {
   const [step, setStep] = useState(1); // 1=category, 2=details
   const [formData, setFormData] = useState({
-    title: '', category: initialCategory, customType: '', description: '', images: [], trafficLevel: 'medium', reviewRating: 3, reviewNote: ''
+    title: '', category: initialCategory, customType: '', description: '', images: [], trafficLevel: 'medium', reviewRating: 3, reviewNote: '', external_stream_url: '', ai_detection_url: '', camera_category: 'แยกหลัก'
   });
+  const [showPreview, setShowPreview] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { setPins } = useAppContext();
   const { lat: gpsLat, lng: gpsLng, accuracy, error, loading } = useGeolocation();
@@ -226,11 +228,16 @@ export default function PinForm({ onClose, initialPosition, initialCategory = ''
 
               {/* URL สำหรับ CCTV */}
               {formData.category === 'cctv' && (
-                <div>
+                <div className="space-y-3">
                   <label className="block text-sm font-bold text-gray-700 mb-1.5">URL ภาพสด หรือ โค้ด iframe (ไม่บังคับ)</label>
                   <input type="text" className="input-modern" placeholder="เช่น https://... หรือ <iframe src='...'>"
                     value={formData.external_stream_url || ''} onChange={e => setFormData({...formData, external_stream_url: e.target.value})} />
                   <p className="text-[10px] text-gray-400 mt-1 ml-1">💡 หากมีลิงก์ภาพสด ผู้ใช้จะสามารถดูภาพสดจากหมุดนี้ได้ทันที</p>
+                  <label className="block text-sm font-bold text-gray-700">หมวดหมู่ย่อย</label>
+                  <select className="input-modern" value={formData.camera_category} onChange={e=>setFormData({...formData,camera_category:e.target.value})}><option>ทางเข้า-ออก</option><option>แยกหลัก</option><option>ลานจอดรถ</option><option>หน้าอาคาร/ฮอลล์</option><option>จุดทั่วไป</option></select>
+                  <label className="block text-sm font-bold text-gray-700">URL API วิเคราะห์จราจร (แยกจากภาพสด)</label>
+                  <input type="text" className="input-modern" placeholder="https://.../traffic หรือ mock:random" value={formData.ai_detection_url} onChange={e=>setFormData({...formData,ai_detection_url:e.target.value})} />
+                  {formData.external_stream_url&&<><button type="button" className="w-full min-h-11 rounded-xl bg-sky-50 text-sky-700 font-bold" onClick={()=>setShowPreview(v=>!v)}>{showPreview?'ซ่อนพรีวิว':'▶ พรีวิวภาพสดก่อนบันทึก'}</button>{showPreview&&<LiveViewer camera={{external_stream_url:formData.external_stream_url,status:'online'}} />}</>}
                 </div>
               )}
 

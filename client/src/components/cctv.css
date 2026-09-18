@@ -32,3 +32,4 @@
 .cctv-viewer:fullscreen { width: 100vw; height: 100vh; border-radius: 0; display: flex; flex-direction: column; }
 .cctv-viewer:fullscreen > div { height: auto !important; padding-top: 0 !important; flex: 1; }
 .cctv-viewer:fullscreen video { flex: 1; height: auto; max-height: 100%; aspect-ratio: auto; border-radius: 0; object-fit: contain; }
+.cctv-preview-box{margin:14px 0;padding:12px;border:1px solid #cbd5e1;border-radius:14px;background:#f8fafc}.cctv-preview-box>button{min-height:44px;border:0;border-radius:11px;padding:0 14px;background:#0f766e;color:white;font-weight:800;cursor:pointer}.cctv-preview-box .cctv-viewer{margin-top:12px;max-width:760px}.cctv-preview-box .cctv-viewer>div{height:280px!important}

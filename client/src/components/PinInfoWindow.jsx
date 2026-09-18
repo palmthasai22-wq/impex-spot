@@ -17,7 +17,8 @@ export default function PinInfoWindow({ pin, onClose, onSelectCamera, isAdmin = 
   const [expandedImage, setExpandedImage] = useState(null);
   const aiTraffic = pin.ai_traffic || null;
   const aiLevel = aiTraffic ? getTrafficLevel(aiTraffic) : null;
-  const aiStyle = aiLevel ? TRAFFIC_LEVELS[aiLevel] : null;
+  const isCctv = (pin.type || pin.category) === 'cctv';
+  const aiStyle = aiLevel ? TRAFFIC_LEVELS[aiLevel] : (isCctv ? TRAFFIC_LEVELS.gray : null);
 
   useEffect(() => {
     if (!expandedImage) return undefined;
@@ -96,19 +97,19 @@ export default function PinInfoWindow({ pin, onClose, onSelectCamera, isAdmin = 
       )}
 
       {/* Live traffic analysis linked from Detec by camera ID or nearby GPS. */}
-      {aiTraffic && aiStyle && (
+      {aiStyle && (
         <div className="mb-3 rounded-xl border p-2.5" style={{backgroundColor: aiStyle.background, borderColor: `${aiStyle.color}55`, color: aiStyle.text}}>
           <div className="flex items-center justify-between gap-2">
             <strong className="text-xs">{aiStyle.emoji} {aiStyle.label}</strong>
-            <strong className="text-xs">Jam Index {Number(aiTraffic.jam_index || 0)}%</strong>
+            <strong className="text-xs">{aiTraffic ? `Jam Index ${Number(aiTraffic.jam_index || 0)}%` : 'ยังไม่มีข้อมูล AI'}</strong>
           </div>
-          <div className="mt-1.5 grid grid-cols-2 gap-1 text-[10px] font-medium">
+          {aiTraffic && <><div className="mt-1.5 grid grid-cols-2 gap-1 text-[10px] font-medium">
             <span>รถ {Number(aiTraffic.current_vehicles || 0)} คัน</span>
             <span>เร็วเฉลี่ย {Number(aiTraffic.average_speed ?? aiTraffic.avg_speed ?? 0).toFixed(1)} {aiTraffic.speed_unit || 'px/window'}</span>
           </div>
           <p className="mt-1 text-[9px] opacity-75">
-            {aiTraffic.active === false ? 'Detec ยังไม่ได้ประมวลผล' : `Detec กล้อง #${aiTraffic.camera_id} · อัปเดตสด`}
-          </p>
+            {aiTraffic.active === false ? 'Detec ยังไม่ได้ประมวลผล' : aiTraffic.camera_id ? `Detec กล้อง #${aiTraffic.camera_id} · อัปเดตสด` : 'อัปเดตจาก AI URL ของกล้อง'}
+          </p></>}
         </div>
       )}
 
@@ -158,7 +159,7 @@ export default function PinInfoWindow({ pin, onClose, onSelectCamera, isAdmin = 
       {/* Actions */}
       <div className="grid grid-cols-2 gap-1.5 pt-2.5 border-t border-gray-100">
         {(pin.type === 'cctv' || pin.category === 'cctv') && pin.external_stream_url ? (
-          <button onClick={() => { onClose(); onSelectCamera({ id: pin.id || pin._id, location: { lat: pin.lat, lng: pin.lng }, status: 'online', name: pin.title, external_stream_url: pin.external_stream_url }); }}
+          <button onClick={() => { onClose(); onSelectCamera({ id: pin.id || pin._id, location: { lat: pin.lat, lng: pin.lng }, status: 'online', name: pin.title, external_stream_url: pin.external_stream_url, ai_detection_url: pin.ai_detection_url, ai_traffic: pin.ai_traffic }); }}
             className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-semibold bg-rose-50 text-rose-700 hover:bg-rose-100 active:scale-95 transition-all border border-rose-100 col-span-2 mb-1.5">
             ▶️ ดูภาพสด
           </button>

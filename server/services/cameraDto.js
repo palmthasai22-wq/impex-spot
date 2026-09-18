@@ -5,6 +5,8 @@ const publishable = row => !!row && row.owner_consent === true && row.verificati
 function publicCamera(row) {
   return {
     id: row.id,
+    name: row.name || 'กล้อง CCTV',
+    camera_category: row.camera_category || 'จุดทั่วไป',
     location: { lat: Number(row.lat), lng: Number(row.lng) },
     coverage_direction: row.coverage_direction,
     owner_type: row.owner_type,
@@ -12,6 +14,7 @@ function publicCamera(row) {
     public_stream_url: publishable(row) && row.status === 'online' ? `/streams/${row.id}/index.m3u8` : null,
     external_stream_url: publishable(row) ? (row.external_stream_url || null) : null,
     detec_camera_id: row.detec_camera_id == null ? null : Number(row.detec_camera_id),
+    ai_detection_url: row.ai_detection_url || null,
   };
 }
 

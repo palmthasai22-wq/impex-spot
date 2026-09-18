@@ -10,9 +10,14 @@ import CameraPin from './CameraPin';
 import LiveViewer from './LiveViewer';
 import useCameras from '../hooks/useCameras';
 import useTrafficFlow from '../hooks/useTrafficFlow';
+import useCameraTraffic from '../hooks/useCameraTraffic';
+import useEvents from '../hooks/useEvents';
+import EventPin from './EventPin';
+import MapExplorerControls from './MapExplorerControls';
 import { PIN_CATEGORIES, MAIN_FEATURES } from '../utils/categories';
 import { fetchDispatchedResponders } from '../utils/api';
 import { TRAFFIC_LEVELS, connectCctvToDetec, getTrafficLevel as getAiTrafficLevel, hasTrafficCoordinates, trafficNodeId } from '../utils/traffic';
+import { eventOccursOn, getCamerasNearVenue, getEventStatus } from '../utils/events';
 
 const createPinIcon = (category) => {
   const image = category === 'emergency'
@@ -86,9 +91,8 @@ function MapClickHandler({ onSelect }) {
   return null;
 }
 
-function MapController({ onReady, bounds, pins, trafficNodes = [] }) {
+function MapController({ onReady, bounds }) {
   const map = useMap();
-  const hasFocusedPins = useRef(false);
 
   useEffect(() => {
     onReady(map);
@@ -97,27 +101,6 @@ function MapController({ onReady, bounds, pins, trafficNodes = [] }) {
   useEffect(() => {
     map.setMaxBounds(bounds || null);
   }, [bounds, map]);
-
-  useEffect(() => {
-    if (hasFocusedPins.current || (pins.length === 0 && trafficNodes.length === 0)) return;
-
-    const positions = [
-      ...pins
-        .filter(pin => Number.isFinite(Number(pin.lat)) && Number.isFinite(Number(pin.lng)))
-        .map(pin => [Number(pin.lat), Number(pin.lng)]),
-      ...trafficNodes
-        .filter(hasTrafficCoordinates)
-        .map(node => [Number(node.lat), Number(node.lng)]),
-    ];
-    if (positions.length === 0) return;
-
-    hasFocusedPins.current = true;
-    if (positions.length === 1) {
-      map.setView(positions[0], 14);
-    } else {
-      map.fitBounds(L.latLngBounds(positions), { padding: [40, 40], maxZoom: 14 });
-    }
-  }, [map, pins, trafficNodes]);
 
   return null;
 }
@@ -137,11 +120,15 @@ const getTrafficLevel = (pin) => {
 
 export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFormOpen, isAdmin = false }) {
   const { cameras, cameraError } = useCameras();
+  const { events, eventError } = useEvents();
   const { trafficNodes, detecCameras, trafficError, trafficUpdatedAt } = useTrafficFlow();
   const [showCameras, setShowCameras] = useState(true);
   const [selectedCamera, setSelectedCamera] = useState(null);
   const { pins, connected, lastRealtimeAt } = usePins();
   const { selectedPin, setSelectedPin, filters } = useAppContext();
+  const [pollingSeconds, setPollingSeconds] = useState(30);
+  const cctvPins = useMemo(() => pins.filter(pin => (pin.type || pin.category) === 'cctv'), [pins]);
+  const pinTraffic = useCameraTraffic(cctvPins, pollingSeconds);
   const { lat, lng } = useGeolocation();
   const [activeFilter, setActiveFilter] = useState(null);
   const [flyTo, setFlyTo] = useState(null);
@@ -152,12 +139,23 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
   const [limitedBounds, setLimitedBounds] = useState(null);
   const [show3D, setShow3D] = useState(false);
   const [showActionMenu, setShowActionMenu] = useState(false);
+  const [showLegend, setShowLegend] = useState(false);
   const [pendingAction, setPendingAction] = useState(null);
   const [dispatchedResponders, setDispatchedResponders] = useState([]);
-  const linkedCameras = useMemo(
-    () => cameras.map(camera => connectCctvToDetec(camera, detecCameras, trafficNodes)),
-    [cameras, detecCameras, trafficNodes]
-  );
+  const [selectedDate, setSelectedDate] = useState('');
+  const [nearbyCameraIds, setNearbyCameraIds] = useState([]);
+  const markerRefs = useRef(new Map());
+  const directTraffic = useCameraTraffic(cameras, pollingSeconds);
+  const linkedCameras = useMemo(() => cameras.map(camera => {
+    const linked = connectCctvToDetec(camera, detecCameras, trafficNodes);
+    return directTraffic[camera.id] ? { ...linked, ai_traffic: directTraffic[camera.id] } : linked;
+  }), [cameras, detecCameras, trafficNodes, directTraffic]);
+  const now = new Date();
+  const visibleEvents = useMemo(() => events.filter(event => {
+    const status = getEventStatus(event, now);
+    if (status === 'ended' && event.hideWhenEnded) return false;
+    return !selectedDate || eventOccursOn(event, selectedDate);
+  }), [events, selectedDate, Math.floor(Date.now() / 60000)]);
 
   useEffect(() => {
     const t = setTimeout(() => setShowWelcome(false), 4000);
@@ -193,13 +191,17 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
     () => filteredPins.map(pin => {
       const type = pin.type || pin.category;
       return type === 'cctv' || type === 'traffic'
-        ? connectCctvToDetec(pin, detecCameras, trafficNodes)
+        ? { ...connectCctvToDetec(pin, detecCameras, trafficNodes), ...(pinTraffic[pin.id || pin._id] ? { ai_traffic: pinTraffic[pin.id || pin._id] } : {}) }
         : pin;
     }),
-    [filteredPins, detecCameras, trafficNodes]
+    [filteredPins, detecCameras, trafficNodes, pinTraffic]
   );
+  const searchableCameras = useMemo(() => [
+    ...linkedCameras,
+    ...linkedPins.filter(pin => (pin.type || pin.category) === 'cctv').map(pin => ({ ...pin, id: pin.id || pin._id, name: pin.title, location:{ lat:Number(pin.lat), lng:Number(pin.lng) }, _communityPin:true }))
+  ], [linkedCameras, linkedPins]);
 
-  const defaultCenter = [13.9127, 100.5534];
+  const defaultCenter = [13.9126, 100.5530];
   const quickFilters = MAIN_FEATURES.filter(f => f.categories.length > 0);
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
 
@@ -242,9 +244,22 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
     setLimitedBounds([[bounds.getSouth(), bounds.getWest()], [bounds.getNorth(), bounds.getEast()]]);
   };
 
+  const registerMarker = (id, marker) => { if (marker) markerRefs.current.set(String(id), marker); else markerRefs.current.delete(String(id)); };
+  const focusResult = result => {
+    const item = result.item; const position = result.kind === 'camera' ? [item.location.lat, item.location.lng] : [item.lat, item.lng];
+    mapInstance?.flyTo(position, 17, { duration: 0.8 });
+    setTimeout(() => markerRefs.current.get(String(item.id))?.openPopup(), 850);
+  };
+  const showNearbyCameras = event => {
+    const nearby = getCamerasNearVenue(event, searchableCameras, 300); setNearbyCameraIds(nearby.map(camera=>camera.id));
+    if (!nearby.length) return;
+    mapInstance?.fitBounds(L.latLngBounds(nearby.map(camera=>[camera.location.lat,camera.location.lng])), { padding:[60,60], maxZoom:18 });
+  };
+
   return (
     <div style={{ width:'100%', height:'100%', position:'relative', overflow:'hidden', background:'#e8f0ea' }}>
       {selectedCamera && <div className="cctv-map-viewer"><LiveViewer camera={selectedCamera} onClose={() => setSelectedCamera(null)} /></div>}
+      <MapExplorerControls cameras={searchableCameras} events={events} onSelect={focusResult} selectedDate={selectedDate} onDate={date=>{setSelectedDate(date);setNearbyCameraIds([]);}} pollingSeconds={pollingSeconds} onPolling={setPollingSeconds} />
 
       {/* ── TOP: Filter Bar (ซ่อนได้) ── */}
       {showFilterBar && (
@@ -314,15 +329,16 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
             onReady={setMapInstance}
             onUnavailable={() => setShow3D(false)}
           />
-        ) : <MapContainer center={defaultCenter} zoom={14} minZoom={3} maxZoom={19}
+        ) : <MapContainer center={defaultCenter} zoom={15} minZoom={3} maxZoom={19}
           style={{width:'100%',height:'100%',zIndex:1}}
           zoomControl={false} attributionControl={false}>
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap' />
           <ZoomControl position="bottomleft" />
-          <MapController onReady={setMapInstance} bounds={limitedBounds} pins={linkedPins} trafficNodes={trafficNodes} />
+          <MapController onReady={setMapInstance} bounds={limitedBounds} />
           <MapClickHandler onSelect={handleMapSelect} />
           {flyTo && <FlyToUser position={flyTo} />}
-          {showCameras && linkedCameras.map(camera => <CameraPin key={camera.id} camera={camera} onSelect={setSelectedCamera} />)}
+          {showCameras && linkedCameras.map(camera => <CameraPin key={camera.id} camera={camera} onSelect={setSelectedCamera} highlighted={nearbyCameraIds.includes(camera.id)} registerMarker={registerMarker} />)}
+          {visibleEvents.map(event => <EventPin key={event.id} event={event} now={now} highlighted={selectedDate ? eventOccursOn(event, selectedDate) : false} nearbyCount={getCamerasNearVenue(event, searchableCameras, 300).length} onNearby={showNearbyCameras} registerMarker={registerMarker} />)}
 
           {/* 🚦 AI Traffic Nodes from Detec */}
           {trafficNodes.filter(hasTrafficCoordinates).map((node, index) => {
@@ -383,12 +399,12 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
                   pathOptions={{
                     color: aiTraffic?.color || '#0284c7',
                     fillColor: aiTraffic?.color || '#38bdf8',
-                    fillOpacity: 0.18,
-                    weight: 2,
+                    fillOpacity: nearbyCameraIds.includes(pin.id || pin._id) ? 0.34 : 0.18,
+                    weight: nearbyCameraIds.includes(pin.id || pin._id) ? 5 : 2,
                     opacity: 0.9,
                   }} />
               )}
-              <Marker position={[pin.lat, pin.lng]}
+              <Marker ref={node => registerMarker(pin.id || pin._id, node)} position={[pin.lat, pin.lng]}
                 icon={createPinIcon(pin.type || pin.category || 'other')}
                 eventHandlers={{ click: () => setSelectedPin(pin) }}>
               <Popup maxWidth={260} minWidth={260} closeButton={false} className="custom-popup" autoPan={true} autoPanPaddingTopLeft={[50, 50]} autoPanPaddingBottomRight={[50, 280]}>
@@ -486,15 +502,17 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
           </button>
         </div>
 
-        <div className="traffic-legend" style={{position:'absolute',top:isMobile ? 74 : 12,right:isMobile ? 'auto' : 12,left:isMobile ? 12 : 'auto',zIndex:800,background:'rgba(255,255,255,0.92)',borderRadius:12,padding:'8px 10px',boxShadow:'0 2px 10px rgba(0,0,0,0.1)',backdropFilter:'blur(8px)',fontSize:10,fontWeight:700,color:'#374151',maxWidth:isMobile ? 'calc(100vw - 24px)' : 'none',overflowX:isMobile ? 'auto' : 'visible'}}>
-          <div style={{display:'flex',gap:8,alignItems:'center',whiteSpace:'nowrap'}}>
-            {Object.entries(trafficColors).map(([level, item]) => (
+        <div className="traffic-legend" style={{position:'absolute',top:isMobile ? 74 : 12,right:isMobile ? 'auto' : 12,left:isMobile ? 12 : 'auto',zIndex:800,background:'rgba(255,255,255,0.92)',borderRadius:12,padding:showLegend?'8px 10px':'4px',boxShadow:'0 2px 10px rgba(0,0,0,0.1)',backdropFilter:'blur(8px)',fontSize:10,fontWeight:700,color:'#374151',maxWidth:isMobile ? 'calc(100vw - 24px)' : 'none'}}>
+          <button aria-label="คำอธิบายสัญลักษณ์" aria-expanded={showLegend} onClick={()=>setShowLegend(v=>!v)} style={{width:44,height:44,border:0,borderRadius:10,background:'#f1f5f9',fontSize:18,fontWeight:900,cursor:'pointer'}}>?</button>
+          {showLegend&&<div style={{display:'flex',gap:8,alignItems:'center',whiteSpace:'nowrap',padding:'6px 4px 2px',overflowX:'auto'}}>
+            {Object.entries(TRAFFIC_LEVELS).map(([level, item]) => (
               <span key={level} style={{display:'flex',alignItems:'center',gap:3}}>
                 <i style={{width:9,height:9,borderRadius:'50%',background:item.color,display:'inline-block'}} />
                 {item.label}
               </span>
             ))}
-          </div>
+            <span>🎪 จุดจัดงาน</span>
+          </div>}
         </div>
 
         <div className={`realtime-status ${connected ? 'is-live' : ''}`} title={lastRealtimeAt ? `อัปเดตล่าสุด ${lastRealtimeAt.toLocaleTimeString('th-TH')}` : 'กำลังเชื่อมต่อข้อมูล realtime'}>

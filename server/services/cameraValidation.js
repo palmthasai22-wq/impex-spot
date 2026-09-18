@@ -1,7 +1,7 @@
 const { isIP } = require('node:net');
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 function invalid() { const error = new Error('Invalid camera input'); error.status = 400; throw error; }
-const allowed = new Set(['lat', 'lng', 'coverage_direction', 'owner_type', 'connection_type', 'camera_ip', 'rtsp_path', 'credentials', 'verification_status', 'owner_consent', 'external_stream_url', 'detec_camera_id']);
+const allowed = new Set(['name', 'camera_category', 'ai_detection_url', 'lat', 'lng', 'coverage_direction', 'owner_type', 'connection_type', 'camera_ip', 'rtsp_path', 'credentials', 'verification_status', 'owner_consent', 'external_stream_url', 'detec_camera_id']);
 
 function validateCamera(body, creating = false) {
   if (!body || typeof body !== 'object' || Array.isArray(body) || Object.keys(body).some(k => !allowed.has(k))) invalid();
@@ -20,6 +20,11 @@ function validateCamera(body, creating = false) {
     if (key in body && !values.includes(body[key])) invalid();
   }
   if ('owner_consent' in body && typeof body.owner_consent !== 'boolean') invalid();
+  if ('name' in body && (typeof body.name !== 'string' || !body.name.trim() || body.name.length > 160)) invalid();
+  if ('camera_category' in body && (typeof body.camera_category !== 'string' || body.camera_category.length > 80)) invalid();
+  if ('ai_detection_url' in body && body.ai_detection_url !== '' && body.ai_detection_url !== null) {
+    if (typeof body.ai_detection_url !== 'string' || body.ai_detection_url.length > 2048 || !/^(https?:\/\/|mock:)/i.test(body.ai_detection_url)) invalid();
+  }
   // ตรวจสอบ external_stream_url
   if ('external_stream_url' in body) {
     if (body.external_stream_url !== '' && body.external_stream_url !== null) {
@@ -49,4 +54,3 @@ function validateCamera(body, creating = false) {
   return body;
 }
 module.exports = { UUID, invalid, validateCamera };
-

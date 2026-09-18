@@ -1,0 +1,3 @@
+ALTER TABLE cctv_pins ADD COLUMN IF NOT EXISTS name TEXT;
+ALTER TABLE cctv_pins ADD COLUMN IF NOT EXISTS camera_category TEXT;
+ALTER TABLE cctv_pins ADD COLUMN IF NOT EXISTS ai_detection_url TEXT;

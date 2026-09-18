@@ -13,7 +13,8 @@ function isAdminToken(req) {
     const auth = req.headers.authorization || '';
     const token = auth.startsWith('Bearer ') ? auth.slice(7) : null;
     if (!token) return false;
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    // ใช้ secret เดียวกับ /api/admin/login เพื่อให้สิทธิ์แอดมินทำงานตรงกันในโหมด fallback
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret');
     return decoded && decoded.role === 'admin';
   } catch {
     return false;

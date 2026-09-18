@@ -73,7 +73,7 @@ function safe(body) {
 
 test('public DTO has an exact allowlist and derives a safe stream URL', () => {
   const result = publicCamera(row);
-  assert.deepEqual(Object.keys(result).sort(), ['id', 'location', 'coverage_direction', 'owner_type', 'status', 'public_stream_url', 'external_stream_url', 'detec_camera_id'].sort());
+  assert.deepEqual(Object.keys(result).sort(), ['id', 'name', 'camera_category', 'location', 'coverage_direction', 'owner_type', 'status', 'public_stream_url', 'external_stream_url', 'detec_camera_id', 'ai_detection_url'].sort());
   safe(JSON.stringify(result));
   assert.equal(result.public_stream_url, `/streams/${cameraId}/index.m3u8`);
   assert.equal(adminCamera(row).camera_ip, '192.168.50.2');

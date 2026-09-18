@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const pinStore = require('../services/pinStore');
 const responderStore = require('../services/responderStore');
+const eventStore = require('../services/eventStore');
 
 const router = express.Router();
 
@@ -92,6 +93,23 @@ const authMiddleware = (req, res, next) => {
 
 // ─── ทุก route หลัง login ต้องมี token ───
 router.use(authMiddleware);
+
+// ปฏิทินงาน IMPACT — แอดมินเพิ่ม/แก้ไขข้อมูลที่ตรวจสอบจากแหล่งทางการได้
+router.get('/events', (_req, res) => res.json(eventStore.list()));
+router.post('/events', (req, res) => {
+  try { res.status(201).json(eventStore.create(req.body)); }
+  catch (error) { res.status(400).json({ error: error.message }); }
+});
+router.put('/events/:id', (req, res) => {
+  try {
+    const event = eventStore.update(req.params.id, req.body);
+    res.status(event ? 200 : 404).json(event || { error: 'Event not found' });
+  } catch (error) { res.status(400).json({ error: error.message }); }
+});
+router.delete('/events/:id', (req, res) => {
+  const event = eventStore.remove(req.params.id);
+  res.status(event ? 200 : 404).json(event || { error: 'Event not found' });
+});
 
 // ─── GET /stats ─── ภาพรวม
 router.get('/stats', (req, res) => {

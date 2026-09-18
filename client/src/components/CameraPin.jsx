@@ -1,5 +1,5 @@
 import React from 'react';
-import { Marker, Polygon } from 'react-leaflet';
+import { Marker, Polygon, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import { TRAFFIC_LEVELS, getTrafficLevel } from '../utils/traffic';
 
@@ -20,15 +20,26 @@ export function coverageCone(camera) {
   return [...points, origin];
 }
 
-export default function CameraPin({ camera, onSelect }) {
-  const traffic = camera.ai_traffic ? TRAFFIC_LEVELS[getTrafficLevel(camera.ai_traffic)] : null;
-  const aiStyle = traffic ? `style="--ai-traffic-color:${traffic.color};box-shadow:0 0 0 4px ${traffic.color},0 6px 18px rgba(15,23,42,.35)"` : '';
-  const icon = L.divIcon({ className: 'cctv-marker-wrap', html: `<span class="cctv-marker ${camera.status === 'online' ? 'is-online' : ''} ${traffic ? 'has-ai-traffic' : ''}" ${aiStyle}>${CAMERA_ICON}</span>`, iconSize: [62, 82], iconAnchor: [31, 82] });
+export default function CameraPin({ camera, onSelect, highlighted = false, registerMarker }) {
+  const traffic = camera.ai_traffic ? TRAFFIC_LEVELS[getTrafficLevel(camera.ai_traffic)] : TRAFFIC_LEVELS.gray;
+  const aiStyle = `style="--ai-traffic-color:${traffic.color};box-shadow:0 0 0 ${highlighted ? 8 : 4}px ${traffic.color},0 6px 18px rgba(15,23,42,.35)"`;
+  const icon = L.divIcon({ className: 'cctv-marker-wrap', html: `<span class="cctv-marker ${camera.status === 'online' ? 'is-online' : ''} has-ai-traffic ${traffic === TRAFFIC_LEVELS.red ? 'is-jam' : ''}" ${aiStyle}>${CAMERA_ICON}</span>`, iconSize: [62, 82], iconAnchor: [31, 82] });
   const title = camera.detec_camera_id
-    ? `CCTV + Detec #${camera.detec_camera_id}${traffic ? ` · ${traffic.label}` : ''}`
+    ? `CCTV + Detec #${camera.detec_camera_id} · ${traffic.label}`
     : `CCTV · ${camera.status}`;
   return <>
     <Polygon positions={coverageCone(camera)} interactive={false} pathOptions={{ color: '#0d9488', weight: 1, fillOpacity: 0.14 }} />
-    <Marker position={[camera.location.lat, camera.location.lng]} icon={icon} title={title} bubblingMouseEvents={false} eventHandlers={{ click: () => onSelect(camera) }} />
+    <Marker ref={node => registerMarker?.(camera.id, node)} position={[camera.location.lat, camera.location.lng]} icon={icon} title={title} bubblingMouseEvents={false}>
+      <Popup className="camera-popup" minWidth={250}>
+        <div className="camera-popup-card">
+          <strong>📹 {camera.name || title}</strong>
+          <span>{camera.camera_category || 'จุดทั่วไป'}</span>
+          <div className="camera-traffic-status" style={{background:traffic?.background || '#f1f5f9',color:traffic?.text || '#334155'}}>
+            {traffic.emoji} สภาพจราจร: {traffic.label}{camera.ai_traffic?.jam_index != null ? ` (${Math.round(Number(camera.ai_traffic.jam_index))}%)` : ''}
+          </div>
+          <button onClick={() => onSelect(camera)}>▶️ ดูภาพสด</button>
+        </div>
+      </Popup>
+    </Marker>
   </>;
 }

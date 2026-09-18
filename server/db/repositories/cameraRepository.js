@@ -70,15 +70,16 @@ module.exports = {
           next[field] = field in body ? encrypt(body[field], `${id}:${field}`) : row[field];
         }
         if (!next.credentials) next.credentials = encrypt({ username: '', password: '', port: 554 }, `${id}:credentials`);
-        const values = [id, next.lng, next.lat, next.coverage_direction, next.owner_type, next.connection_type, next.camera_ip, next.rtsp_path, next.credentials, next.verification_status, next.owner_consent, next.consent_confirmed_by, next.consent_confirmed_at, next.external_stream_url || null, next.detec_camera_id || null];
-        await client.query(`INSERT INTO cctv_pins (id, location, coverage_direction, owner_type, connection_type, camera_ip, rtsp_path, credentials, verification_status, owner_consent, consent_confirmed_by, consent_confirmed_at, external_stream_url, detec_camera_id)
-          VALUES ($1, ST_SetSRID(ST_MakePoint($2, $3),4326)::geography, $4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+        const values = [id, next.lng, next.lat, next.coverage_direction, next.owner_type, next.connection_type, next.camera_ip, next.rtsp_path, next.credentials, next.verification_status, next.owner_consent, next.consent_confirmed_by, next.consent_confirmed_at, next.external_stream_url || null, next.detec_camera_id || null, next.name || 'กล้อง CCTV', next.camera_category || 'จุดทั่วไป', next.ai_detection_url || null];
+        await client.query(`INSERT INTO cctv_pins (id, location, coverage_direction, owner_type, connection_type, camera_ip, rtsp_path, credentials, verification_status, owner_consent, consent_confirmed_by, consent_confirmed_at, external_stream_url, detec_camera_id, name, camera_category, ai_detection_url)
+          VALUES ($1, ST_SetSRID(ST_MakePoint($2, $3),4326)::geography, $4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
           ON CONFLICT (id) DO UPDATE SET location = EXCLUDED.location, coverage_direction = EXCLUDED.coverage_direction,
           owner_type = EXCLUDED.owner_type, connection_type = EXCLUDED.connection_type, camera_ip = EXCLUDED.camera_ip,
           rtsp_path = EXCLUDED.rtsp_path, credentials = EXCLUDED.credentials, verification_status = EXCLUDED.verification_status,
           owner_consent = EXCLUDED.owner_consent, consent_confirmed_by = EXCLUDED.consent_confirmed_by,
           consent_confirmed_at = EXCLUDED.consent_confirmed_at, external_stream_url = EXCLUDED.external_stream_url,
-          detec_camera_id = EXCLUDED.detec_camera_id,
+          detec_camera_id = EXCLUDED.detec_camera_id, name = EXCLUDED.name,
+          camera_category = EXCLUDED.camera_category, ai_detection_url = EXCLUDED.ai_detection_url,
           status = 'offline', media_reset_required = TRUE, revision = cctv_pins.revision + 1, updated_at = NOW()`, values);
         const result = (await client.query(`${select} WHERE id = $1`, [id])).rows[0];
         await client.query('COMMIT');

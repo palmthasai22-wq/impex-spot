@@ -34,6 +34,9 @@ function mountCameras(app, server) {
     if (pool) {
       pool.query('ALTER TABLE cctv_pins ADD COLUMN IF NOT EXISTS external_stream_url TEXT').catch(() => {});
       pool.query('ALTER TABLE cctv_pins ADD COLUMN IF NOT EXISTS detec_camera_id INTEGER').catch(() => {});
+      pool.query('ALTER TABLE cctv_pins ADD COLUMN IF NOT EXISTS name TEXT').catch(() => {});
+      pool.query('ALTER TABLE cctv_pins ADD COLUMN IF NOT EXISTS camera_category TEXT').catch(() => {});
+      pool.query('ALTER TABLE cctv_pins ADD COLUMN IF NOT EXISTS ai_detection_url TEXT').catch(() => {});
     }
   } catch (e) { /* ignore if pool not available */ }
 
