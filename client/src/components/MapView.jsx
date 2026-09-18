@@ -153,17 +153,24 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
   const now = new Date();
   const visibleEvents = useMemo(() => {
     const venueCounts = {};
-    return events.map(event => {
-      const loc = getVenueLocation(event.venueName) || { lat: event.lat, lng: event.lng };
-      const locKey = `${loc.lat},${loc.lng}`;
-      venueCounts[locKey] = (venueCounts[locKey] || 0) + 1;
-      const count = venueCounts[locKey];
-      
-      const offsetLat = count > 1 ? (Math.random() - 0.5) * 0.0003 : 0;
-      const offsetLng = count > 1 ? (Math.random() - 0.5) * 0.0003 : 0;
+      return events.map(event => {
+        const loc = getVenueLocation(event.venueName) || { lat: event.lat, lng: event.lng };
+        const locKey = `${loc.lat},${loc.lng}`;
+        venueCounts[locKey] = (venueCounts[locKey] || 0) + 1;
+        const count = venueCounts[locKey];
+        
+        // Deterministic offset based on count to prevent random jumping
+        let offsetLat = 0;
+        let offsetLng = 0;
+        if (count > 1) {
+          const radius = 0.0002 + (Math.floor(count / 8) * 0.00015);
+          const angle = (count % 8) * (Math.PI / 4);
+          offsetLat = Math.sin(angle) * radius;
+          offsetLng = Math.cos(angle) * radius;
+        }
 
-      return { ...event, lat: loc.lat + offsetLat, lng: loc.lng + offsetLng };
-    }).filter(event => {
+        return { ...event, lat: loc.lat + offsetLat, lng: loc.lng + offsetLng };
+      }).filter(event => {
       const status = getEventStatus(event, now);
       if (status === 'ended' && event.hideWhenEnded) return false;
       return !selectedDate || eventOccursOn(event, selectedDate);
