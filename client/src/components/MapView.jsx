@@ -17,7 +17,7 @@ import MapExplorerControls from './MapExplorerControls';
 import { PIN_CATEGORIES, MAIN_FEATURES } from '../utils/categories';
 import { fetchDispatchedResponders } from '../utils/api';
 import { TRAFFIC_LEVELS, connectCctvToDetec, getTrafficLevel as getAiTrafficLevel, hasTrafficCoordinates, trafficNodeId } from '../utils/traffic';
-import { eventOccursOn, getCamerasNearVenue, getEventStatus } from '../utils/events';
+import { eventOccursOn, getCamerasNearVenue, getEventStatus, getVenueLocation } from '../utils/events';
 
 const createPinIcon = (category) => {
   const image = category === 'emergency'
@@ -151,11 +151,24 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
     return directTraffic[camera.id] ? { ...linked, ai_traffic: directTraffic[camera.id] } : linked;
   }), [cameras, detecCameras, trafficNodes, directTraffic]);
   const now = new Date();
-  const visibleEvents = useMemo(() => events.filter(event => {
-    const status = getEventStatus(event, now);
-    if (status === 'ended' && event.hideWhenEnded) return false;
-    return !selectedDate || eventOccursOn(event, selectedDate);
-  }), [events, selectedDate, Math.floor(Date.now() / 60000)]);
+  const visibleEvents = useMemo(() => {
+    const venueCounts = {};
+    return events.map(event => {
+      const loc = getVenueLocation(event.venueName) || { lat: event.lat, lng: event.lng };
+      const locKey = `${loc.lat},${loc.lng}`;
+      venueCounts[locKey] = (venueCounts[locKey] || 0) + 1;
+      const count = venueCounts[locKey];
+      
+      const offsetLat = count > 1 ? (Math.random() - 0.5) * 0.0003 : 0;
+      const offsetLng = count > 1 ? (Math.random() - 0.5) * 0.0003 : 0;
+
+      return { ...event, lat: loc.lat + offsetLat, lng: loc.lng + offsetLng };
+    }).filter(event => {
+      const status = getEventStatus(event, now);
+      if (status === 'ended' && event.hideWhenEnded) return false;
+      return !selectedDate || eventOccursOn(event, selectedDate);
+    });
+  }, [events, selectedDate, Math.floor(Date.now() / 60000)]);
 
   useEffect(() => {
     const t = setTimeout(() => setShowWelcome(false), 4000);
