@@ -2,10 +2,13 @@ import { useEffect, useState } from 'react';
 
 const normalize = data => {
   const raw = String(data?.status ?? data?.traffic_status ?? data?.density_level ?? data?.level ?? '').toLowerCase();
-  const status = raw.includes('jam') || raw.includes('ติด') || raw === 'red' ? 'jam'
+  const percent = Number(data?.percent ?? data?.jam_index ?? data?.congestion ?? 0);
+  const explicitStatus = raw.includes('jam') || raw.includes('ติด') || raw === 'red' ? 'jam'
     : raw.includes('slow') || raw.includes('ชะลอ') || raw === 'yellow' ? 'slow'
       : raw.includes('flow') || raw.includes('คล่อง') || raw === 'green' ? 'flow' : 'unknown';
-  const percent = Number(data?.percent ?? data?.jam_index ?? data?.congestion ?? 0);
+  // ถ้า API ส่งมาเฉพาะเปอร์เซ็นต์: 0–39 คล่อง, 40–74 ชะลอ, 75–100 ติดขัด
+  const status = explicitStatus !== 'unknown' ? explicitStatus
+    : Number.isFinite(percent) ? (percent >= 75 ? 'jam' : percent >= 40 ? 'slow' : 'flow') : 'unknown';
   return { ...data, status, jam_index: Number.isFinite(percent) ? Math.max(0, Math.min(100, percent)) : 0 };
 };
 
