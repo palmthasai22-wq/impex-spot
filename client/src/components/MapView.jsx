@@ -427,10 +427,18 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
               )}
               <Marker ref={node => registerMarker(pin.id || pin._id, node)} position={[pin.lat, pin.lng]}
                 icon={createPinIcon(pin.type || pin.category || 'other')}
-                eventHandlers={{ click: () => setSelectedPin(pin) }}>
-              <Popup maxWidth={260} minWidth={260} closeButton={true} className="custom-popup" autoPan={true} autoPanPaddingTopLeft={[50, 50]} autoPanPaddingBottomRight={[50, 280]}>
-                <PinInfoWindow pin={pin} onClose={() => setSelectedPin(null)} onSelectCamera={setSelectedCamera} isAdmin={isAdmin} />
-              </Popup>
+                eventHandlers={{ click: () => {
+                  if ((pin.type || pin.category) === 'cctv') {
+                    setSelectedCamera({ id: pin.id || pin._id, location: { lat: pin.lat, lng: pin.lng }, status: 'online', name: pin.title, external_stream_url: pin.external_stream_url, ai_detection_url: pin.ai_detection_url, ai_traffic: pin.ai_traffic });
+                  } else {
+                    setSelectedPin(pin);
+                  }
+                } }}>
+              {(pin.type || pin.category) !== 'cctv' && (
+                <Popup maxWidth={260} minWidth={260} closeButton={true} className="custom-popup" autoPan={true} autoPanPaddingTopLeft={[50, 50]} autoPanPaddingBottomRight={[50, 280]}>
+                  <PinInfoWindow pin={pin} onClose={() => setSelectedPin(null)} onSelectCamera={setSelectedCamera} isAdmin={isAdmin} />
+                </Popup>
+              )}
               </Marker>
             </React.Fragment>
             );

@@ -45,11 +45,21 @@ export default function PinForm({ onClose, initialPosition, initialCategory = ''
           rtsp_path: '/stream1',
           external_stream_url: formData.external_stream_url || '',
           ai_detection_url: formData.ai_detection_url || '',
-          verification_status: 'pending',
-          owner_consent: false,
+          verification_status: 'verified',
+          owner_consent: true,
         };
-        await import('../utils/api').then(m => m.default.post('/admin/cameras', cameraPayload));
-        toast.success('🎉 เพิ่มกล้อง CCTV สำเร็จ! ข้อมูลอยู่ในหน้าจัดการกล้องแล้ว');
+        const res = await import('../utils/api').then(m => m.default.post('/admin/cameras', cameraPayload));
+        // Add to local state so it appears immediately on the map without waiting for next poll
+        setPins(currentPins => [...currentPins, {
+          ...res.data,
+          category: 'cctv',
+          type: 'cctv',
+          title: res.data.name,
+          lat: res.data.location.lat,
+          lng: res.data.location.lng,
+          _communityPin: true
+        }]);
+        toast.success('🎉 เพิ่มกล้อง CCTV สำเร็จ! หมุดแสดงบนแผนที่และจัดการได้ที่หน้าตั้งค่า');
         onClose();
         setIsSubmitting(false);
         return;

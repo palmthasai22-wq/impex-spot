@@ -29,17 +29,14 @@ export default function CameraPin({ camera, onSelect, highlighted = false, regis
     : `CCTV · ${camera.status}`;
   return <>
     <Polygon positions={coverageCone(camera)} interactive={false} pathOptions={{ color: '#0d9488', weight: 1, fillOpacity: 0.14 }} />
-    <Marker ref={node => registerMarker?.(camera.id, node)} position={[camera.location.lat, camera.location.lng]} icon={icon} title={title} bubblingMouseEvents={false}>
-      <Popup className="camera-popup" minWidth={250}>
-        <div className="camera-popup-card">
-          <strong>📹 {camera.name || title}</strong>
-          <span>{camera.camera_category || 'จุดทั่วไป'}</span>
-          <div className="camera-traffic-status" style={{background:traffic?.background || '#f1f5f9',color:traffic?.text || '#334155'}}>
-            {traffic.emoji} สภาพจราจร: {traffic.label}{camera.ai_traffic?.jam_index != null ? ` (${Math.round(Number(camera.ai_traffic.jam_index))}%)` : ''}
-          </div>
-          <button onClick={() => onSelect(camera)}>▶️ ดูภาพสด</button>
-        </div>
-      </Popup>
+    <Marker 
+      ref={node => registerMarker?.(camera.id, node)} 
+      position={[camera.location.lat, camera.location.lng]} 
+      icon={icon} 
+      title={title} 
+      bubblingMouseEvents={false}
+      eventHandlers={{ click: () => onSelect(camera) }}
+    >
     </Marker>
   </>;
 }
