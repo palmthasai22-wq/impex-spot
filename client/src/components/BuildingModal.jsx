@@ -4,17 +4,24 @@ import PinForm from './PinForm';
 import usePins from '../hooks/usePins';
 import { PIN_CATEGORIES } from '../utils/categories';
 
-export default function BuildingModal({ building, onClose, onSelectBuilding }) {
+export default function BuildingModal({ building, initialFloorId, onClose, onSelectBuilding }) {
   const [activeFloorIndex, setActiveFloorIndex] = useState(0);
   const [showPinForm, setShowPinForm] = useState(false);
   const [indoorPinData, setIndoorPinData] = useState(null);
   const { pins } = usePins();
   const imageRef = useRef(null);
 
-  // Reset floor when building changes
+  // Set initial floor when building changes or initialFloorId is provided
   useEffect(() => {
+    if (building && initialFloorId) {
+      const idx = (building.floors || []).findIndex(f => f.id === initialFloorId);
+      if (idx !== -1) {
+        setActiveFloorIndex(idx);
+        return;
+      }
+    }
     setActiveFloorIndex(0);
-  }, [building]);
+  }, [building, initialFloorId]);
 
   if (!building) return null;
 

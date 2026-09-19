@@ -146,6 +146,7 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
   const [dispatchedResponders, setDispatchedResponders] = useState([]);
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedBuilding, setSelectedBuilding] = useState(null);
+  const [initialFloorId, setInitialFloorId] = useState(null);
   const [nearbyCameraIds, setNearbyCameraIds] = useState([]);
   const markerRefs = useRef(new Map());
   const directTraffic = useCameraTraffic(cameras, pollingSeconds);
@@ -269,7 +270,19 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
 
   const registerMarker = (id, marker) => { if (marker) markerRefs.current.set(String(id), marker); else markerRefs.current.delete(String(id)); };
   const focusResult = result => {
-    const item = result.item; const position = result.kind === 'camera' ? [item.location.lat, item.location.lng] : [item.lat, item.lng];
+    const item = result.item;
+    
+    // Handle Indoor Pins from Search
+    if (item.is_indoor) {
+      const building = BUILDINGS.find(b => b.id === item.indoor_building_id);
+      if (building) {
+        setInitialFloorId(item.indoor_floor_id);
+        setSelectedBuilding(building);
+      }
+      return;
+    }
+
+    const position = result.kind === 'camera' ? [item.location.lat, item.location.lng] : [item.lat, item.lng];
     mapInstance?.flyTo(position, 17, { duration: 0.8 });
     setTimeout(() => markerRefs.current.get(String(item.id))?.openPopup(), 850);
   };
@@ -699,7 +712,15 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
         </div>
       </div>
       
-      <BuildingModal building={selectedBuilding} onClose={() => setSelectedBuilding(null)} onSelectBuilding={setSelectedBuilding} />
+      <BuildingModal 
+        building={selectedBuilding} 
+        initialFloorId={initialFloorId}
+        onClose={() => {
+          setSelectedBuilding(null);
+          setInitialFloorId(null);
+        }} 
+        onSelectBuilding={setSelectedBuilding} 
+      />
     </div>
   );
 }
