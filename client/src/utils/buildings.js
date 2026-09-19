@@ -40,16 +40,9 @@ export const BUILDINGS = [
       {
         id: 'f-f1',
         level: 1,
-        name: 'ชั้น 1 (Hall 4)',
-        description: 'โถงนิทรรศการ IMPACT Forum',
+        name: 'ชั้น 1 (Hall 4 & Sapphire)',
+        description: 'โถงนิทรรศการและห้องประชุม',
         image: '/images/floorplans/forum-f1.png'
-      },
-      {
-        id: 'f-f2',
-        level: 2,
-        name: 'ชั้น 2 (Sapphire)',
-        description: 'ห้องประชุมย่อย Sapphire',
-        image: '/images/floorplans/forum-f2.png' 
       }
     ]
   },
