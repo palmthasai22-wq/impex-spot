@@ -1,4 +1,4 @@
-﻿export const BUILDINGS = [
+export const BUILDINGS = [
   {
     id: 'challenger',
     name: 'IMPACT Challenger',
@@ -15,14 +15,14 @@
         level: 1,
         name: 'ชั้น 1 (Halls 1-3)',
         description: 'โถงนิทรรศการหลัก',
-        image: '/images/impact-forum-floorplan.png'
+        image: '/images/floorplans/challenger-f1.png'
       },
       {
         id: 'c-f2',
         level: 2,
         name: 'ชั้น 2 (Royal Jubilee)',
         description: 'ห้องบอลรูม และห้องประชุม Jupiter',
-        image: '/images/impact-forum-floorplan.png'
+        image: '/images/floorplans/challenger-f2.png'
       }
     ]
   },
@@ -42,14 +42,14 @@
         level: 1,
         name: 'ชั้น 1 (Hall 4)',
         description: 'โถงนิทรรศการ IMPACT Forum',
-        image: '/images/impact-forum-floorplan.png'
+        image: '/images/floorplans/forum-f1.png'
       },
       {
         id: 'f-f2',
         level: 2,
         name: 'ชั้น 2 (Sapphire)',
         description: 'ห้องประชุมย่อย Sapphire',
-        image: '/images/impact-forum-floorplan.png' 
+        image: '/images/floorplans/forum-f2.png' 
       }
     ]
   },
@@ -69,7 +69,7 @@
         level: 1,
         name: 'ชั้น 1 (Halls 5-12)',
         description: 'โถงจัดแสดงสินค้าและนิทรรศการ',
-        image: '/images/impact-forum-floorplan.png'
+        image: '/images/floorplans/exhibition-f1.png'
       }
     ]
   },
@@ -87,9 +87,30 @@
       {
         id: 'a-f1',
         level: 1,
-        name: 'Arena Floor',
-        description: 'ฮอลล์จัดคอนเสิร์ตหลัก',
-        image: '/images/impact-forum-floorplan.png'
+        name: 'ชั้น 1',
+        description: 'พื้นที่ชั้น 1',
+        image: '/images/floorplans/arena-f1.png'
+      },
+      {
+        id: 'a-f2',
+        level: 2,
+        name: 'ชั้น 2',
+        description: 'พื้นที่ชั้น 2',
+        image: '/images/floorplans/arena-f2.png'
+      },
+      {
+        id: 'a-f3',
+        level: 3,
+        name: 'ชั้น 3',
+        description: 'พื้นที่ชั้น 3',
+        image: '/images/floorplans/arena-f3.png'
+      },
+      {
+        id: 'a-f4',
+        level: 4,
+        name: 'ชั้น 4',
+        description: 'พื้นที่ชั้น 4',
+        image: '/images/floorplans/arena-f4.png'
       }
     ]
   }
