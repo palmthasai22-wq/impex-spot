@@ -362,25 +362,7 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
           {flyTo && <FlyToUser position={flyTo} />}
           {showCameras && linkedCameras.map(camera => <CameraPin key={camera.id} camera={camera} onSelect={setSelectedCamera} highlighted={nearbyCameraIds.includes(camera.id)} registerMarker={registerMarker} />)}
           {visibleEvents.map(event => <EventPin key={event.id} event={event} now={now} highlighted={selectedDate ? eventOccursOn(event, selectedDate) : false} nearbyCount={getCamerasNearVenue(event, searchableCameras, 300).length} onNearby={showNearbyCameras} registerMarker={registerMarker} />)}
-          
-          {/* Building Polygons (Indoor Maps) */}
-          {BUILDINGS.map(building => (
-            <Polygon 
-              key={building.id}
-              positions={building.polygon}
-              pathOptions={{ color: '#3b82f6', fillColor: '#3b82f6', fillOpacity: 0.1, weight: 2, dashArray: '5, 5' }}
-              eventHandlers={{
-                click: () => setSelectedBuilding(building)
-              }}
-            >
-              <Popup autoPan={false}>
-                <div style={{ textAlign: 'center', padding: 4 }}>
-                  <strong style={{ fontSize: 14 }}>🏢 {building.name}</strong><br/>
-                  <span style={{ fontSize: 11, color: '#64748b' }}>คลิกที่พื้นที่อาคารเพื่อดูผังภายใน (Indoor Map)</span>
-                </div>
-              </Popup>
-            </Polygon>
-          ))}
+
           {/* 🚦 AI Traffic Nodes from Detec */}
           {trafficNodes.filter(hasTrafficCoordinates).map((node, index) => {
             const level = getAiTrafficLevel(node);
@@ -524,6 +506,11 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
             <img src="/images/mascot.png" alt="" style={{width:14,height:14,objectFit:'contain'}} />
             {linkedPins.length} หมุด
           </div>
+          
+          <button onClick={() => setSelectedBuilding(BUILDINGS[0])}
+            style={{background:selectedBuilding ? '#2563eb' : '#f8fafc',color:selectedBuilding ? 'white' : '#334155',borderRadius:11,border:'1px solid #e2e8f0',padding:'7px 10px',fontSize:11,fontWeight:800,cursor:'pointer',display:'flex',alignItems:'center',gap:4}}>
+            🏢 Indoor Map
+          </button>
 
           {/* ปุ่มเปิด filter กลับ (แสดงเมื่อซ่อน) */}
           {!showFilterBar && (
@@ -712,7 +699,7 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
         </div>
       </div>
       
-      <BuildingModal building={selectedBuilding} onClose={() => setSelectedBuilding(null)} />
+      <BuildingModal building={selectedBuilding} onClose={() => setSelectedBuilding(null)} onSelectBuilding={setSelectedBuilding} />
     </div>
   );
 }

@@ -1,6 +1,6 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
-export default function BuildingModal({ building, onClose }) {
+export default function BuildingModal({ building, onClose, onSelectBuilding }) {
   const [activeFloorIndex, setActiveFloorIndex] = useState(0);
 
   // Reset floor when building changes
@@ -12,6 +12,7 @@ export default function BuildingModal({ building, onClose }) {
 
   const floors = building.floors || [];
   const activeFloor = floors[activeFloorIndex];
+  const BUILDINGS = require('../utils/buildings').BUILDINGS;
 
   return (
     <div style={{
@@ -27,16 +28,31 @@ export default function BuildingModal({ building, onClose }) {
         {/* Header */}
         <div style={{
           padding: '16px 24px', background: 'linear-gradient(90deg, #1e3a8a, #3b82f6)',
-          color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+          color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
+          flexDirection: window.innerWidth <= 640 ? 'column' : 'row', gap: 12
         }}>
           <div>
-            <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800 }}>🏢 {building.name}</h2>
-            <p style={{ margin: 0, fontSize: 13, opacity: 0.9 }}>แผนผังอาคาร (Indoor Floor Plan)</p>
+            <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800 }}>🏢 ผังอาคารภายใน (Indoor Maps)</h2>
+            <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+              {BUILDINGS.map(b => (
+                <button
+                  key={b.id}
+                  onClick={() => onSelectBuilding && onSelectBuilding(b)}
+                  style={{
+                    background: building.id === b.id ? 'white' : 'rgba(255,255,255,0.2)',
+                    color: building.id === b.id ? '#1e3a8a' : 'white',
+                    border: 'none', padding: '6px 12px', borderRadius: 999, fontSize: 12, fontWeight: 700, cursor: 'pointer'
+                  }}>
+                  {b.name}
+                </button>
+              ))}
+            </div>
           </div>
           <button onClick={onClose} style={{
             background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white',
             width: 36, height: 36, borderRadius: '50%', fontSize: 18, cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.2s'
+            display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.2s',
+            alignSelf: window.innerWidth <= 640 ? 'flex-end' : 'auto', marginTop: window.innerWidth <= 640 ? -48 : 0
           }}>✕</button>
         </div>
 
