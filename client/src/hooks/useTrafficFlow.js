@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import api from '../utils/api';
 import { getDetecApiUrl } from '../utils/detecApi';
 
 export default function useTrafficFlow() {
@@ -18,9 +19,10 @@ export default function useTrafficFlow() {
       try {
         const apiUrl = getDetecApiUrl();
         const requestOptions = { signal: controller.signal, timeout: 8000 };
+        // Use our proxy for the JSON data to bypass CORS
         const [{ data }, { data: cameraData }] = await Promise.all([
-          axios.get(`${apiUrl}/api/analytics/live_traffic`, requestOptions),
-          axios.get(`${apiUrl}/api/cameras`, requestOptions),
+          api.get('/detec/analytics/live_traffic', requestOptions),
+          api.get('/detec/cameras', requestOptions),
         ]);
         const nodes = Array.isArray(data) ? data : data?.traffic ?? data?.items ?? [];
         if (!Array.isArray(nodes)) throw new Error('Invalid traffic response');
