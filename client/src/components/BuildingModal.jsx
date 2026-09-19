@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { BUILDINGS } from '../utils/buildings';
 
 export default function BuildingModal({ building, onClose, onSelectBuilding }) {
   const [activeFloorIndex, setActiveFloorIndex] = useState(0);
@@ -12,7 +13,6 @@ export default function BuildingModal({ building, onClose, onSelectBuilding }) {
 
   const floors = building.floors || [];
   const activeFloor = floors[activeFloorIndex];
-  const BUILDINGS = require('../utils/buildings').BUILDINGS;
 
   return (
     <div style={{
