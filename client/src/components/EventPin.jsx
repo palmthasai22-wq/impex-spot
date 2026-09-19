@@ -55,6 +55,11 @@ export default function EventPin({ event, now, highlighted, nearbyCount, onNearb
       position={[event.lat, event.lng]}
       icon={icon}
       opacity={status === 'ended' ? 0.45 : 1}
+      eventHandlers={{
+        click: (e) => {
+          e.target.openPopup();
+        }
+      }}
     >
       <Popup minWidth={270} maxWidth={320} className="event-popup" closeButton={true}>
         <div className="event-popup-card">

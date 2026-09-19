@@ -369,7 +369,7 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
               pathOptions={{
                 color: traffic.color, fillColor: traffic.color, fillOpacity: 0.2, weight: 3,
               }} />
-            <Marker position={[Number(node.lat), Number(node.lng)]} icon={createTrafficIcon(node)}>
+            <Marker position={[Number(node.lat), Number(node.lng)]} icon={createTrafficIcon(node)} eventHandlers={{ click: (e) => e.target.openPopup() }}>
               <Popup>
                 <div style={{textAlign: 'center', fontFamily: 'Kanit'}}>
                   <strong style={{fontSize:'14px'}}>{node.name || `Camera ${node.camera_id}`}</strong>
@@ -447,7 +447,8 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
           {dispatchedResponders.filter(r => Number.isFinite(Number(r.lat)) && Number.isFinite(Number(r.lng))).map(responder => (
             <Marker key={`resp-${responder.id || responder._id}`}
               position={[Number(responder.lat), Number(responder.lng)]}
-              icon={adminResponderIcon}>
+              icon={adminResponderIcon}
+              eventHandlers={{ click: (e) => e.target.openPopup() }}>
               <Popup maxWidth={240} minWidth={200} closeButton={true} className="custom-popup">
                 <div style={{padding:8,fontFamily:'inherit'}}>
                   <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
