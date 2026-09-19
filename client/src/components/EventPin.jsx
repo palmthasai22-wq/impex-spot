@@ -83,8 +83,8 @@ export default function EventPin({ event, now, highlighted, nearbyCount, onNearb
             📅 Save to Calendar
           </button>
 
-          <button onClick={() => onNearby(event)}>
-            📹 ดูกล้องใกล้จุดนี้ ({nearbyCount})
+          <button onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${event.lat},${event.lng}`, '_blank')}>
+            🗺️ นำทางไปที่จัดงาน
           </button>
 
           {event.sourceUrl && (
