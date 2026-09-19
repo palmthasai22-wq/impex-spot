@@ -126,9 +126,9 @@ router.post('/events/sync', async (req, res) => {
       'อิมแพ็คชาเลนเจอร์': { lat: 13.9136, lng: 100.5467 },
       'อิมแพ็ค ชาเลนเจอร์': { lat: 13.9136, lng: 100.5467 },
       'ชาเลนเจอร์': { lat: 13.9136, lng: 100.5467 },
-      'Thunder Dome': { lat: 13.9080, lng: 100.5470 },
-      'ธันเดอร์โดม': { lat: 13.9080, lng: 100.5470 },
-      'ทันเดอร์โดม': { lat: 13.9080, lng: 100.5470 },
+      'Thunder Dome': { lat: 13.9130, lng: 100.5478 },
+      'ธันเดอร์โดม': { lat: 13.9130, lng: 100.5478 },
+      'ทันเดอร์โดม': { lat: 13.9130, lng: 100.5478 },
       'IMPACT Arena': { lat: 13.911465, lng: 100.5483697 },
       'อิมแพ็ค อารีน่า เมืองทองธานี': { lat: 13.911465, lng: 100.5483697 },
       'อิมแพ็ค อารีน่า': { lat: 13.911465, lng: 100.5483697 },
@@ -167,15 +167,62 @@ router.post('/events/sync', async (req, res) => {
       return entry?.[1] || null;
     }
 
+    const thaiMonths = {
+      'มกราคม': '01', 'กุมภาพันธ์': '02', 'มีนาคม': '03', 'เมษายน': '04',
+      'พฤษภาคม': '05', 'มิถุนายน': '06', 'กรกฎาคม': '07', 'สิงหาคม': '08',
+      'กันยายน': '09', 'ตุลาคม': '10', 'พฤศจิกายน': '11', 'ธันวาคม': '12',
+      'ม.ค.': '01', 'ก.พ.': '02', 'มี.ค.': '03', 'เม.ย.': '04',
+      'พ.ค.': '05', 'มิ.ย.': '06', 'ก.ค.': '07', 'ส.ค.': '08',
+      'ก.ย.': '09', 'ต.ค.': '10', 'พ.ย.': '11', 'ธ.ค.': '12'
+    };
+
+    function parseThaiDateRange(dateStr) {
+      dateStr = dateStr.replace(/\s+/g, ' ').trim();
+      const today = new Date().toISOString().split('T')[0];
+      let startDate = today, endDate = today;
+      try {
+        const parts = dateStr.split(/[-ถึง]/).map(s => s.trim());
+        if (parts.length === 1) {
+          const match = parts[0].match(/(\d{1,2})\s+([^\s]+)\s+(\d{4})/);
+          if (match) {
+            const d = match[1].padStart(2, '0');
+            const m = thaiMonths[match[2]] || '01';
+            const y = parseInt(match[3]) - 543;
+            startDate = endDate = `${y}-${m}-${d}`;
+          }
+        } else if (parts.length === 2) {
+          const endMatch = parts[1].match(/(\d{1,2})\s+([^\s]+)\s+(\d{4})/);
+          if (endMatch) {
+            const endD = endMatch[1].padStart(2, '0');
+            const endM = thaiMonths[endMatch[2]] || '01';
+            const endY = parseInt(endMatch[3]) - 543;
+            endDate = `${endY}-${endM}-${endD}`;
+            const startParts = parts[0].split(/\s+/);
+            if (startParts.length === 1) {
+              startDate = `${endY}-${endM}-${startParts[0].padStart(2, '0')}`;
+            } else if (startParts.length === 2) {
+              startDate = `${endY}-${thaiMonths[startParts[1]] || endM}-${startParts[0].padStart(2, '0')}`;
+            } else if (startParts.length >= 3) {
+              startDate = `${parseInt(startParts[2]) - 543}-${thaiMonths[startParts[1]] || endM}-${startParts[0].padStart(2, '0')}`;
+            }
+          }
+        }
+      } catch (e) { }
+      return { startDate, endDate };
+    }
+
     $('.eb-event-item-grid-default-layout').each((i, el) => {
       let title = $(el).find('.eb-event-title').text().trim();
       let venue = $(el).find('.eb-event-location').text().trim();
+      let dateStr = $(el).find('.eb-event-date-time').text().replace(/\s+/g, ' ').trim();
       let posterUrl = $(el).find('img.eb-event-thumb').attr('src') || $(el).find('.eb-event-thumb-container img').attr('src');
       let link = $(el).find('.eb-event-title a').attr('href');
       
       if (title && venue) {
         if (link && !link.startsWith('http')) link = 'https://www.impact.co.th' + link;
         if (posterUrl && !posterUrl.startsWith('http')) posterUrl = 'https://www.impact.co.th' + posterUrl;
+        
+        const { startDate, endDate } = parseThaiDateRange(dateStr);
         
         // Jitter unknown venues slightly so they don't perfectly overlap
         const jitterLat = 13.9145 + (Math.random() - 0.5) * 0.002;
@@ -185,8 +232,8 @@ router.post('/events/sync', async (req, res) => {
         results.push({
           eventName: title.substring(0, 180),
           eventType: 'exhibition_public',
-          startDate: new Date().toISOString().split('T')[0], // Default date to today, admin can edit
-          endDate: new Date().toISOString().split('T')[0],
+          startDate: startDate,
+          endDate: endDate,
           startTime: '10:00',
           endTime: '20:00',
           venueName: venue,
