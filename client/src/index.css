@@ -728,3 +728,104 @@
 
 .event-poster { width: 100%; max-height: 200px; object-fit: cover; border-radius: 8px; margin-bottom: 8px; }
 
+/* ====== Save to Calendar Button ====== */
+.save-calendar-btn {
+  min-height: 44px;
+  border: 2px solid #1a73e8 !important;
+  border-radius: 12px !important;
+  background: #e8f0fe !important;
+  color: #1a73e8 !important;
+  font-weight: 800 !important;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+}
+.save-calendar-btn:hover {
+  background: #1a73e8 !important;
+  color: #fff !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
+}
+.save-calendar-btn:active {
+  transform: scale(0.97);
+}
+
+/* ====== Improved Leaflet Popup Close Button ====== */
+.leaflet-popup-close-button {
+  width: 28px !important;
+  height: 28px !important;
+  font-size: 18px !important;
+  line-height: 28px !important;
+  color: #6b7280 !important;
+  background: rgba(243, 244, 246, 0.9) !important;
+  border-radius: 50% !important;
+  text-align: center !important;
+  padding: 0 !important;
+  top: 6px !important;
+  right: 6px !important;
+  z-index: 10 !important;
+  transition: all 0.15s ease;
+}
+.leaflet-popup-close-button:hover {
+  background: rgba(229, 231, 235, 1) !important;
+  color: #374151 !important;
+}
+
+/* ====== Mobile: Popup bottom-sheet overlay backdrop ====== */
+@media (max-width: 640px) {
+  /* สร้าง backdrop overlay เมื่อ popup แสดง เพื่อให้ปิดได้ง่ายกดนอก popup */
+  .leaflet-popup.custom-popup .leaflet-popup-content,
+  .leaflet-popup.event-popup .leaflet-popup-content,
+  .leaflet-popup.camera-popup .leaflet-popup-content {
+    max-height: 50vh !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
+  /* ปรับ popup close button ให้ใหญ่ขึ้นบนมือถือ กดง่ายขึ้น */
+  .leaflet-popup-close-button {
+    width: 34px !important;
+    height: 34px !important;
+    font-size: 20px !important;
+    line-height: 34px !important;
+    top: 8px !important;
+    right: 8px !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  /* ป้องกัน content ล้นจอ */
+  .event-popup-card {
+    max-height: 50vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .event-poster {
+    max-height: 140px !important;
+  }
+
+  /* Navbar: ลด padding สำหรับจอเล็กมาก */
+  @media (max-width: 374px) {
+    nav .max-w-7xl {
+      padding-left: 8px !important;
+      padding-right: 8px !important;
+      gap: 4px !important;
+    }
+  }
+}
+
+/* ====== Safe Area for notch/home bar devices ====== */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .map-action-dock {
+    padding-bottom: env(safe-area-inset-bottom) !important;
+  }
+  .modal-sheet {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}

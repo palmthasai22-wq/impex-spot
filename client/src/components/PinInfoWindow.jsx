@@ -56,7 +56,15 @@ export default function PinInfoWindow({ pin, onClose, onSelectCamera, isAdmin = 
   };
 
   return (
-    <div className="w-[260px] p-1 font-sans max-h-[45vh] overflow-y-auto">
+    <div className="w-[260px] p-1 font-sans max-h-[45vh] overflow-y-auto relative">
+      {/* ปุ่มปิด — สำคัญมากบนมือถือที่ popup เป็น bottom sheet */}
+      <button
+        onClick={onClose}
+        className="absolute top-1 right-1 w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-400 hover:text-gray-600 text-sm z-10 transition-all"
+        aria-label="ปิด"
+      >
+        ✕
+      </button>
       {/* Header */}
       <div className="flex items-start gap-3 mb-3">
         <div className="w-11 h-11 rounded-2xl flex items-center justify-center text-xl flex-shrink-0 shadow-sm"
@@ -111,6 +119,13 @@ export default function PinInfoWindow({ pin, onClose, onSelectCamera, isAdmin = 
             {aiTraffic.active === false ? 'Detec ยังไม่ได้ประมวลผล' : aiTraffic.camera_id ? `Detec กล้อง #${aiTraffic.camera_id} · อัปเดตสด` : 'อัปเดตจาก AI URL ของกล้อง'}
           </p></>}
         </div>
+      )}
+
+      {/* คำเตือน AI — ข้อ 3: AI แทร็กสถานที่อาจไม่แม่นยำ */}
+      {aiStyle && (
+        <p className="text-[9px] text-amber-600 bg-amber-50 border border-amber-100 rounded-lg px-2.5 py-1.5 mb-2.5 leading-relaxed">
+          ⚠️ ข้อมูลจาก AI อาจไม่ตรงกับสถานการณ์จริง — ใช้เป็นข้อมูลอ้างอิงเท่านั้น ควรตรวจสอบจากแหล่งข้อมูลอื่นประกอบด้วย
+        </p>
       )}
 
       {/* Images */}

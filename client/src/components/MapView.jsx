@@ -378,7 +378,8 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
                   </div>
                   <span>จำนวนรถ: {Number(node.current_vehicles || 0)} คัน</span><br/>
                   {(node.average_speed ?? node.avg_speed) != null && <><span>ความเร็วเฉลี่ย: {Number(node.average_speed ?? node.avg_speed).toFixed(1)} {node.speed_unit || 'px/window'}</span><br/></>}
-                  <span style={{fontSize: '10px', color: '#666'}}>{node.active === false ? '⚪ กล้องไม่ได้ประมวลผล' : '🤖 AI วิเคราะห์แบบ Real-time'}</span>
+                  <span style={{fontSize: '10px', color: '#666'}}>{node.active === false ? '⚪ กล้องไม่ได้ประมวลผล' : '🤖 AI วิเคราะห์แบบ Real-time'}</span><br/>
+                  <span style={{fontSize: '9px', color: '#b45309', background: '#fffbeb', padding: '2px 6px', borderRadius: '4px', marginTop: '4px', display: 'inline-block'}}>⚠️ ข้อมูล AI อาจคลาดเคลื่อน — ใช้อ้างอิงเท่านั้น</span>
                 </div>
               </Popup>
             </Marker>
@@ -427,7 +428,7 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
               <Marker ref={node => registerMarker(pin.id || pin._id, node)} position={[pin.lat, pin.lng]}
                 icon={createPinIcon(pin.type || pin.category || 'other')}
                 eventHandlers={{ click: () => setSelectedPin(pin) }}>
-              <Popup maxWidth={260} minWidth={260} closeButton={false} className="custom-popup" autoPan={true} autoPanPaddingTopLeft={[50, 50]} autoPanPaddingBottomRight={[50, 280]}>
+              <Popup maxWidth={260} minWidth={260} closeButton={true} className="custom-popup" autoPan={true} autoPanPaddingTopLeft={[50, 50]} autoPanPaddingBottomRight={[50, 280]}>
                 <PinInfoWindow pin={pin} onClose={() => setSelectedPin(null)} onSelectCamera={setSelectedCamera} isAdmin={isAdmin} />
               </Popup>
               </Marker>
@@ -439,7 +440,7 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
             <Marker key={`resp-${responder.id || responder._id}`}
               position={[Number(responder.lat), Number(responder.lng)]}
               icon={adminResponderIcon}>
-              <Popup maxWidth={240} minWidth={200} closeButton={false} className="custom-popup">
+              <Popup maxWidth={240} minWidth={200} closeButton={true} className="custom-popup">
                 <div style={{padding:8,fontFamily:'inherit'}}>
                   <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
                     <span style={{width:36,height:36,background:'#dbeafe',borderRadius:12,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18}}>🛡️</span>

@@ -24,7 +24,7 @@ const Navbar = ({ onNavigate, currentView }) => {
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 px-3 py-2.5 sm:px-4 sm:py-3">
         {/* Brand */}
         <button className="flex items-center cursor-pointer" onClick={() => onNavigate('landing')}>
-          <img src="/images/08.png" alt="ImpEx Spot" className="h-12 sm:h-14 lg:h-16 w-auto object-contain" />
+          <img src="/images/08.png" alt="ImpEx Spot" className="h-9 sm:h-14 lg:h-16 w-auto object-contain" />
         </button>
 
         {/* Desktop Links */}
