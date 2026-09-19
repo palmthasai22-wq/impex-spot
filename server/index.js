@@ -108,7 +108,10 @@ app.use(helmet({
 // CORS
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (!origin 
+        || allowedOrigins.includes(origin)
+        || origin.endsWith('.vercel.app')
+        || origin.startsWith('http://localhost:')) {
       callback(null, true);
       return;
     }
