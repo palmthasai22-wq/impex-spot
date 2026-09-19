@@ -8,7 +8,7 @@ import { useAppContext } from '../context/AppContext';
 import toast from 'react-hot-toast';
 import LiveViewer from './LiveViewer';
 
-export default function PinForm({ onClose, initialPosition, initialCategory = '', onEmergency, isAdmin }) {
+export default function PinForm({ onClose, initialPosition, initialCategory = '', onEmergency, isAdmin, indoorData = null }) {
   const [step, setStep] = useState(1); // 1=category, 2=details
   const [formData, setFormData] = useState({
     title: '', category: initialCategory, customType: '', description: '', images: [], trafficLevel: 'medium', reviewRating: 3, reviewNote: '', external_stream_url: '', ai_detection_url: '', camera_category: 'แยกหลัก'
@@ -24,7 +24,7 @@ export default function PinForm({ onClose, initialPosition, initialCategory = ''
   const handleSubmit = async () => {
     if (!formData.title) return toast.error('กรุณาระบุชื่อสถานที่นะคะ 😊');
     if (!formData.category) return toast.error('กรุณาเลือกประเภทด้วยนะ');
-    if (!selectedLat || !selectedLng) return toast.error('ไม่สามารถดึงตำแหน่งได้ กรุณาอนุญาต GPS หรือคลิกเลือกบนแผนที่ 😅');
+    if (!indoorData && (!selectedLat || !selectedLng)) return toast.error('ไม่สามารถดึงตำแหน่งได้ กรุณาอนุญาต GPS หรือคลิกเลือกบนแผนที่ 😅');
     const isShareCategory = ['restaurant', 'market', 'shop', 'event', 'review'].includes(formData.category);
     if (isShareCategory && (formData.reviewRating < 2 || formData.reviewRating > 5)) {
       return toast.error('ให้คะแนนรีวิวได้ตั้งแต่ 2 ถึง 5 ดาวเท่านั้น');
@@ -36,8 +36,13 @@ export default function PinForm({ onClose, initialPosition, initialCategory = ''
         const cameraPayload = {
           name: formData.title,
           camera_category: formData.camera_category || 'จุดทั่วไป',
-          lat: selectedLat,
-          lng: selectedLng,
+          lat: indoorData ? 0 : selectedLat,
+          lng: indoorData ? 0 : selectedLng,
+          is_indoor: !!indoorData,
+          indoor_building_id: indoorData?.building_id,
+          indoor_floor_id: indoorData?.floor_id,
+          indoor_x: indoorData?.x,
+          indoor_y: indoorData?.y,
           coverage_direction: 0,
           owner_type: 'government',
           connection_type: 'wifi_local',
@@ -55,8 +60,13 @@ export default function PinForm({ onClose, initialPosition, initialCategory = ''
           category: 'cctv',
           type: 'cctv',
           title: res.data.name,
-          lat: res.data.location.lat,
-          lng: res.data.location.lng,
+          lat: indoorData ? 0 : res.data.location?.lat,
+          lng: indoorData ? 0 : res.data.location?.lng,
+          is_indoor: !!indoorData,
+          indoor_building_id: indoorData?.building_id,
+          indoor_floor_id: indoorData?.floor_id,
+          indoor_x: indoorData?.x,
+          indoor_y: indoorData?.y,
           _communityPin: true
         }]);
         toast.success('🎉 เพิ่มกล้อง CCTV สำเร็จ! หมุดแสดงบนแผนที่และจัดการได้ที่หน้าตั้งค่า');
@@ -76,8 +86,13 @@ export default function PinForm({ onClose, initialPosition, initialCategory = ''
 
       const createdPin = await createPin({ 
         ...formData,
-        lat: selectedLat,
-        lng: selectedLng,
+        lat: indoorData ? 0 : selectedLat,
+        lng: indoorData ? 0 : selectedLng,
+        is_indoor: !!indoorData,
+        indoor_building_id: indoorData?.building_id,
+        indoor_floor_id: indoorData?.floor_id,
+        indoor_x: indoorData?.x,
+        indoor_y: indoorData?.y,
         gpsAccuracy: accuracy,
         images: imageUrls,
         type: formData.category,

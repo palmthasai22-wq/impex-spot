@@ -35,12 +35,17 @@ router.get('/', (req, res) => {
 // ─── Public: ปักหมุดใหม่ (ไม่ต้อง login) ───
 router.post('/', (req, res) => {
   try {
-    const { title, category, type, lat, lng } = req.body;
+    const { title, category, type, lat, lng, is_indoor, indoor_x, indoor_y, indoor_building_id, indoor_floor_id } = req.body;
     if (!title || (!category && !type)) {
       return res.status(400).json({ error: 'Title and category are required' });
     }
-    if (lat === undefined || lng === undefined) {
-      return res.status(400).json({ error: 'Location (lat, lng) is required' });
+    
+    // Allow either lat/lng OR indoor coordinates
+    if (!is_indoor && (lat === undefined || lng === undefined)) {
+      return res.status(400).json({ error: 'Location (lat, lng) is required for outdoor pins' });
+    }
+    if (is_indoor && (indoor_x === undefined || indoor_y === undefined || !indoor_building_id || !indoor_floor_id)) {
+      return res.status(400).json({ error: 'Indoor coordinates and building info are required for indoor pins' });
     }
 
     // ── ตรวจสอบประเภทที่เฉพาะแอดมิน ──

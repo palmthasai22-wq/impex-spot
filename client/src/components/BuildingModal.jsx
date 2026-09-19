@@ -1,8 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { BUILDINGS } from '../utils/buildings';
+import PinForm from './PinForm';
+import usePins from '../hooks/usePins';
+import { PIN_CATEGORIES } from '../utils/categories';
 
 export default function BuildingModal({ building, onClose, onSelectBuilding }) {
   const [activeFloorIndex, setActiveFloorIndex] = useState(0);
+  const [showPinForm, setShowPinForm] = useState(false);
+  const [indoorPinData, setIndoorPinData] = useState(null);
+  const { pins } = usePins();
+  const imageRef = useRef(null);
 
   // Reset floor when building changes
   useEffect(() => {
@@ -13,6 +20,28 @@ export default function BuildingModal({ building, onClose, onSelectBuilding }) {
 
   const floors = building.floors || [];
   const activeFloor = floors[activeFloorIndex];
+
+  // Filter pins for this floor
+  const indoorPins = pins.filter(pin => 
+    pin.is_indoor === true && 
+    pin.indoor_building_id === building.id && 
+    pin.indoor_floor_id === activeFloor?.id
+  );
+
+  const handleImageClick = (e) => {
+    if (!imageRef.current) return;
+    const rect = imageRef.current.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    
+    setIndoorPinData({
+      building_id: building.id,
+      floor_id: activeFloor.id,
+      x: x,
+      y: y
+    });
+    setShowPinForm(true);
+  };
 
   return (
     <div style={{
@@ -101,14 +130,42 @@ export default function BuildingModal({ building, onClose, onSelectBuilding }) {
             position: 'relative'
           }}>
             {activeFloor ? (
-              <img 
-                src={activeFloor.image} 
-                alt={activeFloor.name} 
-                style={{
-                  maxWidth: '100%', maxHeight: '100%', objectFit: 'contain',
-                  boxShadow: '0 10px 30px rgba(0,0,0,0.1)', borderRadius: 12, background: 'white'
-                }} 
-              />
+              <div style={{ position: 'relative', display: 'inline-block', maxWidth: '100%', maxHeight: '100%' }}>
+                <img 
+                  ref={imageRef}
+                  src={activeFloor.image} 
+                  alt={activeFloor.name}
+                  onClick={handleImageClick}
+                  style={{
+                    maxWidth: '100%', maxHeight: '100%', objectFit: 'contain',
+                    boxShadow: '0 10px 30px rgba(0,0,0,0.1)', borderRadius: 12, background: 'white',
+                    cursor: 'crosshair', display: 'block'
+                  }} 
+                />
+                
+                {/* Render Indoor Pins */}
+                {indoorPins.map(pin => {
+                  const cat = PIN_CATEGORIES.find(c => c.id === (pin.category || pin.type));
+                  const emoji = cat ? cat.emoji : '📍';
+                  return (
+                    <div 
+                      key={pin.id}
+                      style={{
+                        position: 'absolute',
+                        left: `${pin.indoor_x}%`,
+                        top: `${pin.indoor_y}%`,
+                        transform: 'translate(-50%, -100%)',
+                        fontSize: 24,
+                        filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
+                        pointerEvents: 'none'
+                      }}
+                      title={pin.title}
+                    >
+                      {emoji}
+                    </div>
+                  );
+                })}
+              </div>
             ) : (
               <div style={{ color: '#64748b', textAlign: 'center' }}>
                 <span style={{ fontSize: 40, display: 'block', marginBottom: 12 }}>🏗️</span>
@@ -121,9 +178,10 @@ export default function BuildingModal({ building, onClose, onSelectBuilding }) {
               <div style={{
                 position: 'absolute', top: 16, right: 16, background: 'rgba(255,255,255,0.9)',
                 padding: '8px 16px', borderRadius: 999, fontWeight: 800, color: '#1e3a8a',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.1)', backdropFilter: 'blur(4px)', fontSize: 13
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)', backdropFilter: 'blur(4px)', fontSize: 13,
+                pointerEvents: 'none'
               }}>
-                📍 {activeFloor.name}
+                📍 {activeFloor.name} (คลิกที่รูปเพื่อปักหมุด)
               </div>
             )}
           </div>
@@ -136,6 +194,17 @@ export default function BuildingModal({ building, onClose, onSelectBuilding }) {
           <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: '#3b82f6', fontWeight: 800, cursor: 'pointer', padding: '4px 12px' }}>ปิดหน้าต่าง</button>
         </div>
       </div>
+      
+      {/* Pin Form Modal for Indoor Pins */}
+      {showPinForm && (
+        <div style={{ position: 'absolute', zIndex: 10000, inset: 0 }}>
+          <PinForm 
+            onClose={() => setShowPinForm(false)} 
+            indoorData={indoorPinData}
+            initialCategory="cctv"
+          />
+        </div>
+      )}
     </div>
   );
 }

@@ -20,18 +20,26 @@ const persist = () => {
 
 const emit = (event, payload) => socketService?.emit(event, payload);
 
-const normalize = (pin) => ({
-  verifications: [],
-  reviews: [],
-  averageRating: 0,
-  reportCount: 0,
-  confidence: 40,
-  status: 'active',
-  ...pin,
-  id: pin.id || uuidv4(),
-  lat: Number(pin.lat),
-  lng: Number(pin.lng),
-});
+const normalize = (pin) => {
+  const normalized = {
+    verifications: [],
+    reviews: [],
+    averageRating: 0,
+    reportCount: 0,
+    confidence: 40,
+    status: 'active',
+    ...pin,
+    id: pin.id || uuidv4(),
+  };
+  if (!pin.is_indoor) {
+    normalized.lat = Number(pin.lat);
+    normalized.lng = Number(pin.lng);
+  } else {
+    normalized.indoor_x = Number(pin.indoor_x);
+    normalized.indoor_y = Number(pin.indoor_y);
+  }
+  return normalized;
+};
 
 const pinStore = {
   setSocketService(service) { socketService = service; },
