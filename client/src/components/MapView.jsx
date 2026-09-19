@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, ZoomControl, useMap, Circle, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, ZoomControl, useMap, Circle, useMapEvents, Polygon } from 'react-leaflet';
 import L from 'leaflet';
 import { useAppContext } from '../context/AppContext';
 import usePins from '../hooks/usePins';
@@ -13,7 +13,9 @@ import useTrafficFlow from '../hooks/useTrafficFlow';
 import useCameraTraffic from '../hooks/useCameraTraffic';
 import useEvents from '../hooks/useEvents';
 import EventPin from './EventPin';
+import BuildingModal from './BuildingModal';
 import MapExplorerControls from './MapExplorerControls';
+import { BUILDINGS } from '../utils/buildings';
 import { PIN_CATEGORIES, MAIN_FEATURES } from '../utils/categories';
 import { fetchDispatchedResponders } from '../utils/api';
 import { TRAFFIC_LEVELS, connectCctvToDetec, getTrafficLevel as getAiTrafficLevel, hasTrafficCoordinates, trafficNodeId } from '../utils/traffic';
@@ -143,6 +145,7 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
   const [pendingAction, setPendingAction] = useState(null);
   const [dispatchedResponders, setDispatchedResponders] = useState([]);
   const [selectedDate, setSelectedDate] = useState('');
+  const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [nearbyCameraIds, setNearbyCameraIds] = useState([]);
   const markerRefs = useRef(new Map());
   const directTraffic = useCameraTraffic(cameras, pollingSeconds);
@@ -359,7 +362,25 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
           {flyTo && <FlyToUser position={flyTo} />}
           {showCameras && linkedCameras.map(camera => <CameraPin key={camera.id} camera={camera} onSelect={setSelectedCamera} highlighted={nearbyCameraIds.includes(camera.id)} registerMarker={registerMarker} />)}
           {visibleEvents.map(event => <EventPin key={event.id} event={event} now={now} highlighted={selectedDate ? eventOccursOn(event, selectedDate) : false} nearbyCount={getCamerasNearVenue(event, searchableCameras, 300).length} onNearby={showNearbyCameras} registerMarker={registerMarker} />)}
-
+          
+          {/* Building Polygons (Indoor Maps) */}
+          {BUILDINGS.map(building => (
+            <Polygon 
+              key={building.id}
+              positions={building.polygon}
+              pathOptions={{ color: '#3b82f6', fillColor: '#3b82f6', fillOpacity: 0.1, weight: 2, dashArray: '5, 5' }}
+              eventHandlers={{
+                click: () => setSelectedBuilding(building)
+              }}
+            >
+              <Popup autoPan={false}>
+                <div style={{ textAlign: 'center', padding: 4 }}>
+                  <strong style={{ fontSize: 14 }}>🏢 {building.name}</strong><br/>
+                  <span style={{ fontSize: 11, color: '#64748b' }}>คลิกที่พื้นที่อาคารเพื่อดูผังภายใน (Indoor Map)</span>
+                </div>
+              </Popup>
+            </Polygon>
+          ))}
           {/* 🚦 AI Traffic Nodes from Detec */}
           {trafficNodes.filter(hasTrafficCoordinates).map((node, index) => {
             const level = getAiTrafficLevel(node);
@@ -690,6 +711,8 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
           </button>
         </div>
       </div>
+      
+      <BuildingModal building={selectedBuilding} onClose={() => setSelectedBuilding(null)} />
     </div>
   );
 }
