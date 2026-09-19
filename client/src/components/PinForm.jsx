@@ -32,6 +32,29 @@ export default function PinForm({ onClose, initialPosition, initialCategory = ''
 
     setIsSubmitting(true);
     try {
+      if (formData.category === 'cctv') {
+        const cameraPayload = {
+          name: formData.title,
+          camera_category: formData.camera_category || 'จุดทั่วไป',
+          lat: selectedLat,
+          lng: selectedLng,
+          coverage_direction: 0,
+          owner_type: 'government',
+          connection_type: 'wifi_local',
+          camera_ip: '',
+          rtsp_path: '/stream1',
+          external_stream_url: formData.external_stream_url || '',
+          ai_detection_url: formData.ai_detection_url || '',
+          verification_status: 'pending',
+          owner_consent: false,
+        };
+        await import('../utils/api').then(m => m.default.post('/admin/cameras', cameraPayload));
+        toast.success('🎉 เพิ่มกล้อง CCTV สำเร็จ! ข้อมูลอยู่ในหน้าจัดการกล้องแล้ว');
+        onClose();
+        setIsSubmitting(false);
+        return;
+      }
+
       // Upload images if any
       let imageUrls = [];
       if (formData.category !== 'cctv' && formData.images && formData.images.length > 0) {
@@ -50,7 +73,6 @@ export default function PinForm({ onClose, initialPosition, initialCategory = ''
         type: formData.category,
         reviewRating: isShareCategory ? Number(formData.reviewRating) : undefined,
         reviewNote: isShareCategory ? formData.reviewNote : undefined,
-        external_stream_url: formData.category === 'cctv' ? formData.external_stream_url : undefined,
       });
       setPins(currentPins => [...currentPins, createdPin]);
       toast.success('🎉 ปักหมุดสำเร็จ! ขอบคุณที่ช่วยชุมชน');

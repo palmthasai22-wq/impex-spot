@@ -39,6 +39,9 @@ export default function AdminCameraForm({ camera, onSave, onCancel }) {
     finally { setBusy(false); }
   }}>
     <h2>{camera?.id ? 'แก้ไขกล้อง' : 'เพิ่มกล้อง CCTV'}</h2>
+    <div style={{background: '#f0fdf4', color: '#166534', padding: '10px 14px', borderRadius: '8px', fontSize: '13px', marginBottom: '15px', border: '1px solid #bbf7d0'}}>
+      💡 <b>ทิปส์:</b> หากต้องการเพิ่มกล้องใหม่ให้ง่ายขึ้น คุณสามารถไปที่ <b>หน้าแผนที่หลัก</b> นอกสุด แล้วกดปุ่ม <b>"CCTV" (สีชมพู)</b> ด้านล่าง เพื่อจิ้มเลือกลงบนแผนที่ได้เลยครับ
+    </div>
     <p className="cctv-form-help">เชื่อมต่อผ่าน Wi-Fi วงเดียวกับเครื่อง Relay ระบบจะค้นหาและบันทึก IP กล้องให้อัตโนมัติ</p>
     <div className="cctv-fields">
       <label>ชื่อกล้อง/สถานที่<input required maxLength="160" placeholder="เช่น แยกหน้าเมืองทองธานี" value={data.name} onChange={e => change('name', e.target.value)} /></label>
