@@ -28,7 +28,7 @@ const createPinIcon = (pin) => {
     return L.divIcon({
       className: 'custom-admin-dynamic-marker',
       html: `<div style="width:60px;height:60px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 4px 12px rgba(0,0,0,0.3));animation:bounce 2s ease-in-out infinite;">
-        <img src="${pin.customIcon}" alt="custom_pin" style="width:100%;height:100%;object-fit:cover;border-radius:50%;border:4px solid white;" onerror="this.parentElement.textContent='📍'" />
+        <img src="${pin.customIcon}" alt="custom_pin" style="width:100%;height:100%;object-fit:contain;" onerror="this.parentElement.textContent='🌟'" />
       </div>`,
       iconSize: [60, 60],
       iconAnchor: [30, 60],
