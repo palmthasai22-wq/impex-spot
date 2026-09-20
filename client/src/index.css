@@ -682,7 +682,7 @@
 }
 
 /* ====== CCTV + Event map controls ====== */
-.map-explorer{position:fixed;z-index:910;top:12px;left:50%;transform:translateX(-50%);width:min(760px,calc(100% - 28px));font-family:inherit;pointer-events:none}
+.map-explorer{position:absolute;z-index:910;top:12px;left:50%;transform:translateX(-50%);width:min(760px,calc(100% - 28px));font-family:inherit;pointer-events:none}
 .map-explorer > * {pointer-events:auto}
 .map-explorer-row{display:flex;gap:8px;align-items:center;padding:7px;border:1px solid rgba(226,232,240,.95);border-radius:18px;background:rgba(255,255,255,.95);box-shadow:0 8px 28px rgba(15,23,42,.14);backdrop-filter:blur(14px)}
 .map-search{position:relative;flex:1;min-width:180px}.map-search input{width:100%;height:44px;padding:0 14px;border:1px solid #dbe4ea;border-radius:13px;background:#f8fafc;font-size:15px;outline:none}.map-search input:focus{border-color:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.14);background:#fff}
