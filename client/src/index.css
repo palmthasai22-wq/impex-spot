@@ -708,15 +708,14 @@
   .map-explorer{top:6px;width:calc(100% - 12px);}
   .map-explorer-row{min-height:50px;border-radius:14px;padding:4px 6px;justify-content:flex-start;}
   .mobile-tool-toggle,.calendar-toggle{width:42px;height:42px;border-radius:11px;flex:0 0 42px;}
-  .map-search.open{top:52px;}
   .map-search input{height:44px;border-radius:12px;background:#fff;box-shadow:0 8px 22px rgba(15,23,42,.14);}
-  .map-top-controls{top:62px!important;left:6px!important;right:6px!important;padding:3px!important;border-radius:13px!important;}
+  .map-top-controls{top:68px!important;left:6px!important;right:6px!important;padding:3px!important;border-radius:13px!important;}
   .map-top-controls>div,.map-top-controls>button{min-height:40px;flex-shrink:0;}
   .map-top-controls .area-limit-button,.map-top-controls .map-dimension-button{display:none!important;}
-  .traffic-legend{top:112px!important;left:8px!important;right:auto!important;width:52px!important;max-width:52px!important;overflow:visible!important;border-radius:13px!important;}
+  .traffic-legend{top:118px!important;left:8px!important;right:auto!important;width:52px!important;max-width:52px!important;overflow:visible!important;border-radius:13px!important;}
   .traffic-legend.is-open{right:8px!important;width:auto!important;max-width:none!important;padding:6px!important;}
   .traffic-legend.is-open>div{white-space:normal!important;flex-wrap:wrap;gap:6px!important;max-height:132px;overflow:auto!important;}
-  .realtime-status{top:112px!important;right:8px!important;left:auto!important;min-height:36px;padding:6px 9px!important;border-radius:999px!important;}
+  .realtime-status{top:118px!important;right:8px!important;left:auto!important;min-height:36px;padding:6px 9px!important;border-radius:999px!important;}
   .realtime-status small{display:none;}
   .map-action-dock{bottom:max(8px,env(safe-area-inset-bottom))!important;left:6px!important;right:6px!important;width:calc(100% - 12px)!important;}
   .map-action-buttons{padding:4px!important;border-radius:16px;background:rgba(255,255,255,.88);box-shadow:0 6px 22px rgba(15,23,42,.16);backdrop-filter:blur(12px);}
