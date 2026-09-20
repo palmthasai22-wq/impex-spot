@@ -218,4 +218,22 @@ const PORT = process.env.PORT || 3001;
 
 server.listen(PORT, () => {
   console.log(`ImpEx Spot Server running on port ${PORT} [${process.env.NODE_ENV || 'development'}] ✅`);
+
+  // ─── Auto-sync IMPACT events: once on startup + every 6 hours ───
+  const { scrapeImpactEvents } = require('./services/impactScraper');
+  const SCRAPE_INTERVAL_MS = 6 * 60 * 60 * 1000; // 6 hours
+
+  const runScrape = async () => {
+    try {
+      const result = await scrapeImpactEvents();
+      console.log(`[IMPACT Scraper] ✅ Found ${result.totalFound} events, added ${result.added} new`);
+    } catch (err) {
+      console.error('[IMPACT Scraper] ❌ Failed:', err.message);
+    }
+  };
+
+  // First run after 10 seconds (let server fully start)
+  setTimeout(runScrape, 10_000);
+  // Then every 6 hours
+  setInterval(runScrape, SCRAPE_INTERVAL_MS);
 });

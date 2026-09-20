@@ -217,32 +217,68 @@ export default function PinForm({ onClose, initialPosition, initialCategory = ''
                 </div>
               )}
 
-              {/* GPS Info */}
+              {/* GPS Info + Lat/Lng Inputs */}
+              {!indoorData && (
               <div className="glass-card p-3 border border-green-100">
-                <div className="flex items-center gap-2 mb-1">
+                <div className="flex items-center gap-2 mb-2">
                   <span className="text-sm">📡</span>
                   <span className="text-xs font-bold text-green-700">ตำแหน่งที่จะปักหมุด</span>
                 </div>
                 {pinPosition ? (
                   <>
-                    <p className="text-xs text-green-700">✅ จุดที่เลือกบนแผนที่ ({selectedLat.toFixed(4)}, {selectedLng.toFixed(4)})</p>
+                    <p className="text-xs text-green-700 mb-2">✅ จุดที่เลือกบนแผนที่</p>
                     {gpsLat !== null && gpsLng !== null && (
-                      <button type="button" onClick={() => setPinPosition(null)} className="mt-2 text-[10px] font-bold text-blue-600 hover:text-blue-800">
+                      <button type="button" onClick={() => setPinPosition(null)} className="mb-2 text-[10px] font-bold text-blue-600 hover:text-blue-800">
                         📍 ใช้ตำแหน่ง GPS ปัจจุบันแทน
                       </button>
                     )}
                   </>
                 ) : loading ? (
-                  <p className="text-xs text-gray-400 flex items-center gap-1">⏳ กำลังหาตำแหน่ง กรุณารอสักครู่...</p>
+                  <p className="text-xs text-gray-400 flex items-center gap-1 mb-2">⏳ กำลังหาตำแหน่ง กรุณารอสักครู่...</p>
                 ) : error ? (
-                  <p className="text-xs text-red-500">😅 {error} หรือกลับไปคลิกเลือกจุดบนแผนที่</p>
+                  <p className="text-xs text-red-500 mb-2">😅 {error} หรือกลับไปคลิกเลือกจุดบนแผนที่</p>
                 ) : (
                   <>
-                    <p className="text-xs text-gray-500">✅ GPS พร้อมแล้ว ({selectedLat?.toFixed(6)}, {selectedLng?.toFixed(6)})</p>
-                    {accuracy && <p className="mt-1 text-[10px] text-gray-400">ความแม่นยำประมาณ {Math.round(accuracy)} เมตร</p>}
+                    <p className="text-xs text-gray-500 mb-2">✅ GPS พร้อมแล้ว</p>
+                    {accuracy && <p className="mb-2 text-[10px] text-gray-400">ความแม่นยำประมาณ {Math.round(accuracy)} เมตร</p>}
                   </>
                 )}
+                {/* Editable Lat/Lng */}
+                <div className="grid grid-cols-2 gap-2 mt-1">
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-500 mb-0.5">Latitude (-90 ถึง 90)</label>
+                    <input type="number" step="any" min="-90" max="90"
+                      className="input-modern text-xs"
+                      placeholder="13.9126"
+                      value={selectedLat ?? ''}
+                      onChange={e => {
+                        const v = parseFloat(e.target.value);
+                        if (!isNaN(v) && v >= -90 && v <= 90) {
+                          setPinPosition([v, selectedLng ?? 0]);
+                        } else if (e.target.value === '' || e.target.value === '-') {
+                          // allow typing
+                        }
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-500 mb-0.5">Longitude (-180 ถึง 180)</label>
+                    <input type="number" step="any" min="-180" max="180"
+                      className="input-modern text-xs"
+                      placeholder="100.5530"
+                      value={selectedLng ?? ''}
+                      onChange={e => {
+                        const v = parseFloat(e.target.value);
+                        if (!isNaN(v) && v >= -180 && v <= 180) {
+                          setPinPosition([selectedLat ?? 0, v]);
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+                <p className="text-[10px] text-gray-400 mt-1">💡 กรอกพิกัดตรงนี้ หรือคลิกเลือกจุดบนแผนที่ก็ได้</p>
               </div>
+              )}
 
               {formData.category === 'traffic' && (
                 <div>

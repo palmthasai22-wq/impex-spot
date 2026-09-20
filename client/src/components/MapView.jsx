@@ -127,7 +127,7 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
   const [showCameras, setShowCameras] = useState(true);
   const [selectedCamera, setSelectedCamera] = useState(null);
   const { pins, connected, lastRealtimeAt } = usePins();
-  const { selectedPin, setSelectedPin, filters } = useAppContext();
+  const { selectedPin, setSelectedPin } = useAppContext();
   const [pollingSeconds, setPollingSeconds] = useState(30);
   const cctvPins = useMemo(() => pins.filter(pin => (pin.type || pin.category) === 'cctv'), [pins]);
   const pinTraffic = useCameraTraffic(cctvPins, pollingSeconds);
@@ -207,8 +207,6 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
     if (pin.status !== 'active') return false;
     const t = pin.type || pin.category || 'other';
     if (activeFilter && t !== activeFilter) return false;
-    if (filters.types.length > 0 && !filters.types.includes(t)) return false;
-    if (filters.verified && (pin.confidence || 0) < 60) return false;
     return true;
   });
   const linkedPins = useMemo(
