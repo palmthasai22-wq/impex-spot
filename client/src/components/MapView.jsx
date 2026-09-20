@@ -520,7 +520,7 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
         )}
 
         {/* Pin Count + ปุ่มเปิด Filter กลับ */}
-        <div className="map-top-controls" style={{ position:'absolute', top:12, left:12, zIndex:800, display:'flex', gap:8, alignItems:'center', flexWrap:'wrap', rowGap:6, maxWidth:isMobile ? 'calc(100vw - 24px)' : 'none', padding:4, borderRadius:16, background:'rgba(255,255,255,0.78)', backdropFilter:'blur(10px)', boxShadow:'0 3px 12px rgba(15,23,42,0.12)' }}>
+        <div className="map-top-controls" style={{ position:'absolute', top:12, left:12, zIndex:800, display:'flex', gap:8, alignItems:'center', flexWrap:'wrap', rowGap:6, maxWidth:isMobile ? 'calc(100vw - 24px)' : 'none' }}>
           {isAdmin && (
             <button aria-pressed={showCameras} title={cameraError || 'แสดงกล้อง CCTV'} onClick={() => { setShowCameras(value => !value); setSelectedCamera(null); }} style={{ border:'none',borderRadius:11,padding:'6px 10px',fontSize:11,fontWeight:800,background:showCameras ? '#fce7f3' : '#f1f5f9',color:'#9d174d',display:'flex',alignItems:'center',gap:5,cursor:'pointer' }}>
               <img src="/images/cctv.png" alt="" aria-hidden="true" style={{width:20,height:24,objectFit:'contain'}} />
