@@ -12,6 +12,7 @@
   }
 
   body {
+    font-family: 'Noto Sans Thai', sans-serif !important;
     @apply font-sans antialiased text-gray-800 bg-gradient-to-br from-brand-50 via-white to-accent-50 min-h-screen;
   }
 

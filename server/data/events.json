@@ -472,5 +472,53 @@
     "sourceUrl": "https://www.impact.co.th/th/visitors/event-calendar",
     "posterUrl": "https://www.impact.co.th/media/com_eventbooking/images/thumbs/0716 choom.webp",
     "hideWhenEnded": false
+  },
+  {
+    "id": "b0b15e5e-ff7c-4549-a5b8-a951f0095aa1",
+    "eventName": "โดรนเทค เอเชีย 2026",
+    "eventType": "exhibition_public",
+    "startDate": "2026-11-11",
+    "endDate": "2026-11-13",
+    "startTime": "10:00",
+    "endTime": "20:00",
+    "venueName": "ศูนย์แสดงสินค้า อิมแพ็ค เมืองทองธานี",
+    "lat": 13.913,
+    "lng": 100.548,
+    "organizer": "",
+    "sourceUrl": "https://www.impact.co.th/th/visitors/event-calendar",
+    "posterUrl": "https://www.impact.co.th/media/com_eventbooking/images/thumbs/0717 drontech.webp",
+    "hideWhenEnded": false
+  },
+  {
+    "id": "74efc00c-60c2-4a79-84be-cef088753ad2",
+    "eventName": "งานแสดงสินค้าครบวงจรด้านอาหาร เครื่องดื่ม และวัตถุดิบจากจีน เพื่อธุรกิจบริการอาหารในอาเซียน",
+    "eventType": "exhibition_public",
+    "startDate": "2026-11-19",
+    "endDate": "2026-11-21",
+    "startTime": "10:00",
+    "endTime": "20:00",
+    "venueName": "ศูนย์แสดงสินค้า อิมแพ็ค เมืองทองธานี",
+    "lat": 13.913,
+    "lng": 100.548,
+    "organizer": "",
+    "sourceUrl": "https://www.impact.co.th/th/visitors/event-calendar",
+    "posterUrl": "https://www.impact.co.th/media/com_eventbooking/images/thumbs/0915-tiface.webp",
+    "hideWhenEnded": false
+  },
+  {
+    "id": "9472650c-8d62-480c-8ad6-88d92e97aa26",
+    "eventName": "ดิจิเทค อาเซียน ไทยแลนด์ 2026",
+    "eventType": "exhibition_public",
+    "startDate": "2026-11-25",
+    "endDate": "2026-11-27",
+    "startTime": "10:00",
+    "endTime": "20:00",
+    "venueName": "ศูนย์แสดงสินค้า อิมแพ็ค เมืองทองธานี",
+    "lat": 13.913,
+    "lng": 100.548,
+    "organizer": "",
+    "sourceUrl": "https://www.impact.co.th/th/visitors/event-calendar",
+    "posterUrl": "https://www.impact.co.th/media/com_eventbooking/images/thumbs/0518-digitech-2026.webp",
+    "hideWhenEnded": false
   }
 ]

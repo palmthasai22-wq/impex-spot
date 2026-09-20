@@ -18,6 +18,9 @@ import { PIN_CATEGORIES, MAIN_FEATURES } from '../utils/categories';
 import { fetchDispatchedResponders } from '../utils/api';
 import { TRAFFIC_LEVELS, connectCctvToDetec, getTrafficLevel as getAiTrafficLevel, hasTrafficCoordinates, trafficNodeId } from '../utils/traffic';
 import { eventOccursOn, getCamerasNearVenue, getEventStatus, getVenueLocation } from '../utils/events';
+import PlanViewPopup from './PlanViewPopup';
+import api from '../utils/api';
+import toast from 'react-hot-toast';
 
 const createPinIcon = (pin) => {
   const category = pin.type || pin.category || 'other';
@@ -156,6 +159,8 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
   const [showLegend, setShowLegend] = useState(false);
   const [pendingAction, setPendingAction] = useState(null);
   const [dispatchedResponders, setDispatchedResponders] = useState([]);
+  const [activePlanPin, setActivePlanPin] = useState(null);
+  const [activePlans, setActivePlans] = useState([]);
   const [selectedDate, setSelectedDate] = useState('');
   const [nearbyCameraIds, setNearbyCameraIds] = useState([]);
   const markerRefs = useRef(new Map());
@@ -511,6 +516,7 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
             <img src="/images/mascot.png" alt="" style={{width:14,height:14,objectFit:'contain'}} />
             {linkedPins.length} หมุด
           </div>
+          <button onClick={async () => { const targetPin = pins.find(p => p.title && p.title.includes('อิมแพ็ค ฟอรั่ม')); if (targetPin) { try { const res = await api.get('/plans/' + (targetPin.id || targetPin._id)); setActivePlanPin(targetPin); setActivePlans(res.data); } catch (err) { toast.error('ไม่สามารถโหลดแผนผังได้'); } } else { toast.error('ไม่พบแผนผังอาคาร'); } }} style={{background:activePlanPin ? '#2563eb' : '#f8fafc',color:activePlanPin ? 'white' : '#334155',borderRadius:11,border:'1px solid #e2e8f0',padding:'7px 10px',fontSize:11,fontWeight:800,cursor:'pointer',display:'flex',alignItems:'center',gap:4}}>🏢 Indoor Map</button>
           
           <button className={`area-limit-button ${limitedBounds ? 'is-active' : ''}`}
             onClick={limitedBounds ? () => setLimitedBounds(null) : handleLimitArea}
@@ -677,7 +683,7 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
           </button>
         </div>
       </div>
-      
+      {activePlanPin && <PlanViewPopup pinId={activePlanPin.id || activePlanPin._id} pinTitle={activePlanPin.title} plans={activePlans} onClose={() => {setActivePlanPin(null); setActivePlans([]);}} />}
     </div>
   );
 }
