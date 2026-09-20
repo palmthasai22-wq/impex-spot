@@ -537,18 +537,7 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
             🏢 Indoor Map
           </button>
 
-          {/* ปุ่มเปิด filter กลับ (แสดงเมื่อซ่อน) */}
-          {!showFilterBar && (
-            <button onClick={() => setShowFilterBar(true)}
-              style={{
-                background:'#dbeafe', borderRadius:11, padding:'8px 11px',
-                fontSize:11, fontWeight:800, color:'#1e40af',
-                border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:4,
-              }}>
-              <img src="/images/mascot_search.png" alt="" style={{width:16,height:16,objectFit:'contain'}} />
-              ตัวกรอง ▼
-            </button>
-          )}
+
           <button className={`area-limit-button ${limitedBounds ? 'is-active' : ''}`}
             onClick={limitedBounds ? () => setLimitedBounds(null) : handleLimitArea}
             aria-label={limitedBounds ? 'ยกเลิกการจำกัดพื้นที่' : 'จำกัดพื้นที่นี้'}
