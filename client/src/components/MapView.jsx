@@ -633,7 +633,9 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
             <button onClick={() => startAreaSelection('share', 'restaurant')} role="menuitem">
               <img src="/images/mascot_share.png" alt="" /> แบ่งปัน
             </button>
-            
+            </div>
+          )}
+          <div className="map-action-buttons" style={{display:'flex',flexDirection:'column',alignItems:'center',gap:'clamp(8px, 1.6vw, 14px)'}}>
           {/* รู้ทัน */}
           <button className="map-action-button" data-tooltip="รู้ทัน: เลือกพื้นที่" onClick={() => startAreaSelection('pin', 'traffic')} aria-label="เลือกพื้นที่ปักหมุดสถานการณ์" title="เลือกพื้นที่ปักหมุดสถานการณ์"
             style={{display:'flex',alignItems:'center',justifyContent:'center',width:'clamp(52px, 6vw, 64px)',height:'clamp(52px, 6vw, 64px)',borderRadius:18,border:'2px solid #16a34a',cursor:'pointer',background:'#ffffff',color:'#16a34a',boxShadow:'0 3px 9px rgba(22,163,74,0.15)',transition:'all 0.2s'}}
@@ -684,8 +686,6 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
             <img src="/images/mascot_share.png" alt="แบ่งปัน" style={{width:'clamp(34px, 4.5vw, 50px)',height:'clamp(34px, 4.5vw, 50px)',objectFit:'contain'}} />
             <span className="map-action-label" style={{color:'#15803d',textShadow:'none'}}>แบ่งปัน</span>
           </button>
-          {/* กรอง */}
-          
         </div>
       </div>
       
