@@ -4,7 +4,6 @@ import { FiMenu, FiX } from 'react-icons/fi';
 const NAV_LINKS = [
   { label: 'Insight Feed', id: 'landing' },
   { label: 'Kanban Board', id: 'kanban' },
-  { label: 'Impact Commu', id: 'commu' },
   { label: 'ทำงานยังไง', id: 'how' },
   { label: 'คำถามที่เจอบ่อย', id: 'faq' },
 ];

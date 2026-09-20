@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, ZoomControl, useMap, Circle, useMapEvents, Polygon } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, ZoomControl, useMap, Circle, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import { useAppContext } from '../context/AppContext';
 import usePins from '../hooks/usePins';
@@ -13,9 +13,7 @@ import useTrafficFlow from '../hooks/useTrafficFlow';
 import useCameraTraffic from '../hooks/useCameraTraffic';
 import useEvents from '../hooks/useEvents';
 import EventPin from './EventPin';
-import BuildingModal from './BuildingModal';
 import MapExplorerControls from './MapExplorerControls';
-import { BUILDINGS } from '../utils/buildings';
 import { PIN_CATEGORIES, MAIN_FEATURES } from '../utils/categories';
 import { fetchDispatchedResponders } from '../utils/api';
 import { TRAFFIC_LEVELS, connectCctvToDetec, getTrafficLevel as getAiTrafficLevel, hasTrafficCoordinates, trafficNodeId } from '../utils/traffic';
@@ -159,8 +157,6 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
   const [pendingAction, setPendingAction] = useState(null);
   const [dispatchedResponders, setDispatchedResponders] = useState([]);
   const [selectedDate, setSelectedDate] = useState('');
-  const [selectedBuilding, setSelectedBuilding] = useState(null);
-  const [initialFloorId, setInitialFloorId] = useState(null);
   const [nearbyCameraIds, setNearbyCameraIds] = useState([]);
   const markerRefs = useRef(new Map());
   const directTraffic = useCameraTraffic(cameras, pollingSeconds);
@@ -239,8 +235,6 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
 
   const defaultCenter = [13.9126, 100.5530];
   const quickFilters = MAIN_FEATURES.filter(f => f.categories.length > 0);
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
-
   const handleFilterClick = (feat) => {
     const isActive = feat.categories.some(c => c.id === activeFilter);
     setActiveFilter(isActive ? null : feat.categories[0]?.id);
@@ -284,16 +278,6 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
   const focusResult = result => {
     const item = result.item;
     
-    // Handle Indoor Pins from Search
-    if (item.is_indoor) {
-      const building = BUILDINGS.find(b => b.id === item.indoor_building_id);
-      if (building) {
-        setInitialFloorId(item.indoor_floor_id);
-        setSelectedBuilding(building);
-      }
-      return;
-    }
-
     const position = result.kind === 'camera' ? [item.location.lat, item.location.lng] : [item.lat, item.lng];
     mapInstance?.flyTo(position, 17, { duration: 0.8 });
     setTimeout(() => markerRefs.current.get(String(item.id))?.openPopup(), 850);
@@ -305,17 +289,13 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
   };
 
   return (
-    <div style={{ width:'100%', height:'100%', position:'relative', overflow:'hidden', background:'#e8f0ea' }}>
+    <div className="map-screen" style={{ width:'100%', height:'100%', position:'relative', overflow:'hidden', background:'#e8f0ea' }}>
       {selectedCamera && <div className="cctv-map-viewer"><LiveViewer camera={selectedCamera} onClose={() => setSelectedCamera(null)} /></div>}
       <MapExplorerControls cameras={searchableCameras} events={events} pins={linkedPins} onSelect={focusResult} selectedDate={selectedDate} onDate={date=>{setSelectedDate(date);setNearbyCameraIds([]);}} pollingSeconds={pollingSeconds} onPolling={setPollingSeconds} />
 
       {/* ── TOP: Filter Bar (ซ่อนได้) ── */}
       {showFilterBar && (
-        <div style={{
-          position:'absolute', top:0, left:0, right:0, zIndex:900,
-          background:'rgba(255,255,255,0.94)', borderBottom:'1px solid #e5e7eb',
-          padding:'8px 12px', display:'flex', alignItems:'center', gap:8,
-        }}>
+        <div className="map-filter-panel">
           {/* Chips — scrollable */}
           <div style={{ display:'flex', gap:8, flex:1, overflowX:'auto' }} className="no-scrollbar">
             <button onClick={() => setActiveFilter(null)}
@@ -420,6 +400,7 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
             <Marker position={defaultCenter} icon={userIcon} />
           )}
           {linkedPins.map(pin => {
+            if (pin.title === 'อิมแพ็ค ฟอรั่ม (IMPACT Forum)') return null;
             const aiTraffic = pin.ai_traffic ? TRAFFIC_LEVELS[getAiTrafficLevel(pin.ai_traffic)] : null;
             const pinTraffic = aiTraffic || trafficColors[getTrafficLevel(pin)];
             return (
@@ -519,7 +500,7 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
         )}
 
         {/* Pin Count + ปุ่มเปิด Filter กลับ */}
-        <div className="map-top-controls" style={{ position:'absolute', top:12, left:12, zIndex:800, display:'flex', gap:8, alignItems:'center', flexWrap:'wrap', rowGap:6, maxWidth:isMobile ? 'calc(100vw - 24px)' : 'none' }}>
+        <div className="map-top-controls" role="group" aria-label="เครื่องมือแผนที่ด่วน">
           {isAdmin && (
             <button aria-pressed={showCameras} title={cameraError || 'แสดงกล้อง CCTV'} onClick={() => { setShowCameras(value => !value); setSelectedCamera(null); }} style={{ border:'none',borderRadius:11,padding:'6px 10px',fontSize:11,fontWeight:800,background:showCameras ? '#fce7f3' : '#f1f5f9',color:'#9d174d',display:'flex',alignItems:'center',gap:5,cursor:'pointer' }}>
               <img src="/images/cctv.png" alt="" aria-hidden="true" style={{width:20,height:24,objectFit:'contain'}} />
@@ -531,12 +512,6 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
             {linkedPins.length} หมุด
           </div>
           
-          <button onClick={() => setSelectedBuilding(BUILDINGS[0])}
-            style={{background:selectedBuilding ? '#2563eb' : '#f8fafc',color:selectedBuilding ? 'white' : '#334155',borderRadius:11,border:'1px solid #e2e8f0',padding:'7px 10px',fontSize:11,fontWeight:800,cursor:'pointer',display:'flex',alignItems:'center',gap:4}}>
-            🏢 Indoor Map
-          </button>
-
-
           <button className={`area-limit-button ${limitedBounds ? 'is-active' : ''}`}
             onClick={limitedBounds ? () => setLimitedBounds(null) : handleLimitArea}
             aria-label={limitedBounds ? 'ยกเลิกการจำกัดพื้นที่' : 'จำกัดพื้นที่นี้'}
@@ -553,23 +528,25 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
           </button>
         </div>
 
-        <div className={`traffic-legend ${showLegend ? 'is-open' : ''}`} style={{position:'absolute',top:isMobile ? 74 : 12,right:isMobile ? 'auto' : 12,left:isMobile ? 12 : 'auto',zIndex:800,background:'rgba(255,255,255,0.92)',borderRadius:12,padding:showLegend?'8px 10px':'4px',boxShadow:'0 2px 10px rgba(0,0,0,0.1)',backdropFilter:'blur(8px)',fontSize:10,fontWeight:700,color:'#374151',maxWidth:isMobile ? 'calc(100vw - 24px)' : 'none'}}>
-          <button aria-label="คำอธิบายสัญลักษณ์" aria-expanded={showLegend} onClick={()=>setShowLegend(v=>!v)} style={{width:44,height:44,border:0,borderRadius:10,background:'#f1f5f9',fontSize:18,fontWeight:900,cursor:'pointer'}}>?</button>
-          {showLegend&&<div style={{display:'flex',gap:8,alignItems:'center',whiteSpace:'nowrap',padding:'6px 4px 2px',overflowX:'auto'}}>
-            {Object.entries(TRAFFIC_LEVELS).map(([level, item]) => (
-              <span key={level} style={{display:'flex',alignItems:'center',gap:3}}>
-                <i style={{width:9,height:9,borderRadius:'50%',background:item.color,display:'inline-block'}} />
-                {item.label}
-              </span>
-            ))}
-            <span>🎪 จุดจัดงาน</span>
-          </div>}
-        </div>
+        <div className="map-status-stack" aria-label="สถานะแผนที่">
+          <div className={`traffic-legend ${showLegend ? 'is-open' : ''}`}>
+            <button aria-label="คำอธิบายสัญลักษณ์" aria-expanded={showLegend} onClick={()=>setShowLegend(v=>!v)}>?</button>
+            {showLegend&&<div className="traffic-legend-items">
+              {Object.entries(TRAFFIC_LEVELS).map(([level, item]) => (
+                <span key={level}>
+                  <i style={{background:item.color}} />
+                  {item.label}
+                </span>
+              ))}
+              <span>🎪 จุดจัดงาน</span>
+            </div>}
+          </div>
 
-        <div className={`realtime-status ${connected ? 'is-live' : ''}`} title={lastRealtimeAt ? `อัปเดตล่าสุด ${lastRealtimeAt.toLocaleTimeString('th-TH')}` : 'กำลังเชื่อมต่อข้อมูล realtime'}>
-          <span className="realtime-dot" />
-          <span>{connected ? 'LIVE' : 'กำลังเชื่อมต่อ'}</span>
-          {lastRealtimeAt && <small>{lastRealtimeAt.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}</small>}
+          <div className={`realtime-status ${connected ? 'is-live' : ''}`} title={lastRealtimeAt ? `อัปเดตล่าสุด ${lastRealtimeAt.toLocaleTimeString('th-TH')}` : 'กำลังเชื่อมต่อข้อมูล realtime'}>
+            <span className="realtime-dot" />
+            <span>{connected ? 'LIVE' : 'กำลังเชื่อมต่อ'}</span>
+            {lastRealtimeAt && <small>{lastRealtimeAt.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}</small>}
+          </div>
         </div>
 
         {pendingAction && !selectedPosition && (
@@ -638,6 +615,16 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
             </div>
           )}
           <div className="map-action-buttons" style={{display:'flex',flexDirection:'column',alignItems:'center',gap:'clamp(8px, 1.6vw, 14px)'}}>
+          {/* กรองหมุด */}
+          <button className={`map-action-button ${showFilterBar ? 'is-active' : ''}`} data-tooltip="กรองหมุด" onClick={() => setShowFilterBar(prev => !prev)} aria-label="กรองหมุด" title="กรองหมุด"
+            style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',width:'clamp(52px, 6vw, 64px)',height:'clamp(52px, 6vw, 64px)',borderRadius:18,border:'2px solid #8b5cf6',cursor:'pointer',background:showFilterBar ? '#f3f0ff' : '#ffffff',color:'#8b5cf6',boxShadow:'0 3px 9px rgba(139,92,246,0.15)',transition:'all 0.2s', gap:'2px'}}
+            onMouseEnter={(e) => {e.currentTarget.style.transform='scale(1.08)'; e.currentTarget.style.boxShadow='0 4px 16px rgba(139,92,246,0.25)'}}
+            onMouseLeave={(e) => {e.currentTarget.style.transform='scale(1)'; e.currentTarget.style.boxShadow='0 2px 8px rgba(139,92,246,0.15)'}}
+            onMouseDown={(e) => e.currentTarget.style.transform='scale(0.95)'}
+            onMouseUp={(e) => {e.currentTarget.style.transform='scale(1.08)'}}>
+            <img src="/images/mascot_search.png" alt="กรองหมุด" style={{width:'clamp(30px, 4vw, 46px)',height:'clamp(30px, 4vw, 46px)',objectFit:'contain'}} />
+            <span className="map-action-label" style={{color:'#6d28d9',textShadow:'none'}}>กรองหมุด</span>
+          </button>
           {/* รู้ทัน */}
           <button className="map-action-button" data-tooltip="รู้ทัน: เลือกพื้นที่" onClick={() => startAreaSelection('pin', 'traffic')} aria-label="เลือกพื้นที่ปักหมุดสถานการณ์" title="เลือกพื้นที่ปักหมุดสถานการณ์"
             style={{display:'flex',alignItems:'center',justifyContent:'center',width:'clamp(52px, 6vw, 64px)',height:'clamp(52px, 6vw, 64px)',borderRadius:18,border:'2px solid #16a34a',cursor:'pointer',background:'#ffffff',color:'#16a34a',boxShadow:'0 3px 9px rgba(22,163,74,0.15)',transition:'all 0.2s'}}
@@ -691,15 +678,6 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
         </div>
       </div>
       
-      <BuildingModal 
-        building={selectedBuilding} 
-        initialFloorId={initialFloorId}
-        onClose={() => {
-          setSelectedBuilding(null);
-          setInitialFloorId(null);
-        }} 
-        onSelectBuilding={setSelectedBuilding} 
-      />
     </div>
   );
 }

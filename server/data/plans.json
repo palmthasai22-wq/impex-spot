@@ -1,0 +1,18 @@
+[
+  {
+    "id": "b22cadbf-1d04-4b23-a710-b8e03225a2f5",
+    "linkedPinId": "2a92f448-8778-48bb-a190-679693f539b3",
+    "floorName": "ชั้น 1",
+    "planImageUrl": "/uploads/b4124544-0779-4886-9166-9c80cfedf3a6.png",
+    "createdAt": "2026-09-20T14:08:54.694Z",
+    "updatedAt": "2026-09-20T14:08:54.694Z"
+  },
+  {
+    "id": "540a350c-068f-4553-bcb2-40c85ec3836a",
+    "linkedPinId": "2a92f448-8778-48bb-a190-679693f539b3",
+    "floorName": "ชั้น 2",
+    "planImageUrl": "/uploads/55263b6c-3aea-4ebd-ab81-354539717192.png",
+    "createdAt": "2026-09-20T14:08:54.694Z",
+    "updatedAt": "2026-09-20T14:08:54.694Z"
+  }
+]

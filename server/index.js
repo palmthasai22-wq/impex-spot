@@ -167,7 +167,6 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/detec', require('./routes/detecProxy'));
-
 // Admin routes (auth inside)
 app.use('/api/admin', adminRoutes);
 

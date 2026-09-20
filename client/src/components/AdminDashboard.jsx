@@ -881,6 +881,7 @@ export default function AdminDashboard({ onBack, onLogout, token, onCameras }) {
               </form>
             </div>
           )}
+
         </main>
       </div>
     </div>

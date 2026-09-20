@@ -11,7 +11,6 @@ import PinForm from './components/PinForm';
 import EmergencyForm from './components/EmergencyForm';
 
 import HowPage from './components/HowPage';
-import CommunitiesPage from './components/CommunitiesPage';
 import FAQPage from './components/FAQPage';
 import ReportPage from './components/ReportPage';
 import KanbanPage from './components/KanbanPage';
@@ -60,7 +59,6 @@ const MainApp = () => {
           />
         )}
         {view === 'how' && <HowPage onBack={() => setView('landing')} />}
-        {view === 'commu' && <CommunitiesPage onBack={() => setView('landing')} />}
         {view === 'faq' && <FAQPage onBack={() => setView('landing')} />}
         {view === 'report' && <ReportPage onBack={() => setView('landing')} />}
         {view === 'kanban' && <KanbanPage onNavigate={setView} />}
