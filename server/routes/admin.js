@@ -144,8 +144,23 @@ router.get('/pins', (req, res) => {
 
 // ─── PUT /pins/:id ─── แก้ไขหมุด
 router.put('/pins/:id', (req, res) => {
-  const { title, type, customType, description, status } = req.body;
-  const pin = pinStore.update(req.params.id, { title, type, customType, description, status });
+  const { title, type, customType, description, status, isPermanent, expiresAt, customIcon, expiryHours } = req.body;
+  
+  const updateData = { title, type, customType, description, status };
+  
+  // Custom admin fields update
+  if (isPermanent !== undefined) {
+    updateData.isPermanent = isPermanent;
+    if (isPermanent) updateData.expiresAt = null;
+  }
+  if (!updateData.isPermanent && expiryHours) {
+    updateData.expiresAt = new Date(Date.now() + Number(expiryHours) * 3600000).toISOString();
+  } else if (expiresAt !== undefined) {
+    updateData.expiresAt = expiresAt;
+  }
+  if (customIcon !== undefined) updateData.customIcon = customIcon;
+
+  const pin = pinStore.update(req.params.id, updateData);
   if (!pin) return res.status(404).json({ error: 'Pin not found' });
   res.json(pin);
 });

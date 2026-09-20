@@ -38,6 +38,11 @@ const normalize = (pin) => {
     normalized.indoor_x = Number(pin.indoor_x);
     normalized.indoor_y = Number(pin.indoor_y);
   }
+  // Preserve custom pin fields
+  if (pin.expiresAt) normalized.expiresAt = pin.expiresAt;
+  if (pin.customIcon) normalized.customIcon = pin.customIcon;
+  if (pin.isPermanent !== undefined) normalized.isPermanent = pin.isPermanent;
+  if (!normalized.createdAt) normalized.createdAt = new Date().toISOString();
   return normalized;
 };
 

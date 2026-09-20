@@ -231,7 +231,14 @@ export default function AdminDashboard({ onBack, onLogout, token, onCameras }) {
 
   const openEditModal = (pin) => {
     setEditingPin(pin);
-    setEditForm({ title: pin.title || '', type: pin.type || pin.category || 'other', customType: pin.customType || '', description: pin.description || '' });
+    setEditForm({ 
+      title: pin.title || '', 
+      type: pin.type || pin.category || 'other', 
+      customType: pin.customType || '', 
+      description: pin.description || '',
+      isPermanent: pin.isPermanent !== false, // default true if not set
+      expiryHours: 24
+    });
   };
 
   const handleSaveEdit = async (event) => {
@@ -239,7 +246,12 @@ export default function AdminDashboard({ onBack, onLogout, token, onCameras }) {
     if (!editingPin) return;
     setIsSaving(true);
     try {
-      await api.put(`/admin/pins/${pinId(editingPin)}`, editForm, { headers: { Authorization: `Bearer ${token}` } });
+      const payload = { ...editForm };
+      if (payload.type !== 'custom_admin') {
+        delete payload.isPermanent;
+        delete payload.expiryHours;
+      }
+      await api.put(`/admin/pins/${pinId(editingPin)}`, payload, { headers: { Authorization: `Bearer ${token}` } });
       setEditingPin(null);
       await fetchPins();
       toast.success('บันทึกการแก้ไขแล้ว');
@@ -832,6 +844,28 @@ export default function AdminDashboard({ onBack, onLogout, token, onCameras }) {
                       <input value={editForm.customType} onChange={e => setEditForm({ ...editForm, customType: e.target.value })}
                         className="mt-1.5 w-full rounded-xl border border-gray-200 px-4 py-2.5 font-medium outline-none transition-all focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100" />
                     </label>
+                  )}
+                  {editForm.type === 'custom_admin' && (
+                    <div className="pt-2 border-t border-gray-100">
+                      <label className="block text-sm font-bold text-gray-700 mb-2">อายุของหมุด</label>
+                      <div className="flex gap-4">
+                        <label className="flex items-center gap-2 text-sm cursor-pointer">
+                          <input type="radio" checked={editForm.isPermanent} onChange={() => setEditForm({...editForm, isPermanent: true})} />
+                          ถาวร
+                        </label>
+                        <label className="flex items-center gap-2 text-sm cursor-pointer">
+                          <input type="radio" checked={!editForm.isPermanent} onChange={() => setEditForm({...editForm, isPermanent: false})} />
+                          ชั่วคราว
+                        </label>
+                      </div>
+                      {!editForm.isPermanent && (
+                        <div className="mt-2 flex items-center gap-2">
+                          <input type="number" min="1" max="720" value={editForm.expiryHours} onChange={e => setEditForm({...editForm, expiryHours: parseInt(e.target.value) || 1})}
+                            className="w-24 rounded-xl border border-gray-200 px-3 py-2 text-sm font-medium outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100" />
+                          <span className="text-sm text-gray-600">ชั่วโมงนับจากตอนนี้</span>
+                        </div>
+                      )}
+                    </div>
                   )}
                   <label className="block text-sm font-bold text-gray-700">รายละเอียด
                     <textarea rows="4" value={editForm.description} onChange={e => setEditForm({ ...editForm, description: e.target.value })}

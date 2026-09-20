@@ -6,7 +6,7 @@ const jwt = require('jsonwebtoken');
 const router = express.Router();
 
 // ─── ประเภทที่เฉพาะแอดมินเท่านั้น ───
-const ADMIN_ONLY_CATEGORIES = ['cctv', 'admin_help'];
+const ADMIN_ONLY_CATEGORIES = ['cctv', 'admin_help', 'custom_admin'];
 
 function isAdminToken(req) {
   try {
@@ -54,11 +54,22 @@ router.post('/', (req, res) => {
       return res.status(403).json({ error: 'เฉพาะแอดมินเท่านั้นที่สามารถปักหมุดประเภทนี้ได้' });
     }
 
-    const pin = pinStore.create({
+    const pinData = {
       ...req.body,
       sessionId: req.sessionId || req.headers['x-session-id'],
       type: type || category,
-    });
+    };
+
+    // Custom admin pins: compute expiresAt from expiryHours
+    if (resolvedCategory === 'custom_admin' && req.body.expiryHours && !req.body.isPermanent) {
+      pinData.expiresAt = new Date(Date.now() + Number(req.body.expiryHours) * 3600000).toISOString();
+    }
+    if (req.body.isPermanent) {
+      pinData.isPermanent = true;
+      delete pinData.expiresAt;
+    }
+
+    const pin = pinStore.create(pinData);
 
     res.status(201).json(pin);
   } catch (error) {

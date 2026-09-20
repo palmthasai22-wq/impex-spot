@@ -21,7 +21,21 @@ import { fetchDispatchedResponders } from '../utils/api';
 import { TRAFFIC_LEVELS, connectCctvToDetec, getTrafficLevel as getAiTrafficLevel, hasTrafficCoordinates, trafficNodeId } from '../utils/traffic';
 import { eventOccursOn, getCamerasNearVenue, getEventStatus, getVenueLocation } from '../utils/events';
 
-const createPinIcon = (category) => {
+const createPinIcon = (pin) => {
+  const category = pin.type || pin.category || 'other';
+  
+  if (category === 'custom_admin' && pin.customIcon) {
+    return L.divIcon({
+      className: 'custom-admin-dynamic-marker',
+      html: `<div style="width:60px;height:60px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 4px 12px rgba(0,0,0,0.3));animation:bounce 2s ease-in-out infinite;">
+        <img src="${pin.customIcon}" alt="custom_pin" style="width:100%;height:100%;object-fit:cover;border-radius:50%;border:4px solid white;" onerror="this.parentElement.textContent='📍'" />
+      </div>`,
+      iconSize: [60, 60],
+      iconAnchor: [30, 60],
+      popupAnchor: [0, -70],
+    });
+  }
+
   const image = category === 'emergency'
     ? '/images/5-transparent.png'
     : category === 'traffic'
@@ -440,7 +454,7 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
                   }} />
               )}
               <Marker ref={node => registerMarker(pin.id || pin._id, node)} position={[pin.lat, pin.lng]}
-                icon={createPinIcon(pin.type || pin.category || 'other')}
+                icon={createPinIcon(pin)}
                 eventHandlers={{ click: () => {
                   if ((pin.type || pin.category) === 'cctv') {
                     setSelectedCamera({ id: pin.id || pin._id, location: { lat: pin.lat, lng: pin.lng }, status: 'online', name: pin.title, external_stream_url: pin.external_stream_url, ai_detection_url: pin.ai_detection_url, ai_traffic: pin.ai_traffic });

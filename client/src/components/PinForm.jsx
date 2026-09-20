@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { SITUATION_CATEGORIES, PLACE_CATEGORIES, SHARE_CATEGORIES, ADMIN_ONLY_CATEGORIES, EXPIRY_CONFIG } from '../utils/categories';
 import ImageUpload from './ImageUpload';
+import ImageCropper from './ImageCropper';
 import StarRating from './StarRating';
 import { createPin, uploadImages } from '../utils/api';
 import useGeolocation from '../hooks/useGeolocation';
@@ -11,9 +12,11 @@ import LiveViewer from './LiveViewer';
 export default function PinForm({ onClose, initialPosition, initialCategory = '', onEmergency, isAdmin, indoorData = null }) {
   const [step, setStep] = useState(1); // 1=category, 2=details
   const [formData, setFormData] = useState({
-    title: '', category: initialCategory, customType: '', description: '', images: [], trafficLevel: 'medium', reviewRating: 3, reviewNote: '', external_stream_url: '', ai_detection_url: '', camera_category: 'แยกหลัก'
+    title: '', category: initialCategory, customType: '', description: '', images: [], trafficLevel: 'medium', reviewRating: 3, reviewNote: '', external_stream_url: '', ai_detection_url: '', camera_category: 'แยกหลัก',
+    isPermanent: true, expiryHours: 24, customIcon: null
   });
   const [showPreview, setShowPreview] = useState(false);
+  const [cropSource, setCropSource] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { setPins } = useAppContext();
   const { lat: gpsLat, lng: gpsLng, accuracy, error, loading } = useGeolocation();
@@ -84,6 +87,14 @@ export default function PinForm({ onClose, initialPosition, initialCategory = ''
         }
       }
 
+      let customIconUrl = '';
+      if (formData.category === 'custom_admin' && formData.customIcon) {
+        // formData.customIcon is a blob
+        const iconFile = new File([formData.customIcon], 'custom_icon.png', { type: 'image/png' });
+        const [url] = await uploadImages([iconFile]);
+        customIconUrl = url;
+      }
+
       const createdPin = await createPin({ 
         ...formData,
         lat: indoorData ? 0 : selectedLat,
@@ -96,6 +107,7 @@ export default function PinForm({ onClose, initialPosition, initialCategory = ''
         gpsAccuracy: accuracy,
         images: imageUrls,
         type: formData.category,
+        customIcon: customIconUrl || undefined,
         reviewRating: isShareCategory ? Number(formData.reviewRating) : undefined,
         reviewNote: isShareCategory ? formData.reviewNote : undefined,
       });
@@ -324,6 +336,65 @@ export default function PinForm({ onClose, initialPosition, initialCategory = ''
                 </div>
               )}
 
+              {/* Custom Admin Pin Fields */}
+              {formData.category === 'custom_admin' && (
+                <div className="space-y-4 bg-orange-50 border border-orange-200 p-4 rounded-2xl">
+                  <h3 className="font-bold text-orange-800 flex items-center gap-2">⭐ ตั้งค่าหมุดพิเศษ</h3>
+                  
+                  {/* Icon Upload */}
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-1.5">ไอคอนหมุด (รูปวงกลม)</label>
+                    <div className="flex items-center gap-4">
+                      {formData.customIcon ? (
+                        <div className="relative w-16 h-16 rounded-full border-4 border-white shadow-md overflow-hidden bg-gray-100 flex-shrink-0">
+                          <img src={URL.createObjectURL(formData.customIcon)} alt="Custom Icon" className="w-full h-full object-cover" />
+                        </div>
+                      ) : (
+                        <div className="w-16 h-16 rounded-full border-2 border-dashed border-gray-300 bg-white flex items-center justify-center text-2xl text-gray-400">
+                          📷
+                        </div>
+                      )}
+                      <div className="flex-1">
+                        <input type="file" accept="image/*" className="hidden" id="custom-icon-upload"
+                          onChange={(e) => {
+                            if (e.target.files?.[0]) {
+                              setCropSource(URL.createObjectURL(e.target.files[0]));
+                              e.target.value = ''; // reset
+                            }
+                          }}
+                        />
+                        <label htmlFor="custom-icon-upload" className="btn-outline px-4 py-2 rounded-xl text-xs cursor-pointer inline-block">
+                          เลือกรูปไอคอน
+                        </label>
+                        <p className="text-[10px] text-gray-500 mt-1">รูปจะถูกครอบเป็นวงกลม</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Expiry Setting */}
+                  <div className="pt-2 border-t border-orange-200/50">
+                    <label className="block text-sm font-bold text-gray-700 mb-2">อายุของหมุด</label>
+                    <div className="flex gap-4">
+                      <label className="flex items-center gap-2 text-sm cursor-pointer">
+                        <input type="radio" name="pinExpiry" checked={formData.isPermanent} onChange={() => setFormData({...formData, isPermanent: true})} />
+                        ถาวร
+                      </label>
+                      <label className="flex items-center gap-2 text-sm cursor-pointer">
+                        <input type="radio" name="pinExpiry" checked={!formData.isPermanent} onChange={() => setFormData({...formData, isPermanent: false})} />
+                        ชั่วคราว
+                      </label>
+                    </div>
+                    {!formData.isPermanent && (
+                      <div className="mt-2 flex items-center gap-2">
+                        <input type="number" min="1" max="720" className="input-modern text-sm w-24"
+                          value={formData.expiryHours} onChange={e => setFormData({...formData, expiryHours: parseInt(e.target.value) || 1})} />
+                        <span className="text-sm text-gray-600">ชั่วโมง</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Description */}
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-1.5">หมายเหตุ / คำอธิบาย</label>
@@ -345,8 +416,8 @@ export default function PinForm({ onClose, initialPosition, initialCategory = ''
                 </div>
               )}
 
-              {/* หมุด CCTV ใช้ไอคอนประจำหมวด จึงไม่รับภาพจากผู้ใช้ */}
-              {formData.category !== 'cctv' && (
+              {/* หมุด CCTV และ custom_admin ใช้ไอคอนพิเศษ จึงไม่รับภาพจากผู้ใช้ปกติ */}
+              {formData.category !== 'cctv' && formData.category !== 'custom_admin' && (
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-1.5">📷 แนบรูปภาพ</label>
                   <p className="text-[10px] text-gray-400 mb-2">ภาพช่วยเพิ่มความน่าเชื่อถือให้ข้อมูลของคุณ ✨</p>
@@ -375,6 +446,17 @@ export default function PinForm({ onClose, initialPosition, initialCategory = ''
           )}
         </div>
       </div>
+
+      {cropSource && (
+        <ImageCropper
+          imageSrc={cropSource}
+          onCropComplete={(blob) => {
+            setFormData({ ...formData, customIcon: blob });
+            setCropSource(null);
+          }}
+          onCancel={() => setCropSource(null)}
+        />
+      )}
     </div>
   );
 }

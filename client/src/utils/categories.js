@@ -26,6 +26,7 @@ export const PLACE_CATEGORIES = [
 export const ADMIN_ONLY_CATEGORIES = [
   { id: 'cctv', label: 'กล้อง CCTV', emoji: '📹', image: '/images/cctv.png', color: '#EC4899' },
   { id: 'admin_help', label: 'ทีมช่วยเหลือ', emoji: '🛡️', color: '#1E40AF' },
+  { id: 'custom_admin', label: 'หมุดกำหนดเอง', emoji: '⭐', color: '#F59E0B' },
 ];
 
 // หมวด: แบ่งปัน (รีวิว/ร้านค้า)
@@ -97,5 +98,6 @@ export const EXPIRY_CONFIG = {
   review: { ms: null, label: 'ถาวร' },
   emergency: { ms: null, label: 'จนกว่าจะแก้ไข' },
   admin_help: { ms: null, label: 'ถาวร' },
+  custom_admin: { ms: null, label: 'กำหนดเอง' },
   other: { ms: 24 * 3600000, label: '24 ชั่วโมง' },
 };

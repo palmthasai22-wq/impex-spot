@@ -189,6 +189,28 @@ export default function PinInfoWindow({ pin, onClose, onSelectCamera, isAdmin = 
         </button>
       </div>
 
+      {/* Admin Controls */}
+      {isAdmin && (
+        <div className="mt-2 pt-2 border-t border-red-100">
+          <button 
+            onClick={async () => {
+              if (window.confirm('ยืนยันการลบหมุดนี้?')) {
+                try {
+                  const { default: api } = await import('../utils/api');
+                  await api.delete(`/admin/pins/${pin.id || pin._id}`);
+                  window.location.reload();
+                } catch (e) {
+                  alert('ลบไม่สำเร็จ');
+                }
+              }
+            }}
+            className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] font-semibold bg-white text-red-500 border border-red-200 hover:bg-red-50"
+          >
+            🗑️ ลบหมุดนี้ (Admin)
+          </button>
+        </div>
+      )}
+
       {/* Navigate hint */}
       <p className="text-[9px] text-gray-300 text-center mt-2">กดนำทางจะเปิด Google Maps ให้อัตโนมัติ</p>
 
