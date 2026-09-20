@@ -87,8 +87,8 @@ const MainApp = () => {
         toastOptions={{
           duration: 3500,
           style: {
-            fontFamily: 'Prompt',
-            borderRadius: '20px',
+            fontFamily: '"Noto Sans Thai", sans-serif',
+            borderRadius: '16px',
             padding: '14px 22px',
             fontSize: '14px',
             boxShadow: '0 10px 40px rgba(0,0,0,0.1)',

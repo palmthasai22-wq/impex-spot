@@ -399,7 +399,7 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
               }} />
             <Marker position={[Number(node.lat), Number(node.lng)]} icon={createTrafficIcon(node)} eventHandlers={{ click: (e) => e.target.openPopup() }}>
               <Popup>
-                <div style={{textAlign: 'center', fontFamily: 'Kanit'}}>
+                <div style={{textAlign: 'center', fontFamily: 'inherit'}}>
                   <strong style={{fontSize:'14px'}}>{node.name || `Camera ${node.camera_id}`}</strong>
                   <div style={{margin: '8px 0', padding: '4px', borderRadius: '4px', background: traffic.background, color: traffic.text}}>
                     <strong>{traffic.emoji} {traffic.label} · Jam Index {Number(node.jam_index || 0)}%</strong>

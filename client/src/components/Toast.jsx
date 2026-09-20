@@ -7,10 +7,12 @@ export default function ToastContainer() {
       position="top-center"
       toastOptions={{
         style: {
-          fontFamily: 'Prompt, sans-serif',
-          background: '#333',
+          boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
+          fontFamily: '"Noto Sans Thai", sans-serif',
+          fontWeight: '500',
           color: '#fff',
           borderRadius: '8px',
+          background: '#333',
         },
         success: {
           style: {
