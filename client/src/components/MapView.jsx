@@ -120,7 +120,7 @@ const getTrafficLevel = (pin) => {
   return 'medium';
 };
 
-export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFormOpen, isAdmin = false }) {
+export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, isAdmin = false }) {
   const { cameras, cameraError } = useCameras();
   const { events, eventError } = useEvents();
   const { trafficNodes, detecCameras, trafficError, trafficUpdatedAt } = useTrafficFlow();
@@ -635,20 +635,7 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
             <button onClick={() => startAreaSelection('share', 'restaurant')} role="menuitem">
               <img src="/images/mascot_share.png" alt="" /> แบ่งปัน
             </button>
-            <button onClick={() => { setShowActionMenu(false); onFilter(); }} role="menuitem">
-              <img src="/images/mascot_search.png" alt="" /> กรองหมุด
-            </button>
-          </div>
-        )}
-        <div className="map-action-buttons" style={{display:'flex',flexDirection:'column',alignItems:'center',gap:'clamp(8px, 1.6vw, 14px)'}}>
-          {/* กลับหน้าแรก */}
-          <button className="map-action-button" data-tooltip="กลับหน้าแรก" onClick={onBack} aria-label="กลับหน้าแรก" title="กลับหน้าแรก"
-            style={{display:'flex',alignItems:'center',justifyContent:'center',width:'clamp(52px, 6vw, 64px)',height:'clamp(52px, 6vw, 64px)',borderRadius:18,border:'2px solid #16a34a',cursor:'pointer',background:'#ffffff',color:'#16a34a',boxShadow:'0 3px 9px rgba(22,163,74,0.15)',transition:'all 0.2s'}}
-            onMouseEnter={(e) => {e.currentTarget.style.transform='scale(1.08)'; e.currentTarget.style.boxShadow='0 4px 16px rgba(22,163,74,0.25)'}}
-            onMouseLeave={(e) => {e.currentTarget.style.transform='scale(1)'; e.currentTarget.style.boxShadow='0 2px 8px rgba(22,163,74,0.15)'}}>
-            <img src="/images/mascot.png" alt="หน้าแรก" style={{width:'clamp(34px, 4.5vw, 50px)',height:'clamp(34px, 4.5vw, 50px)',objectFit:'contain'}} />
-            <span className="map-action-label" style={{color:'#15803d',textShadow:'none'}}>หน้าแรก</span>
-          </button>
+            
           {/* รู้ทัน */}
           <button className="map-action-button" data-tooltip="รู้ทัน: เลือกพื้นที่" onClick={() => startAreaSelection('pin', 'traffic')} aria-label="เลือกพื้นที่ปักหมุดสถานการณ์" title="เลือกพื้นที่ปักหมุดสถานการณ์"
             style={{display:'flex',alignItems:'center',justifyContent:'center',width:'clamp(52px, 6vw, 64px)',height:'clamp(52px, 6vw, 64px)',borderRadius:18,border:'2px solid #16a34a',cursor:'pointer',background:'#ffffff',color:'#16a34a',boxShadow:'0 3px 9px rgba(22,163,74,0.15)',transition:'all 0.2s'}}
@@ -700,15 +687,7 @@ export default function MapView({ onAddPin, onEmergency, onFilter, onBack, pinFo
             <span className="map-action-label" style={{color:'#15803d',textShadow:'none'}}>แบ่งปัน</span>
           </button>
           {/* กรอง */}
-          <button className="map-action-button" data-tooltip="กรองหมุด" onClick={onFilter} aria-label="กรองหมุด" title="กรองหมุด"
-            style={{display:'flex',alignItems:'center',justifyContent:'center',width:'clamp(52px, 6vw, 64px)',height:'clamp(52px, 6vw, 64px)',borderRadius:18,border:'2px solid #16a34a',cursor:'pointer',background:'#ffffff',color:'#16a34a',boxShadow:'0 3px 9px rgba(22,163,74,0.15)',transition:'all 0.2s'}}
-            onMouseEnter={(e) => {e.target.style.transform='scale(1.08)'; e.target.style.boxShadow='0 4px 16px rgba(22,163,74,0.25)'}}
-            onMouseLeave={(e) => {e.target.style.transform='scale(1)'; e.target.style.boxShadow='0 2px 8px rgba(22,163,74,0.15)'}}
-            onMouseDown={(e) => e.target.style.transform='scale(0.95)'}
-            onMouseUp={(e) => {e.target.style.transform='scale(1.08)'}}>
-            <img src="/images/mascot_search.png" alt="กรองหมุด" style={{width:'clamp(34px, 4.5vw, 50px)',height:'clamp(34px, 4.5vw, 50px)',objectFit:'contain'}} />
-            <span className="map-action-label" style={{color:'#15803d',textShadow:'none'}}>กรองหมุด</span>
-          </button>
+          
         </div>
       </div>
       

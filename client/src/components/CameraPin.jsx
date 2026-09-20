@@ -22,7 +22,8 @@ export function coverageCone(camera) {
 
 export default function CameraPin({ camera, onSelect, highlighted = false, registerMarker }) {
   const traffic = camera.ai_traffic ? TRAFFIC_LEVELS[getTrafficLevel(camera.ai_traffic)] : TRAFFIC_LEVELS.gray;
-  const aiStyle = `style="--ai-traffic-color:${traffic.color};box-shadow:0 0 0 ${highlighted ? 8 : 4}px ${traffic.color},0 6px 18px rgba(15,23,42,.35)"`;
+  const isGray = traffic === TRAFFIC_LEVELS.gray;
+  const aiStyle = `style="--ai-traffic-color:${traffic.color};box-shadow:${isGray ? '' : `0 0 0 ${highlighted ? 8 : 4}px ${traffic.color},`}0 6px 18px rgba(15,23,42,.35)"`;
   const icon = L.divIcon({ className: 'cctv-marker-wrap', html: `<span class="cctv-marker ${camera.status === 'online' ? 'is-online' : ''} has-ai-traffic ${traffic === TRAFFIC_LEVELS.red ? 'is-jam' : ''}" ${aiStyle}>${CAMERA_ICON}</span>`, iconSize: [62, 82], iconAnchor: [31, 82] });
   const title = camera.detec_camera_id
     ? `CCTV + Detec #${camera.detec_camera_id} · ${traffic.label}`

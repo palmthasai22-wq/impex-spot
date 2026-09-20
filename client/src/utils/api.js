@@ -19,8 +19,8 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-export const getPins = async (bounds, filters) => {
-  const res = await api.get('/pins', { params: { ...bounds, ...filters } });
+export const getPins = async (bounds) => {
+  const res = await api.get('/pins', { params: { ...bounds } });
   return res.data;
 };
 

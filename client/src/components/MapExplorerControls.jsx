@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { eventOccursOn } from '../utils/events';
 import { PIN_CATEGORIES } from '../utils/categories';
+import { FiSearch } from 'react-icons/fi';
 
 const normalize = value => String(value || '').toLocaleLowerCase('th-TH').replace(/\s+/g,' ').trim();
 const fuzzyMatch = (text, query) => {
@@ -19,10 +20,16 @@ export default function MapExplorerControls({ cameras, events, pins = [], onSele
   const month=selectedDate?.slice(0,7)||new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Bangkok'}).slice(0,7);
   const [year,monthNo]=month.split('-').map(Number); const days=new Date(year,monthNo,0).getDate(); const first=new Date(year,monthNo-1,1).getDay();
   const pick=result=>{onSelect(result);setSearchOpen(false);setQuery(result.label);};
-  return <div className="map-explorer" aria-label="ค้นหาและปฏิทินงาน">
+  return <div className="map-explorer" aria-label="เมนูควบคุมแผนที่อัจฉริยะ">
     <div className="map-explorer-row">
-      <button className="mobile-tool-toggle" aria-label="เปิดการค้นหา" onClick={()=>setSearchOpen(v=>!v)}>🔎</button>
-      <div className={`map-search ${searchOpen?'open':''}`}><input aria-label="ค้นหาข้อมูลจากหมุด กล้อง สถานที่ หรืองาน" value={query} onFocus={()=>setSearchOpen(true)} onChange={e=>{setQuery(e.target.value);setSearchOpen(true);}} placeholder="ค้นหาหมุด กล้อง สถานที่ หรืองาน…" />{searchOpen&&query&&<div className="map-search-results" role="listbox">{results.length?<><small>พบ {results.length} ผลลัพธ์</small>{results.map(result=><button key={`${result.kind}-${result.id}`} onClick={()=>pick(result)}><span>{result.kind==='camera'?'📹':result.kind==='event'?'🎪':'📍'}</span><span><strong>{result.label}</strong><small>{result.sub}</small></span></button>)}</>:<p>ไม่พบข้อมูลที่ค้นหา</p>}</div>}</div>
+      <button className="mobile-tool-toggle" aria-label="ซ่อน/แสดงเมนู" onClick={()=>setSearchOpen(v=>!v)}>🔍</button>
+      <div className={`map-search ${searchOpen?'open':''}`}>
+        <div style={{ position: 'relative', width: '100%' }}>
+          <FiSearch style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none', width: 18, height: 18 }} />
+          <input aria-label="ค้นหากล้อง, สถานที่, หรือเหตุการณ์" style={{ paddingLeft: 38 }} value={query} onFocus={()=>setSearchOpen(true)} onChange={e=>{setQuery(e.target.value);setSearchOpen(true);}} placeholder="ค้นหากล้อง, สถานที่, งาน..." />
+        </div>
+        {searchOpen&&query&&<div className="map-search-results" role="listbox">{results.length?<><small>พบ {results.length} รายการ</small>{results.map(result=><button key={`${result.kind}-${result.id}`} onClick={()=>pick(result)}><span>{result.kind==='camera'?'📹':result.kind==='event'?'🎪':'📍'}</span><span><strong>{result.label}</strong><small>{result.sub}</small></span></button>)}</>:<p>ไม่พบผลลัพธ์ที่ตรงกัน</p>}</div>}
+      </div>
       <button className="calendar-toggle" aria-expanded={calendarOpen} onClick={()=>setCalendarOpen(v=>!v)}>📅 <span>{selectedDate||'เลือกวันที่'}</span></button>
       <label className="polling-control" title="กำหนดว่าหน้าแผนที่จะดึงค่าสภาพจราจรจาก AI ใหม่บ่อยแค่ไหน"><span>↻ AI</span><select aria-label="รีเฟรชข้อมูล AI ทุกกี่วินาที" value={pollingSeconds} onChange={e=>onPolling(Number(e.target.value))}><option value="5">ทุก 5 วิ</option><option value="15">ทุก 15 วิ</option><option value="30">ทุก 30 วิ</option><option value="60">ทุก 1 นาที</option></select></label>
     </div>

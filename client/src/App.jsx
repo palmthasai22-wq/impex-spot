@@ -9,7 +9,7 @@ import AdminLogin from './components/AdminLogin';
 import AdminMonitorGrid from './components/AdminMonitorGrid';
 import PinForm from './components/PinForm';
 import EmergencyForm from './components/EmergencyForm';
-import FilterPanel from './components/FilterPanel';
+
 import HowPage from './components/HowPage';
 import CommunitiesPage from './components/CommunitiesPage';
 import FAQPage from './components/FAQPage';
@@ -31,7 +31,7 @@ const MainApp = () => {
   };
   const [showPinForm, setShowPinForm] = useState(false);
   const [showEmergencyForm, setShowEmergencyForm] = useState(false);
-  const [showFilter, setShowFilter] = useState(false);
+  
   const [pinPosition, setPinPosition] = useState(null);
   const [pinCategory, setPinCategory] = useState('');
   const [emergencyPosition, setEmergencyPosition] = useState(null);
@@ -53,7 +53,7 @@ const MainApp = () => {
           <MapView
             onAddPin={(position = null, category = '') => { setPinPosition(position); setPinCategory(category); setShowPinForm(true); }}
             onEmergency={(position = null) => { setEmergencyPosition(position); setShowEmergencyForm(true); }}
-            onFilter={() => setShowFilter(true)}
+
             onBack={() => setView('landing')}
             pinFormOpen={showPinForm}
             isAdmin={isAdmin}
@@ -80,7 +80,7 @@ const MainApp = () => {
         isAdmin={isAdmin}
       />}
       {showEmergencyForm && <EmergencyForm initialPosition={emergencyPosition} onClose={() => { setShowEmergencyForm(false); setEmergencyPosition(null); }} />}
-      {showFilter && <FilterPanel onClose={() => setShowFilter(false)} />}
+      
 
       <Toaster
         position="top-center"

@@ -5,7 +5,6 @@ const AppContext = createContext();
 export const AppProvider = ({ children }) => {
   const [pins, setPins] = useState([]);
   const [selectedPin, setSelectedPin] = useState(null);
-  const [filters, setFilters] = useState({ types: [], verified: false, timeRange: 'all' });
   const [sessionId, setSessionId] = useState('');
   
   useEffect(() => {
@@ -21,7 +20,6 @@ export const AppProvider = ({ children }) => {
     <AppContext.Provider value={{
       pins, setPins,
       selectedPin, setSelectedPin,
-      filters, setFilters,
       sessionId
     }}>
       {children}

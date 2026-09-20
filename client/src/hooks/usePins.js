@@ -4,7 +4,7 @@ import { useAppContext } from '../context/AppContext';
 import useSocket from './useSocket';
 
 export default function usePins() {
-  const { pins, setPins, filters } = useAppContext();
+  const { pins, setPins } = useAppContext();
   const { socket, connected } = useSocket();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -13,7 +13,7 @@ export default function usePins() {
   const fetchPins = useCallback(async (bounds = null) => {
     try {
       setLoading(true);
-      const data = await getPins(bounds, filters);
+      const data = await getPins(bounds);
       setPins(data);
       setError(null);
     } catch (err) {
@@ -21,7 +21,7 @@ export default function usePins() {
     } finally {
       setLoading(false);
     }
-  }, [filters, setPins]);
+  }, [setPins]);
 
   useEffect(() => {
     fetchPins();
