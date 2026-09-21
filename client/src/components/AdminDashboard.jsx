@@ -6,6 +6,7 @@ import AuditLogTab from './admin/AuditLogTab';
 import SystemSettingsTab from './admin/SystemSettingsTab';
 import FlagsTab from './admin/FlagsTab';
 import EventsTab from './admin/EventsTab';
+import PlansTab from './admin/PlansTab';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
 
@@ -329,6 +330,7 @@ export default function AdminDashboard({ onBack, onLogout, token, onCameras }) {
   const SYSTEM_NAV_ITEMS = [
     { id: 'cctv', label: 'กล้อง CCTV', mascot: '/images/mascot_search.png', accent: 'bg-teal-500/30' },
     { id: 'events', label: 'ปฏิทินงาน', mascot: '/images/mascot_star.png', accent: 'bg-violet-500/30' },
+    { id: 'plans', label: 'แผนผังอาคาร', mascot: '/images/mascot_impact.png', accent: 'bg-indigo-500/30' },
     { id: 'users', label: 'ผู้ใช้งาน', mascot: '/images/mascot_share.png', accent: 'bg-blue-500/30' },
     { id: 'settings', label: 'ตั้งค่าระบบ', mascot: '/images/mascot_search.png', accent: 'bg-slate-500/30' },
     { id: 'audit', label: 'Audit Log', mascot: '/images/mascot_star.png', accent: 'bg-teal-500/30' },
@@ -767,6 +769,7 @@ export default function AdminDashboard({ onBack, onLogout, token, onCameras }) {
           )}
 
           {/* ═══════ Other Tabs ═══════ */}
+          {activeTab === 'plans' && <PlansTab pins={pins} token={token} />}
           {activeTab === 'flags' && <FlagsTab token={token} />}
           {activeTab === 'events' && userRole !== 'moderator' && <EventsTab token={token} />}
           {activeTab === 'users' && userRole !== 'moderator' && <UsersTab token={token} />}
