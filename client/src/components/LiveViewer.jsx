@@ -40,7 +40,7 @@ function YouTubeViewer({ videoId, onClose }) {
           {onClose && <button aria-label="ปิดภาพสด" onClick={onClose}>✕</button>}
         </div>
       </header>
-      <div style={{ position: 'relative', width: '100%', paddingTop: '56.25%', background: '#000' }}>
+      <div style={{ position: 'relative', width: '100%', paddingTop: '56.25%', background: '#000', overflow: 'hidden' }}>
         <iframe
           src={embedUrl}
           title="YouTube Live"
@@ -156,7 +156,7 @@ function IframeViewer({ url, onClose }) {
           {onClose && <button aria-label="ปิดภาพ" onClick={onClose}>✕</button>}
         </div>
       </header>
-      <div style={{ position: 'relative', width: '100%', height: '350px', background: '#000' }}>
+      <div style={{ position: 'relative', width: '100%', height: '350px', background: '#000', overflow: 'hidden' }}>
         <iframe
           src={url}
           title="แหล่งภาพภายนอก"
@@ -190,7 +190,7 @@ function DetecViewer({ camera, onClose }) {
           {onClose && <button aria-label="ปิดภาพสด" onClick={onClose}>✕</button>}
         </div>
       </header>
-      <div style={{position:'relative',width:'100%',height:350,background:'#000',display:'flex',alignItems:'center',justifyContent:'center'}}>
+      <div style={{position:'relative',width:'100%',height:350,background:'#000',overflow:'hidden',display:'flex',alignItems:'center',justifyContent:'center'}}>
         {(isViewOnly && detec.embed_mode === 'iframe') || monitorUrl ? (
           <iframe src={source} title={`Detec camera ${camera.detec_camera_id}`} allow="autoplay; fullscreen; picture-in-picture" allowFullScreen
             sandbox="allow-scripts allow-same-origin allow-presentation" referrerPolicy="no-referrer"
