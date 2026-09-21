@@ -587,10 +587,17 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
               <div style={{display:'flex',alignItems:'center',gap:12}}>
                 <div style={{width:36,height:36,borderRadius:12,background:'#eff6ff',color:'#3b82f6',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20}}>📍</div>
                 <div>
-                  <p style={{fontSize:13,fontWeight:800,color:'#1e3a8a',margin:0}}>
-                    {(activeRoute.distance / 1000).toFixed(1)} กม. <span style={{color:'#93c5fd'}}>•</span> ~{Math.ceil(activeRoute.duration / 60)} นาที
+                  <p style={{fontSize:14,fontWeight:800,color:'#1e3a8a',margin:0}}>
+                    ระยะทาง {(activeRoute.distance / 1000).toFixed(2)} กม.
                   </p>
-                  <p style={{fontSize:10,color:'#64748b',margin:0,marginTop:2}}>กำลังนำทางไปยังจุดหมาย</p>
+                  <div style={{display:'flex', gap:6, marginTop:4, flexWrap:'wrap'}}>
+                    <span style={{fontSize:10,fontWeight:700,background:'#dbeafe',color:'#1e40af',padding:'2px 8px',borderRadius:10}}>
+                      🚗 ขับรถ ~{Math.max(1, Math.ceil(activeRoute.duration / 60))} นาที
+                    </span>
+                    <span style={{fontSize:10,fontWeight:700,background:'#dcfce7',color:'#166534',padding:'2px 8px',borderRadius:10}}>
+                      🚶 เดิน ~{Math.max(1, Math.ceil(activeRoute.distance / 80))} นาที
+                    </span>
+                  </div>
                 </div>
               </div>
               <button 
