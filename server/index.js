@@ -61,6 +61,7 @@ const adminRoutes = require('./routes/admin');
 const uploadRoutes = require('./routes/upload');
 const responderRoutes = require('./routes/responder');
 const eventRoutes = require('./routes/events');
+const plansRoutes = require('./routes/plans');
 
 // Safe route imports for new routes
 let placesDbRoutes, incidentsDbRoutes, healthRoutes, notificationRoutes;
@@ -166,6 +167,7 @@ app.use('/api/emergency', emergencyRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/events', eventRoutes);
+app.use('/api/plans', plansRoutes);
 app.use('/api/detec', require('./routes/detecProxy'));
 // Admin routes (auth inside)
 app.use('/api/admin', adminRoutes);
