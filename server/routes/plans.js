@@ -25,6 +25,11 @@ const requireAdmin = (req, res, next) => {
 // PLAN CRUD
 // ══════════════════════════════════════════════════════════════
 
+// GET /api/plans — ดึงแผนผังทั้งหมด (public)
+router.get('/', (req, res) => {
+  res.json(planStore.getAll());
+});
+
 // GET /api/plans/:pinId — ดึงแผนผังทั้งหมดของหมุด (public)
 router.get('/:pinId', (req, res) => {
   const plans = planStore.getByPinId(req.params.pinId);
@@ -34,12 +39,15 @@ router.get('/:pinId', (req, res) => {
 // POST /api/plans — สร้างแผนผังใหม่ (admin only)
 router.post('/', requireAdmin, (req, res) => {
   const { linkedPinId, locationName, floorName, floorLevel, floorOrder, zoneName, description, planImageUrl } = req.body;
-  if (!linkedPinId) return res.status(400).json({ error: 'ต้องระบุ linkedPinId' });
+  
   if (!String(locationName || '').trim()) return res.status(400).json({ error: 'ต้องระบุอาคารหรือสถานที่' });
   if (!String(floorName || '').trim()) return res.status(400).json({ error: 'ต้องระบุชั้น' });
   if (!planImageUrl) return res.status(400).json({ error: 'ต้องระบุ planImageUrl' });
 
-  const duplicate = planStore.getByPinId(linkedPinId).some(plan =>
+  const finalLinkedPinId = linkedPinId || 'unlinked';
+
+  const duplicate = planStore.getAll().some(plan =>
+    plan.linkedPinId === finalLinkedPinId &&
     String(plan.locationName || '').trim().toLocaleLowerCase('th-TH') === String(locationName).trim().toLocaleLowerCase('th-TH') &&
     String(plan.floorName || '').trim().toLocaleLowerCase('th-TH') === String(floorName).trim().toLocaleLowerCase('th-TH') &&
     String(plan.zoneName || '').trim().toLocaleLowerCase('th-TH') === String(zoneName || '').trim().toLocaleLowerCase('th-TH')
@@ -47,7 +55,7 @@ router.post('/', requireAdmin, (req, res) => {
   if (duplicate) return res.status(409).json({ error: 'อาคาร ชั้น และโซนนี้มีแผนผังอยู่แล้ว' });
 
   const plan = planStore.create({
-    linkedPinId,
+    linkedPinId: finalLinkedPinId,
     locationName: String(locationName).trim(),
     floorName: String(floorName).trim(),
     floorLevel,

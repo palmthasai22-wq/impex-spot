@@ -9,6 +9,7 @@ export default function PlansTab({ pins, token }) {
   const [isSaving, setIsSaving] = useState(false);
   
   // Form state
+  const [locationName, setLocationName] = useState('');
   const [floorName, setFloorName] = useState('');
   const [floorLevel, setFloorLevel] = useState(1);
   const [floorOrder, setFloorOrder] = useState(10);
@@ -20,13 +21,9 @@ export default function PlansTab({ pins, token }) {
   const candidatePins = pins.filter(p => p.type === 'place' || p.category === 'place' || p.category === 'facility');
 
   const fetchPlans = async (pinId) => {
-    if (!pinId) {
-      setPlans([]);
-      return;
-    }
     setLoading(true);
     try {
-      const res = await api.get(`/plans/${pinId}`);
+      const res = await api.get(pinId ? `/plans/${pinId}` : '/plans');
       setPlans(res.data);
     } catch (err) {
       toast.error('ไม่สามารถโหลดแผนผังได้');
@@ -39,14 +36,20 @@ export default function PlansTab({ pins, token }) {
     fetchPlans(selectedPinId);
   }, [selectedPinId]);
 
+  const handlePinSelect = (e) => {
+    const pid = e.target.value;
+    setSelectedPinId(pid);
+    if (pid) {
+      const pin = pins.find(p => (p.id || p._id) === pid);
+      if (pin) setLocationName(pin.title);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!selectedPinId) return toast.error('กรุณาเลือกหมุดสถานที่');
     if (!imageFile) return toast.error('กรุณาอัพโหลดรูปภาพแผนผัง');
+    if (!locationName.trim()) return toast.error('กรุณาระบุชื่อสถานที่/อาคาร');
     if (!floorName.trim()) return toast.error('กรุณาระบุชื่อชั้น');
-
-    const selectedPin = pins.find(p => (p.id || p._id) === selectedPinId);
-    if (!selectedPin) return;
 
     setIsSaving(true);
     try {
@@ -58,8 +61,8 @@ export default function PlansTab({ pins, token }) {
       
       // 2. Create Plan
       const payload = {
-        linkedPinId: selectedPinId,
-        locationName: selectedPin.title,
+        linkedPinId: selectedPinId || 'unlinked',
+        locationName,
         floorName,
         floorLevel: parseInt(floorLevel, 10),
         floorOrder: parseInt(floorOrder, 10),
@@ -117,7 +120,7 @@ export default function PlansTab({ pins, token }) {
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.15em] text-indigo-600">Indoor Maps</p>
             <h2 className="mt-1 text-xl font-black text-gray-900 sm:text-2xl">จัดการแผนผังอาคาร</h2>
-            <p className="mt-1 text-sm text-gray-500">อัพโหลดและจัดการแผนผังภายในอาคารสำหรับแต่ละสถานที่</p>
+            <p className="mt-1 text-sm text-gray-500">อัพโหลดและจัดการแผนผังภายในอาคาร (สามารถอัพโหลดไว้ก่อนแล้วค่อยไปผูกกับหมุดทีหลังได้)</p>
           </div>
         </div>
       </div>
@@ -127,14 +130,14 @@ export default function PlansTab({ pins, token }) {
         <div className="lg:col-span-1 space-y-4">
           <div className="rounded-2xl border border-indigo-100 bg-white p-5 shadow-sm">
             <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-              <span className="text-indigo-600">1.</span> เลือกสถานที่ (หมุด)
+              <span className="text-indigo-600">1.</span> เลือกสถานที่ผูกแผนผัง (ไม่บังคับ)
             </h3>
             <select
               value={selectedPinId}
-              onChange={(e) => setSelectedPinId(e.target.value)}
+              onChange={handlePinSelect}
               className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm font-semibold text-gray-700 outline-none focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-100"
             >
-              <option value="">-- เลือกสถานที่ --</option>
+              <option value="">-- ดูแผนผังทั้งหมด (ไม่ผูกหมุด) --</option>
               {candidatePins.map(pin => (
                 <option key={pin.id || pin._id} value={pin.id || pin._id}>
                   {pin.title}
@@ -143,11 +146,23 @@ export default function PlansTab({ pins, token }) {
             </select>
           </div>
 
-          <form onSubmit={handleSubmit} className="rounded-2xl border border-indigo-100 bg-white p-5 shadow-sm opacity-100 transition-opacity" style={{ opacity: selectedPinId ? 1 : 0.5, pointerEvents: selectedPinId ? 'auto' : 'none' }}>
+          <form onSubmit={handleSubmit} className="rounded-2xl border border-indigo-100 bg-white p-5 shadow-sm">
             <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
               <span className="text-indigo-600">2.</span> อัพโหลดแผนผังใหม่
             </h3>
             <div className="space-y-3">
+              <label className="block text-xs font-bold text-gray-700">
+                ชื่อสถานที่/อาคาร *
+                <input
+                  type="text"
+                  required
+                  value={locationName}
+                  onChange={(e) => setLocationName(e.target.value)}
+                  placeholder="เช่น อิมแพ็ค ฟอรั่ม"
+                  className="mt-1.5 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                />
+              </label>
+
               <label className="block text-xs font-bold text-gray-700">
                 รูปภาพแผนผัง (JPG/PNG) *
                 <input
@@ -217,25 +232,25 @@ export default function PlansTab({ pins, token }) {
         <div className="lg:col-span-2">
           <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden h-full min-h-[400px]">
             <div className="bg-gray-50 border-b border-gray-100 px-5 py-4">
-              <h3 className="font-bold text-gray-800">แผนผังที่อัพโหลดแล้ว</h3>
+              <h3 className="font-bold text-gray-800">{selectedPinId ? 'แผนผังสำหรับสถานที่นี้' : 'แผนผังอาคารทั้งหมด'}</h3>
             </div>
             <div className="p-5">
-              {!selectedPinId ? (
-                <div className="text-center py-12 text-gray-400">
-                  <span className="text-4xl block mb-2">👆</span>
-                  <p className="font-medium text-sm">กรุณาเลือกสถานที่จากรายการด้านซ้าย</p>
-                </div>
-              ) : loading ? (
+              {loading ? (
                 <div className="text-center py-12 text-gray-400">กำลังโหลด...</div>
               ) : plans.length === 0 ? (
                 <div className="text-center py-12 text-gray-400">
                   <span className="text-4xl block mb-2">🏢</span>
-                  <p className="font-medium text-sm">ยังไม่มีแผนผังสำหรับสถานที่นี้</p>
+                  <p className="font-medium text-sm">ยังไม่มีแผนผัง</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {plans.sort((a, b) => (a.floorOrder || 0) - (b.floorOrder || 0)).map((plan) => (
-                    <div key={plan.id} className="rounded-xl border border-gray-200 overflow-hidden flex flex-col">
+                    <div key={plan.id} className="rounded-xl border border-gray-200 overflow-hidden flex flex-col relative">
+                      {(!plan.linkedPinId || plan.linkedPinId === 'unlinked') && (
+                        <div className="absolute top-2 right-2 z-10 bg-amber-100 text-amber-800 text-[10px] px-2 py-1 rounded font-bold shadow-sm">
+                          ยังไม่ผูกหมุด
+                        </div>
+                      )}
                       <div className="h-32 bg-gray-100 relative group">
                         <img src={plan.planImageUrl} alt={plan.floorName} className="w-full h-full object-cover" />
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
