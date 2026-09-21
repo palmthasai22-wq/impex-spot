@@ -582,19 +582,19 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
 
         {/* Route Info Banner */}
         {activeRoute && (
-          <div className="animate-slide-down" style={{ position:'absolute', top: 110, left:'50%', transform:'translateX(-50%)', zIndex:1000, width: '92%', maxWidth: '380px' }}>
-            <div style={{background:'rgba(255,255,255,0.95)',borderRadius:16,padding:'12px 14px',display:'flex',alignItems:'center',justifyContent:'space-between',boxShadow:'0 4px 20px rgba(59,130,246,0.3)',border:'2px solid #60a5fa',backdropFilter:'blur(10px)',gap:10}}>
+          <div className="animate-slide-up" style={{ position:'absolute', bottom: 32, left:'50%', transform:'translateX(-50%)', zIndex:1000, width: '92%', maxWidth: '380px' }}>
+            <div style={{background:'rgba(255,255,255,0.95)',borderRadius:20,padding:'12px 14px',display:'flex',alignItems:'center',justifyContent:'space-between',boxShadow:'0 8px 32px rgba(59,130,246,0.35)',border:'2px solid #60a5fa',backdropFilter:'blur(10px)',gap:10}}>
               <div style={{display:'flex',alignItems:'center',gap:10, flex:1, minWidth:0}}>
-                <div style={{width:36,height:36,flexShrink:0,borderRadius:12,background:'#eff6ff',color:'#3b82f6',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20}}>📍</div>
+                <div style={{width:40,height:40,flexShrink:0,borderRadius:14,background:'#eff6ff',color:'#3b82f6',display:'flex',alignItems:'center',justifyContent:'center',fontSize:22}}>📍</div>
                 <div style={{minWidth:0}}>
-                  <p style={{fontSize:13,fontWeight:800,color:'#1e3a8a',margin:0,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
+                  <p style={{fontSize:14,fontWeight:900,color:'#1e3a8a',margin:0,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
                     ระยะทาง {(activeRoute.distance / 1000).toFixed(2)} กม.
                   </p>
                   <div style={{display:'flex', gap:6, marginTop:4, flexWrap:'wrap'}}>
-                    <span style={{fontSize:10,fontWeight:700,background:'#dbeafe',color:'#1e40af',padding:'3px 8px',borderRadius:10,whiteSpace:'nowrap'}}>
+                    <span style={{fontSize:11,fontWeight:800,background:'#dbeafe',color:'#1e40af',padding:'4px 10px',borderRadius:12,whiteSpace:'nowrap'}}>
                       🚗 ขับรถ ~{Math.max(1, Math.ceil(activeRoute.duration / 60))} นาที
                     </span>
-                    <span style={{fontSize:10,fontWeight:700,background:'#dcfce7',color:'#166534',padding:'3px 8px',borderRadius:10,whiteSpace:'nowrap'}}>
+                    <span style={{fontSize:11,fontWeight:800,background:'#dcfce7',color:'#166534',padding:'4px 10px',borderRadius:12,whiteSpace:'nowrap'}}>
                       🚶 เดิน ~{Math.max(1, Math.ceil(activeRoute.distance / 80))} นาที
                     </span>
                   </div>
@@ -602,7 +602,7 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
               </div>
               <button 
                 onClick={() => setActiveRoute(null)} 
-                style={{flexShrink:0,background:'#fee2e2',border:'none',color:'#ef4444',cursor:'pointer',fontSize:12,fontWeight:800,padding:'8px 12px',borderRadius:10,transition:'all 0.2s'}}
+                style={{flexShrink:0,background:'#fee2e2',border:'none',color:'#ef4444',cursor:'pointer',fontSize:13,fontWeight:900,padding:'10px 14px',borderRadius:12,transition:'all 0.2s',boxShadow:'0 2px 8px rgba(239,68,68,0.2)'}}
                 onMouseEnter={e => e.target.style.background = '#fecaca'}
                 onMouseLeave={e => e.target.style.background = '#fee2e2'}
               >
