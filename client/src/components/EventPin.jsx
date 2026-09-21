@@ -33,7 +33,7 @@ function buildGoogleCalendarUrl(event) {
   return `https://calendar.google.com/calendar/render?${params.toString()}`;
 }
 
-export default function EventPin({ event, now, highlighted, nearbyCount, onNearby, registerMarker }) {
+export default function EventPin({ event, now, highlighted, nearbyCount, onNearby, registerMarker, onNavigate }) {
   const status = getEventStatus(event, now);
   const type = EVENT_TYPES[event.eventType] || EVENT_TYPES.exhibition_public;
   const badge = status === 'live' ? 'LIVE' : status === 'soon' ? 'เร็วๆ นี้' : '';
@@ -88,7 +88,13 @@ export default function EventPin({ event, now, highlighted, nearbyCount, onNearb
             📅 Save to Calendar
           </button>
 
-          <button onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${event.lat},${event.lng}`, '_blank')}>
+          <button onClick={() => {
+            if (onNavigate) {
+              onNavigate(event.lat, event.lng);
+            } else {
+              window.open(`https://www.google.com/maps/dir/?api=1&destination=${event.lat},${event.lng}`, '_blank');
+            }
+          }}>
             🗺️ นำทางไปที่จัดงาน
           </button>
 

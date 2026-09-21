@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, ZoomControl, useMap, Circle, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, ZoomControl, useMap, Circle, useMapEvents, GeoJSON } from 'react-leaflet';
 import L from 'leaflet';
 import { useAppContext } from '../context/AppContext';
 import usePins from '../hooks/usePins';
@@ -164,6 +164,11 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
   const [availableIndoorLocations, setAvailableIndoorLocations] = useState(null);
   const [selectedDate, setSelectedDate] = useState('');
   const [nearbyCameraIds, setNearbyCameraIds] = useState([]);
+  
+  // Navigation Route State
+  const [activeRoute, setActiveRoute] = useState(null); // { geometry, distance, duration }
+  const [isRouting, setIsRouting] = useState(false);
+
   const markerRefs = useRef(new Map());
   const directTraffic = useCameraTraffic(cameras, pollingSeconds);
   const linkedCameras = useMemo(() => cameras.map(camera => {
@@ -239,6 +244,62 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
     ...linkedPins.filter(pin => (pin.type || pin.category) === 'cctv').map(pin => ({ ...pin, id: pin.id || pin._id, name: pin.title, location:{ lat:Number(pin.lat), lng:Number(pin.lng) }, _communityPin:true }))
   ], [linkedCameras, linkedPins]);
 
+  const handleNavigateTo = async (targetLat, targetLng) => {
+    if (isRouting) return;
+    setIsRouting(true);
+    
+    if (!navigator.geolocation) {
+      toast.error('เบราว์เซอร์ของคุณไม่รองรับการขอตำแหน่ง');
+      setIsRouting(false);
+      return;
+    }
+
+    toast.loading('กำลังหาตำแหน่งของคุณ...', { id: 'routing' });
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        toast.loading('กำลังคำนวณเส้นทาง...', { id: 'routing' });
+        try {
+          const res = await api.get('/route', {
+            params: {
+              from_lat: latitude,
+              from_lng: longitude,
+              to_lat: targetLat,
+              to_lng: targetLng
+            }
+          });
+          setActiveRoute({
+            geometry: res.data.geometry,
+            distance: res.data.distance,
+            duration: res.data.duration,
+            destination: { lat: targetLat, lng: targetLng }
+          });
+          toast.success('คำนวณเส้นทางสำเร็จ', { id: 'routing' });
+          if (mapInstance) {
+            mapInstance.closePopup();
+          }
+        } catch (err) {
+          console.error(err);
+          toast.error('ไม่สามารถคำนวณเส้นทางได้ (OSRM Error)', { id: 'routing' });
+          const fallbackUrl = `https://www.google.com/maps/dir/?api=1&destination=${targetLat},${targetLng}`;
+          setTimeout(() => {
+            if(window.confirm('ไม่พบเส้นทางในระบบ นำทางด้วย Google Maps แทนหรือไม่?')) {
+              window.open(fallbackUrl, '_blank');
+            }
+          }, 500);
+        } finally {
+          setIsRouting(false);
+        }
+      },
+      (error) => {
+        console.error(error);
+        toast.error('ไม่สามารถดึงตำแหน่งปัจจุบันได้ (Permission Denied)', { id: 'routing' });
+        setIsRouting(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  };
+
   const defaultCenter = [13.9126, 100.5530];
   const quickFilters = MAIN_FEATURES.filter(f => f.categories.length > 0);
   const handleFilterClick = (feat) => {
@@ -296,7 +357,7 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
 
   return (
     <div className="map-screen" style={{ width:'100%', height:'100%', position:'relative', overflow:'hidden', background:'#e8f0ea' }}>
-      {selectedCamera && <div className="cctv-map-viewer"><LiveViewer camera={selectedCamera} onClose={() => setSelectedCamera(null)} /></div>}
+      {selectedCamera && <div className="cctv-map-viewer"><LiveViewer camera={selectedCamera} onClose={() => setSelectedCamera(null)} onNavigate={handleNavigateTo} /></div>}
       <MapExplorerControls cameras={searchableCameras} events={events} pins={linkedPins} onSelect={focusResult} selectedDate={selectedDate} onDate={date=>{setSelectedDate(date);setNearbyCameraIds([]);}} pollingSeconds={pollingSeconds} onPolling={setPollingSeconds} />
 
       {/* ── TOP: Filter Bar (ซ่อนได้) ── */}
@@ -367,12 +428,26 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
           style={{width:'100%',height:'100%',zIndex:1}}
           zoomControl={false} attributionControl={false}>
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap' />
+          {activeRoute && activeRoute.geometry && (
+            <GeoJSON 
+              key={activeRoute.geometry.coordinates.join(',')}
+              data={activeRoute.geometry} 
+              style={{
+                color: '#3b82f6', 
+                weight: 6, 
+                opacity: 0.8,
+                lineJoin: 'round',
+                dashArray: '1, 12',
+                dashOffset: '0'
+              }} 
+            />
+          )}
           <ZoomControl position="bottomleft" />
           <MapController onReady={setMapInstance} bounds={limitedBounds} />
           <MapClickHandler onSelect={handleMapSelect} />
           {flyTo && <FlyToUser position={flyTo} />}
           {showCameras && linkedCameras.map(camera => <CameraPin key={camera.id} camera={camera} onSelect={setSelectedCamera} highlighted={nearbyCameraIds.includes(camera.id)} registerMarker={registerMarker} />)}
-          {visibleEvents.map(event => <EventPin key={event.id} event={event} now={now} highlighted={selectedDate ? eventOccursOn(event, selectedDate) : false} nearbyCount={getCamerasNearVenue(event, searchableCameras, 300).length} onNearby={showNearbyCameras} registerMarker={registerMarker} />)}
+          {visibleEvents.map(event => <EventPin key={event.id} event={event} now={now} highlighted={selectedDate ? eventOccursOn(event, selectedDate) : false} nearbyCount={getCamerasNearVenue(event, searchableCameras, 300).length} onNearby={showNearbyCameras} registerMarker={registerMarker} onNavigate={handleNavigateTo} />)}
 
           {/* 🚦 AI Traffic Nodes from Detec */}
           {trafficNodes.filter(hasTrafficCoordinates).map((node, index) => {
@@ -450,7 +525,7 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
                 } }}>
               {(pin.type || pin.category) !== 'cctv' && (
                 <Popup maxWidth={260} minWidth={260} closeButton={true} className="custom-popup" autoPan={true} autoPanPaddingTopLeft={[50, 50]} autoPanPaddingBottomRight={[50, 280]}>
-                  <PinInfoWindow pin={pin} onClose={() => { mapInstance?.closePopup(); }} onSelectCamera={setSelectedCamera} isAdmin={isAdmin} />
+                  <PinInfoWindow pin={pin} onClose={() => { mapInstance?.closePopup(); }} onSelectCamera={setSelectedCamera} isAdmin={isAdmin} onNavigate={handleNavigateTo} />
                 </Popup>
               )}
               </Marker>
@@ -491,8 +566,33 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
           {selectedPosition && <Marker position={selectedPosition} icon={selectedPinIcon} />}
         </MapContainer>}
 
+        {/* Route Info Banner */}
+        {activeRoute && (
+          <div className="map-welcome animate-slide-down" style={{ position:'absolute', top:12, left:'50%', transform:'translateX(-50%)', zIndex:800, width: '90%', maxWidth: '340px' }}>
+            <div style={{background:'rgba(255,255,255,0.95)',borderRadius:16,padding:'12px 16px',display:'flex',alignItems:'center',justifyContent:'space-between',boxShadow:'0 4px 20px rgba(59,130,246,0.3)',border:'2px solid #60a5fa',backdropFilter:'blur(10px)'}}>
+              <div style={{display:'flex',alignItems:'center',gap:12}}>
+                <div style={{width:36,height:36,borderRadius:12,background:'#eff6ff',color:'#3b82f6',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20}}>📍</div>
+                <div>
+                  <p style={{fontSize:13,fontWeight:800,color:'#1e3a8a',margin:0}}>
+                    {(activeRoute.distance / 1000).toFixed(1)} กม. <span style={{color:'#93c5fd'}}>•</span> ~{Math.ceil(activeRoute.duration / 60)} นาที
+                  </p>
+                  <p style={{fontSize:10,color:'#64748b',margin:0,marginTop:2}}>กำลังนำทางไปยังจุดหมาย</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setActiveRoute(null)} 
+                style={{background:'#fee2e2',border:'none',color:'#ef4444',cursor:'pointer',fontSize:12,fontWeight:800,padding:'6px 12px',borderRadius:10,transition:'all 0.2s'}}
+                onMouseEnter={e => e.target.style.background = '#fecaca'}
+                onMouseLeave={e => e.target.style.background = '#fee2e2'}
+              >
+                ยกเลิก
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Welcome */}
-        {showWelcome && (
+        {!activeRoute && showWelcome && (
           <div className="map-welcome animate-slide-down" style={{ position:'absolute', top:12, left:'50%', transform:'translateX(-50%)', zIndex:800 }}>
             <div style={{background:'rgba(255,255,255,0.90)',borderRadius:16,padding:'10px 16px',display:'flex',alignItems:'center',gap:10,boxShadow:'0 4px 20px rgba(0,0,0,0.1)',border:'1px solid #dcfce7',whiteSpace:'nowrap',backdropFilter:'blur(10px)'}}>
               <img src="/images/mascot.png" alt="" style={{width:28,height:28,objectFit:'contain'}} className="animate-float" />

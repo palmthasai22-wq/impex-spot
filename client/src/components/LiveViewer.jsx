@@ -57,7 +57,7 @@ function YouTubeViewer({ videoId, onClose }) {
 }
 
 // ── HLS / Relay viewer ──
-function HlsViewer({ camera, onClose, externalUrl }) {
+function HlsViewer({ camera, onClose, externalUrl, onNavigate }) {
   const videoRef = useRef(null);
   const [error, setError] = useState('');
   const [playing, setPlaying] = useState(false);
@@ -140,6 +140,15 @@ function HlsViewer({ camera, onClose, externalUrl }) {
         }}>{playing ? 'หยุดชั่วคราว' : 'เล่นภาพสด'}</button>
         <label>เสียง <input aria-label="ระดับเสียง" type="range" min="0" max="1" step="0.05" value={volume}
           onChange={e => { const v = Number(e.target.value); setVolume(v); videoRef.current.volume = v; }} /></label>
+        
+        {onNavigate && camera?.location && (
+          <button 
+            onClick={() => onNavigate(camera.location.lat, camera.location.lng)}
+            style={{background:'#ffffff',color:'#2563eb',border:'1px solid #bfdbfe',borderRadius:20,padding:'6px 12px',fontSize:12,fontWeight:700,cursor:'pointer',boxShadow:'0 2px 4px rgba(0,0,0,0.05)',display:'flex',alignItems:'center',gap:6, marginLeft:'auto'}}
+          >
+            🗺️ นำทาง
+          </button>
+        )}
       </div>
     </section>
   );
@@ -172,20 +181,22 @@ function IframeViewer({ url, onClose }) {
   );
 }
 
-function DetecViewer({ camera, onClose }) {
+function DetecViewer({ camera, onClose, onNavigate }) {
   const [error, setError] = useState('');
   const detec = camera.detec_camera || {};
   const traffic = camera.ai_traffic ? TRAFFIC_LEVELS[getTrafficLevel(camera.ai_traffic)] : null;
   const isViewOnly = !detec.url && detec.embed_url;
   const monitorUrl = detec.public_id ? `${getDetecApiUrl()}/live/${detec.public_id}` : null;
-  const source = isViewOnly ? detec.embed_url : monitorUrl || `${getDetecApiUrl()}/api/streams/${camera.detec_camera_id}`;
+  const source = monitorUrl || (isViewOnly ? detec.embed_url : detec.url);
 
   return (
-    <section className="cctv-viewer" aria-label="ภาพสด CCTV ที่วิเคราะห์ด้วย Detec">
+    <section className="cctv-viewer" aria-label="ภาพสด AI Detec">
       <header>
-        <strong>🤖 CCTV + Detec #{camera.detec_camera_id}</strong>
-        <div className="flex items-center gap-2">
-          {traffic && <span style={{background:traffic.background,color:traffic.text,borderRadius:999,padding:'3px 8px',fontSize:11}}>{traffic.emoji} {traffic.label}</span>}
+        <strong>
+          🤖 AI Traffic: {traffic?.label || 'ไม่มีข้อมูล'} 
+          {traffic?.emoji ? ` ${traffic.emoji}` : ''}
+        </strong>
+        <div className="flex gap-2">
           <button aria-label="เต็มจอ" onClick={toggleFullscreen}>🔲</button>
           {onClose && <button aria-label="ปิดภาพสด" onClick={onClose}>✕</button>}
         </div>
@@ -205,14 +216,22 @@ function DetecViewer({ camera, onClose }) {
       <div className="cctv-controls" style={{justifyContent:'center',gap:14}}>
         <span>Jam Index: {Number(camera.ai_traffic?.jam_index || 0)}%</span>
         <span>รถ: {Number(camera.ai_traffic?.current_vehicles || 0)} คัน</span>
+        {onNavigate && camera?.location && (
+          <button 
+            onClick={() => onNavigate(camera.location.lat, camera.location.lng)}
+            style={{background:'#ffffff',color:'#2563eb',border:'1px solid #bfdbfe',borderRadius:20,padding:'6px 12px',fontSize:12,fontWeight:700,cursor:'pointer',boxShadow:'0 2px 4px rgba(0,0,0,0.05)',display:'flex',alignItems:'center',gap:6, marginLeft:'auto'}}
+          >
+            🗺️ นำทาง
+          </button>
+        )}
       </div>
     </section>
   );
 }
 
 // ── Main export — เลือก viewer ตาม URL type ──
-export default function LiveViewer({ camera, onClose }) {
-  if (camera.detec_camera_id) return <DetecViewer camera={camera} onClose={onClose} />;
+export default function LiveViewer({ camera, onClose, onNavigate }) {
+  if (camera.detec_camera_id) return <DetecViewer camera={camera} onClose={onClose} onNavigate={onNavigate} />;
   let externalUrl = camera.external_stream_url || null;
   
   // แปลง input ให้เป็น URL ที่ใช้งานได้เสมอ
@@ -239,5 +258,5 @@ export default function LiveViewer({ camera, onClose }) {
   );
   
   if (externalUrl && !isVideo) return <IframeViewer url={externalUrl} onClose={onClose} />;
-  return <HlsViewer camera={camera} onClose={onClose} externalUrl={externalUrl} />;
+  return <HlsViewer camera={camera} onClose={onClose} externalUrl={externalUrl} onNavigate={onNavigate} />;
 }

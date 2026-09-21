@@ -8,7 +8,7 @@ import { verifyPin } from '../utils/api';
 import toast from 'react-hot-toast';
 import { TRAFFIC_LEVELS, getTrafficLevel } from '../utils/traffic';
 
-export default function PinInfoWindow({ pin, onClose, onSelectCamera, isAdmin = false }) {
+export default function PinInfoWindow({ pin, onClose, onSelectCamera, isAdmin = false, onNavigate }) {
   const category = PIN_CATEGORIES.find(c => c.id === (pin.type || pin.category)) || PIN_CATEGORIES[PIN_CATEGORIES.length - 1];
   const shareCategories = ['restaurant', 'market', 'shop', 'event', 'review'];
   const hasRating = shareCategories.includes(pin.type || pin.category);
@@ -42,7 +42,11 @@ export default function PinInfoWindow({ pin, onClose, onSelectCamera, isAdmin = 
   };
 
   const handleNavigate = () => {
-    window.open(`https://www.google.com/maps/dir/?api=1&destination=${pin.lat},${pin.lng}`, '_blank');
+    if (onNavigate) {
+      onNavigate(pin.lat, pin.lng);
+    } else {
+      window.open(`https://www.google.com/maps/dir/?api=1&destination=${pin.lat},${pin.lng}`, '_blank');
+    }
   };
 
   const timeAgo = (date) => {
@@ -212,7 +216,7 @@ export default function PinInfoWindow({ pin, onClose, onSelectCamera, isAdmin = 
       )}
 
       {/* Navigate hint */}
-      <p className="text-[9px] text-gray-300 text-center mt-2">กดนำทางจะเปิด Google Maps ให้อัตโนมัติ</p>
+      <p className="text-[9px] text-gray-300 text-center mt-2">คำนวณเส้นทางด้วยระบบนำทางในตัว</p>
 
       {expandedImage && createPortal(
         <div className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/80 p-4 cursor-zoom-out" onClick={() => setExpandedImage(null)} role="dialog" aria-modal="true" aria-label="ดูภาพขนาดใหญ่">
