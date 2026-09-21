@@ -293,10 +293,24 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
       },
       (error) => {
         console.error(error);
-        toast.error('ไม่สามารถดึงตำแหน่งปัจจุบันได้ (Permission Denied)', { id: 'routing' });
+        
+        let errMsg = 'ไม่สามารถดึงตำแหน่งปัจจุบันได้';
+        if (error.code === 1) errMsg = 'ถูกปฏิเสธการเข้าถึงตำแหน่ง (Permission Denied)';
+        else if (error.code === 2) errMsg = 'สัญญาณ GPS/ตำแหน่งไม่พร้อมใช้งาน';
+        else if (error.code === 3) errMsg = 'ดึงตำแหน่งล่าช้า (Timeout)';
+
+        toast.error(errMsg, { id: 'routing' });
         setIsRouting(false);
+
+        // Fallback to Google Maps if geolocation fails
+        const fallbackUrl = `https://www.google.com/maps/dir/?api=1&destination=${targetLat},${targetLng}`;
+        setTimeout(() => {
+          if(window.confirm(`${errMsg}\n\nต้องการนำทางด้วย Google Maps แทนหรือไม่?`)) {
+            window.open(fallbackUrl, '_blank');
+          }
+        }, 500);
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      { enableHighAccuracy: false, timeout: 15000, maximumAge: 10000 }
     );
   };
 
