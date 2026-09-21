@@ -347,7 +347,7 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
       )}
 
       {/* ── MIDDLE: Map ── */}
-      <div style={{ position:'absolute', inset:0, zIndex:1, overflow:'hidden' }}>
+      <div style={{ position:'absolute', inset:0, overflow:'hidden' }}>
         {show3D ? (
           <Free3DMap
             cameras={showCameras ? linkedCameras : []}
