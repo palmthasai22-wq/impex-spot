@@ -443,18 +443,28 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
           zoomControl={false} attributionControl={false}>
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap' />
           {activeRoute && activeRoute.geometry && (
-            <GeoJSON 
-              key={activeRoute.geometry.coordinates.join(',')}
-              data={activeRoute.geometry} 
-              style={{
-                color: '#3b82f6', 
-                weight: 6, 
-                opacity: 0.8,
-                lineJoin: 'round',
-                dashArray: '1, 12',
-                dashOffset: '0'
-              }} 
-            />
+            <React.Fragment key={activeRoute.geometry.coordinates.join(',')}>
+              {/* Layer 1: Outer Shadow (Glow) */}
+              <GeoJSON 
+                data={activeRoute.geometry} 
+                style={{ color: '#1d4ed8', weight: 14, opacity: 0.15, lineCap: 'round', lineJoin: 'round' }} 
+              />
+              {/* Layer 2: Border (Darker Blue) */}
+              <GeoJSON 
+                data={activeRoute.geometry} 
+                style={{ color: '#1e40af', weight: 8, opacity: 0.8, lineCap: 'round', lineJoin: 'round' }} 
+              />
+              {/* Layer 3: Main Line (Vibrant Blue) */}
+              <GeoJSON 
+                data={activeRoute.geometry} 
+                style={{ color: '#3b82f6', weight: 5, opacity: 1, lineCap: 'round', lineJoin: 'round' }} 
+              />
+              {/* Layer 4: Inner Highlight (Light Blue / White-ish) */}
+              <GeoJSON 
+                data={activeRoute.geometry} 
+                style={{ color: '#93c5fd', weight: 2, opacity: 1, lineCap: 'round', lineJoin: 'round' }} 
+              />
+            </React.Fragment>
           )}
           <ZoomControl position="bottomleft" />
           <MapController onReady={setMapInstance} bounds={limitedBounds} />
