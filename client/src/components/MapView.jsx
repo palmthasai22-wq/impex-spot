@@ -161,6 +161,7 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
   const [dispatchedResponders, setDispatchedResponders] = useState([]);
   const [activePlanPin, setActivePlanPin] = useState(null);
   const [activePlans, setActivePlans] = useState([]);
+  const [availableIndoorLocations, setAvailableIndoorLocations] = useState(null);
   const [selectedDate, setSelectedDate] = useState('');
   const [nearbyCameraIds, setNearbyCameraIds] = useState([]);
   const markerRefs = useRef(new Map());
@@ -516,7 +517,31 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
             <img src="/images/mascot.png" alt="" style={{width:14,height:14,objectFit:'contain'}} />
             {linkedPins.length} หมุด
           </div>
-          <button onClick={async () => { const targetPin = pins.find(p => p.title && p.title.includes('อิมแพ็ค ฟอรั่ม')); if (targetPin) { try { const res = await api.get('/plans/' + (targetPin.id || targetPin._id)); setActivePlanPin(targetPin); setActivePlans(res.data); } catch (err) { toast.error('ไม่สามารถโหลดแผนผังได้'); } } else { toast.error('ไม่พบแผนผังอาคาร'); } }} style={{background:activePlanPin ? '#2563eb' : '#f8fafc',color:activePlanPin ? 'white' : '#334155',borderRadius:11,border:'1px solid #e2e8f0',padding:'7px 10px',fontSize:11,fontWeight:800,cursor:'pointer',display:'flex',alignItems:'center',gap:4}}>🏢 Indoor Map</button>
+          <button onClick={async () => {
+            try {
+              const res = await api.get('/plans');
+              const allPlans = res.data || [];
+              if (allPlans.length === 0) {
+                toast.error('ยังไม่มีแผนผังอาคารในระบบ');
+                return;
+              }
+              const grouped = {};
+              allPlans.forEach(p => {
+                const locName = p.locationName || 'ไม่ระบุสถานที่';
+                if (!grouped[locName]) grouped[locName] = [];
+                grouped[locName].push(p);
+              });
+              const locations = Object.keys(grouped);
+              if (locations.length === 1) {
+                setActivePlanPin({ title: locations[0], id: grouped[locations[0]][0].linkedPinId });
+                setActivePlans(grouped[locations[0]]);
+              } else {
+                setAvailableIndoorLocations(grouped);
+              }
+            } catch (err) {
+              toast.error('ไม่สามารถโหลดข้อมูลแผนผังได้');
+            }
+          }} style={{background:activePlanPin||availableIndoorLocations ? '#2563eb' : '#f8fafc',color:activePlanPin||availableIndoorLocations ? 'white' : '#334155',borderRadius:11,border:'1px solid #e2e8f0',padding:'7px 10px',fontSize:11,fontWeight:800,cursor:'pointer',display:'flex',alignItems:'center',gap:4}}>🏢 Indoor Map</button>
           
           <button className={`area-limit-button ${limitedBounds ? 'is-active' : ''}`}
             onClick={limitedBounds ? () => setLimitedBounds(null) : handleLimitArea}
@@ -683,7 +708,42 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
           </button>
         </div>
       </div>
-      {activePlanPin && <PlanViewPopup pinId={activePlanPin.id || activePlanPin._id} pinTitle={activePlanPin.title} plans={activePlans} onClose={() => {setActivePlanPin(null); setActivePlans([]);}} />}
+      
+      {availableIndoorLocations && (
+        <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-4 animate-fade-in" onClick={() => setAvailableIndoorLocations(null)}>
+          <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="bg-indigo-50 border-b border-indigo-100 p-4 flex items-center justify-between">
+              <h3 className="font-bold text-indigo-900 flex items-center gap-2">
+                <span className="text-xl">🏢</span> เลือกสถานที่
+              </h3>
+              <button onClick={() => setAvailableIndoorLocations(null)} className="text-gray-400 hover:text-gray-600 font-bold p-1">✕</button>
+            </div>
+            <div className="p-2 max-h-[60vh] overflow-y-auto">
+              {Object.keys(availableIndoorLocations).map(loc => (
+                <button
+                  key={loc}
+                  onClick={() => {
+                    setActivePlanPin({ title: loc, id: availableIndoorLocations[loc][0].linkedPinId });
+                    setActivePlans(availableIndoorLocations[loc]);
+                    setAvailableIndoorLocations(null);
+                  }}
+                  className="w-full text-left px-4 py-3 rounded-xl hover:bg-gray-50 flex items-center gap-3 transition-colors border-b border-gray-50 last:border-0"
+                >
+                  <div className="w-10 h-10 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center flex-shrink-0 font-bold">
+                    {loc.charAt(0)}
+                  </div>
+                  <div>
+                    <div className="font-bold text-gray-800 text-sm">{loc}</div>
+                    <div className="text-[10px] text-gray-500">{availableIndoorLocations[loc].length} แผนผังชั้น</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activePlanPin && <PlanViewPopup isAdmin={isAdmin} pinId={activePlanPin.id || activePlanPin._id} pinTitle={activePlanPin.title} plans={activePlans} onClose={() => {setActivePlanPin(null); setActivePlans([]);}} />}
     </div>
   );
 }
