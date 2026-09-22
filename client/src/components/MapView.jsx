@@ -375,53 +375,7 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
       {selectedCamera && <div className="cctv-map-viewer"><LiveViewer camera={selectedCamera} onClose={() => setSelectedCamera(null)} onNavigate={handleNavigateTo} /></div>}
       <MapExplorerControls cameras={searchableCameras} events={events} pins={linkedPins} onSelect={focusResult} selectedDate={selectedDate} onDate={date=>{setSelectedDate(date);setNearbyCameraIds([]);}} pollingSeconds={pollingSeconds} onPolling={setPollingSeconds} />
 
-      {/* ── TOP: Filter Bar (ซ่อนได้) ── */}
-      {showFilterBar && (
-        <div className="map-filter-panel">
-          {/* Chips — scrollable */}
-          <div style={{ display:'flex', gap:8, flex:1, overflowX:'auto' }} className="no-scrollbar">
-            <button onClick={() => setActiveFilter(null)}
-              style={{
-                flexShrink:0, display:'flex', alignItems:'center', gap:6,
-                padding:'8px 16px', borderRadius:999, border:'none', cursor:'pointer',
-                fontSize:12, fontWeight:700,
-                background: !activeFilter ? '#22c55e' : '#f3f4f6',
-                color: !activeFilter ? '#fff' : '#4b5563',
-              }}>
-              <img src="/images/mascot.png" alt="" style={{width:16,height:16,objectFit:'contain'}} />
-              ทั้งหมด
-            </button>
-            {PIN_CATEGORIES.map(cat => {
-                const isActive = activeFilter === cat.id;
-                return (
-                  <button key={cat.id} onClick={() => setActiveFilter(isActive ? null : cat.id)}
-                    style={{
-                      flexShrink:0, display:'flex', alignItems:'center', gap:6,
-                      padding:'8px 16px', borderRadius:999, border:'none', cursor:'pointer',
-                      fontSize:12, fontWeight:700,
-                      background: isActive ? (cat.color || '#3b82f6') : '#f3f4f6',
-                      color: isActive ? '#fff' : '#4b5563',
-                    }}>
-                    {cat.emoji} {cat.label}
-                  </button>
-                );
-              })}
-          </div>
 
-          {/* ปุ่มปิด ✕ */}
-          <button onClick={() => setShowFilterBar(false)}
-            style={{
-              flexShrink:0, width:32, height:32, borderRadius:999,
-              border:'1px solid #e5e7eb', background:'#f9fafb',
-              display:'flex', alignItems:'center', justifyContent:'center',
-              cursor:'pointer', fontSize:14, color:'#9ca3af',
-              marginLeft:4,
-            }}
-            title="ซ่อนแถบตัวกรอง">
-            ✕
-          </button>
-        </div>
-      )}
 
       {/* ── MIDDLE: Map ── */}
       <div style={{ position:'absolute', inset:0, overflow:'hidden' }}>
@@ -765,7 +719,7 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
       {/* ── BOTTOM: Action Bar (ใหญ่ขึ้น + ปุ่มย้อนกลับ) ── */}
       <div className="map-action-dock" style={{ position:'absolute', right:'16px', top:'50%', transform:'translateY(-50%)', zIndex:900 }}>
         {showActionMenu && (
-          <div className="map-action-menu" role="menu" aria-label="เมนูการทำงาน">
+          <div className="map-action-menu animate-slide-up" role="menu" aria-label="เมนูการทำงาน">
             <button onClick={() => startAreaSelection('pin', 'traffic')} role="menuitem">
               <img src="/images/mascot_pin.png" alt="" /> ปักหมุด
             </button>
@@ -775,11 +729,47 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
             <button onClick={() => startAreaSelection('share', 'restaurant')} role="menuitem">
               <img src="/images/mascot_share.png" alt="" /> แบ่งปัน
             </button>
-            </div>
-          )}
-          <div className="map-action-buttons" style={{display:'flex',flexDirection:'column',alignItems:'center',gap:'clamp(8px, 1.6vw, 14px)'}}>
+          </div>
+        )}
+        {showFilterBar && (
+          <div className="map-filter-menu animate-slide-up no-scrollbar" role="menu" aria-label="ตัวกรองประเภทหมุด">
+            <button onClick={() => { setActiveFilter(null); setShowFilterBar(false); }}
+              style={{
+                display:'flex', alignItems:'center', gap:8, width:'100%',
+                padding:'10px 12px', borderRadius:14, border:'none', cursor:'pointer',
+                fontSize:13, fontWeight:800, textAlign:'left',
+                background: !activeFilter ? '#22c55e' : '#f8fafc',
+                color: !activeFilter ? '#fff' : '#475569',
+                transition:'all 0.2s'
+              }}>
+              <span style={{fontSize:18}}>✅</span> ทั้งหมด
+            </button>
+            {PIN_CATEGORIES.map(cat => {
+              const isActive = activeFilter === cat.id;
+              return (
+                <button key={cat.id} onClick={() => { setActiveFilter(isActive ? null : cat.id); setShowFilterBar(false); }}
+                  style={{
+                    display:'flex', alignItems:'center', gap:8, width:'100%',
+                    padding:'10px 12px', borderRadius:14, border:'none', cursor:'pointer',
+                    fontSize:13, fontWeight:700, textAlign:'left',
+                    background: isActive ? (cat.color || '#3b82f6') : 'transparent',
+                    color: isActive ? '#fff' : '#334155',
+                    transition:'all 0.2s'
+                  }}
+                  onMouseEnter={e => { if(!isActive) e.currentTarget.style.background = '#f1f5f9'; }}
+                  onMouseLeave={e => { if(!isActive) e.currentTarget.style.background = 'transparent'; }}
+                >
+                  <span style={{fontSize:18}}>{cat.emoji}</span> <span style={{whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{cat.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+        <div className="map-action-buttons" style={{display:'flex',flexDirection:'column',alignItems:'center',gap:'clamp(8px, 1.6vw, 14px)'}}>
           {/* กรองหมุด */}
-          <button className={`map-action-button ${showFilterBar ? 'is-active' : ''}`} data-tooltip="กรองหมุด" onClick={() => setShowFilterBar(prev => !prev)} aria-label="กรองหมุด" title="กรองหมุด"
+          <button className={`map-action-button ${showFilterBar ? 'is-active' : ''}`} data-tooltip="กรองหมุด" 
+            onClick={() => { setShowFilterBar(prev => !prev); setShowActionMenu(false); }} 
+            aria-label="กรองหมุด" title="กรองหมุด"
             style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',width:'clamp(52px, 6vw, 64px)',height:'clamp(52px, 6vw, 64px)',borderRadius:18,border:'2px solid #8b5cf6',cursor:'pointer',background:showFilterBar ? '#f3f0ff' : '#ffffff',color:'#8b5cf6',boxShadow:'0 3px 9px rgba(139,92,246,0.15)',transition:'all 0.2s', gap:'2px'}}
             onMouseEnter={(e) => {e.currentTarget.style.transform='scale(1.08)'; e.currentTarget.style.boxShadow='0 4px 16px rgba(139,92,246,0.25)'}}
             onMouseLeave={(e) => {e.currentTarget.style.transform='scale(1)'; e.currentTarget.style.boxShadow='0 2px 8px rgba(139,92,246,0.15)'}}
@@ -789,7 +779,9 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
             <span className="map-action-label" style={{color:'#6d28d9',textShadow:'none'}}>กรองหมุด</span>
           </button>
           {/* รู้ทัน */}
-          <button className="map-action-button" data-tooltip="รู้ทัน: เลือกพื้นที่" onClick={() => startAreaSelection('pin', 'traffic')} aria-label="เลือกพื้นที่ปักหมุดสถานการณ์" title="เลือกพื้นที่ปักหมุดสถานการณ์"
+          <button className="map-action-button" data-tooltip="รู้ทัน: เลือกพื้นที่" 
+            onClick={() => { startAreaSelection('pin', 'traffic'); setShowFilterBar(false); }} 
+            aria-label="เลือกพื้นที่ปักหมุดสถานการณ์" title="เลือกพื้นที่ปักหมุดสถานการณ์"
             style={{display:'flex',alignItems:'center',justifyContent:'center',width:'clamp(52px, 6vw, 64px)',height:'clamp(52px, 6vw, 64px)',borderRadius:18,border:'2px solid #16a34a',cursor:'pointer',background:'#ffffff',color:'#16a34a',boxShadow:'0 3px 9px rgba(22,163,74,0.15)',transition:'all 0.2s'}}
             onMouseEnter={(e) => {e.target.style.transform='scale(1.08)'; e.target.style.boxShadow='0 4px 16px rgba(22,163,74,0.25)'}}
             onMouseLeave={(e) => {e.target.style.transform='scale(1)'; e.target.style.boxShadow='0 2px 8px rgba(22,163,74,0.15)'}}
