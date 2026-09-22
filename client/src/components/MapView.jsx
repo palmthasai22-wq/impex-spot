@@ -719,7 +719,7 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
       {/* ── BOTTOM: Action Bar (ใหญ่ขึ้น + ปุ่มย้อนกลับ) ── */}
       <div className="map-action-dock" style={{ position:'absolute', right:'16px', top:'50%', transform:'translateY(-50%)', zIndex:900 }}>
         {showActionMenu && (
-          <div className="map-action-menu animate-slide-up" role="menu" aria-label="เมนูการทำงาน">
+          <div className="map-action-menu" role="menu" aria-label="เมนูการทำงาน">
             <button onClick={() => startAreaSelection('pin', 'traffic')} role="menuitem">
               <img src="/images/mascot_pin.png" alt="" /> ปักหมุด
             </button>
@@ -732,7 +732,7 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
           </div>
         )}
         {showFilterBar && (
-          <div className="map-filter-menu animate-slide-up no-scrollbar" role="menu" aria-label="ตัวกรองประเภทหมุด">
+          <div className="map-filter-menu no-scrollbar" role="menu" aria-label="ตัวกรองประเภทหมุด">
             <button onClick={() => { setActiveFilter(null); setShowFilterBar(false); }}
               style={{
                 display:'flex', alignItems:'center', gap:8, width:'100%',
