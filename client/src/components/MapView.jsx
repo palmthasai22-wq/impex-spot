@@ -14,7 +14,13 @@ import useCameraTraffic from '../hooks/useCameraTraffic';
 import useEvents from '../hooks/useEvents';
 import EventPin from './EventPin';
 import MapExplorerControls from './MapExplorerControls';
-import { PIN_CATEGORIES, MAIN_FEATURES, ADMIN_ONLY_CATEGORIES } from '../utils/categories';
+import {
+  MAIN_FEATURES,
+  ADMIN_ONLY_CATEGORIES,
+  SITUATION_CATEGORIES,
+  PLACE_CATEGORIES,
+  SHARE_CATEGORIES,
+} from '../utils/categories';
 import { fetchDispatchedResponders } from '../utils/api';
 import { TRAFFIC_LEVELS, connectCctvToDetec, getTrafficLevel as getAiTrafficLevel, hasTrafficCoordinates, trafficNodeId } from '../utils/traffic';
 import { eventOccursOn, getCamerasNearVenue, getEventStatus, getVenueLocation } from '../utils/events';
@@ -128,6 +134,12 @@ const trafficColors = {
   low: { color: '#16a34a', label: 'รถไม่ติด' },
 };
 
+const FILTER_GROUPS = [
+  { id: 'situation', title: 'สถานการณ์ (รู้ทัน)', icon: '🚦', categories: SITUATION_CATEGORIES },
+  { id: 'places', title: 'สถานที่ (ปักหมุด)', icon: '📍', categories: PLACE_CATEGORIES },
+  { id: 'sharing', title: 'แบ่งปัน / รีวิว', icon: '💬', categories: SHARE_CATEGORIES },
+];
+
 const getTrafficLevel = (pin) => {
   const value = pin.trafficLevel || pin.congestion || pin.trafficStatus;
   if (value === 'high' || value === 'heavy' || value === 'มาก') return 'high';
@@ -163,6 +175,15 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
   const [activePlans, setActivePlans] = useState([]);
   const [availableIndoorLocations, setAvailableIndoorLocations] = useState(null);
   const [selectedDate, setSelectedDate] = useState('');
+
+  useEffect(() => {
+    if (!showFilterBar) return undefined;
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') setShowFilterBar(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showFilterBar]);
   const [nearbyCameraIds, setNearbyCameraIds] = useState([]);
   
   // Navigation Route State
@@ -716,6 +737,88 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
         </div>
       )}
 
+      {showFilterBar && (
+        <div
+          className="map-filter-overlay"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setShowFilterBar(false);
+          }}
+        >
+          <section className="map-filter-drawer" role="dialog" aria-modal="true" aria-labelledby="map-filter-title">
+            <header className="map-filter-drawer__header">
+              <h2 id="map-filter-title"><span aria-hidden="true">🔍</span> ตัวกรอง</h2>
+              <button type="button" className="map-filter-drawer__close" onClick={() => setShowFilterBar(false)} aria-label="ปิดตัวกรอง">×</button>
+            </header>
+
+            <div className="map-filter-drawer__body no-scrollbar">
+              {FILTER_GROUPS.map(group => (
+                <section className="map-filter-group" key={group.id} aria-labelledby={`filter-group-${group.id}`}>
+                  <div className="map-filter-group__heading">
+                    <h3 id={`filter-group-${group.id}`}><span aria-hidden="true">{group.icon}</span> {group.title}</h3>
+                    <span aria-hidden="true" />
+                  </div>
+                  <div className="map-filter-chip-grid">
+                    {group.categories.map(cat => {
+                      const isActive = activeFilter === cat.id;
+                      return (
+                        <button
+                          type="button"
+                          key={cat.id}
+                          className={`map-filter-chip ${isActive ? 'is-active' : ''}`}
+                          style={isActive ? { '--filter-accent': cat.color || '#2563eb' } : undefined}
+                          aria-pressed={isActive}
+                          onClick={() => setActiveFilter(isActive ? null : cat.id)}
+                        >
+                          <span className="map-filter-chip__emoji" aria-hidden="true">{cat.emoji}</span>
+                          <span>{cat.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </section>
+              ))}
+
+              {isAdmin && (
+                <section className="map-filter-group" aria-labelledby="filter-group-admin">
+                  <div className="map-filter-group__heading">
+                    <h3 id="filter-group-admin"><span aria-hidden="true">🛡️</span> สำหรับแอดมิน</h3>
+                    <span aria-hidden="true" />
+                  </div>
+                  <div className="map-filter-chip-grid">
+                    {ADMIN_ONLY_CATEGORIES.map(cat => {
+                      const isActive = activeFilter === cat.id;
+                      return (
+                        <button
+                          type="button"
+                          key={cat.id}
+                          className={`map-filter-chip ${isActive ? 'is-active' : ''}`}
+                          style={isActive ? { '--filter-accent': cat.color || '#2563eb' } : undefined}
+                          aria-pressed={isActive}
+                          onClick={() => setActiveFilter(isActive ? null : cat.id)}
+                        >
+                          <span className="map-filter-chip__emoji" aria-hidden="true">{cat.emoji}</span>
+                          <span>{cat.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </section>
+              )}
+
+              <button
+                type="button"
+                className="map-filter-clear"
+                onClick={() => setActiveFilter(null)}
+                disabled={!activeFilter}
+              >
+                <span aria-hidden="true">🗑️</span> ล้างตัวกรองทั้งหมด
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+
       {/* ── BOTTOM: Action Bar (ใหญ่ขึ้น + ปุ่มย้อนกลับ) ── */}
       <div className="map-action-dock" style={{ position:'absolute', right:'16px', top:'50%', transform:'translateY(-50%)', zIndex:900 }}>
         {showActionMenu && (
@@ -729,40 +832,6 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
             <button onClick={() => startAreaSelection('share', 'restaurant')} role="menuitem">
               <img src="/images/mascot_share.png" alt="" /> แบ่งปัน
             </button>
-          </div>
-        )}
-        {showFilterBar && (
-          <div className="map-filter-menu no-scrollbar" role="menu" aria-label="ตัวกรองประเภทหมุด">
-            <button onClick={() => { setActiveFilter(null); setShowFilterBar(false); }}
-              style={{
-                display:'flex', alignItems:'center', gap:8, width:'100%',
-                padding:'10px 12px', borderRadius:14, border:'none', cursor:'pointer',
-                fontSize:13, fontWeight:800, textAlign:'left',
-                background: !activeFilter ? '#22c55e' : '#f8fafc',
-                color: !activeFilter ? '#fff' : '#475569',
-                transition:'all 0.2s'
-              }}>
-              <span style={{fontSize:18}}>✅</span> ทั้งหมด
-            </button>
-            {PIN_CATEGORIES.map(cat => {
-              const isActive = activeFilter === cat.id;
-              return (
-                <button key={cat.id} onClick={() => { setActiveFilter(isActive ? null : cat.id); setShowFilterBar(false); }}
-                  style={{
-                    display:'flex', alignItems:'center', gap:8, width:'100%',
-                    padding:'10px 12px', borderRadius:14, border:'none', cursor:'pointer',
-                    fontSize:13, fontWeight:700, textAlign:'left',
-                    background: isActive ? (cat.color || '#3b82f6') : 'transparent',
-                    color: isActive ? '#fff' : '#334155',
-                    transition:'all 0.2s'
-                  }}
-                  onMouseEnter={e => { if(!isActive) e.currentTarget.style.background = '#f1f5f9'; }}
-                  onMouseLeave={e => { if(!isActive) e.currentTarget.style.background = 'transparent'; }}
-                >
-                  <span style={{fontSize:18}}>{cat.emoji}</span> <span style={{whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{cat.label}</span>
-                </button>
-              );
-            })}
           </div>
         )}
         <div className="map-action-buttons" style={{display:'flex',flexDirection:'column',alignItems:'center',gap:'clamp(8px, 1.6vw, 14px)'}}>
