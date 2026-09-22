@@ -14,7 +14,7 @@ import useCameraTraffic from '../hooks/useCameraTraffic';
 import useEvents from '../hooks/useEvents';
 import EventPin from './EventPin';
 import MapExplorerControls from './MapExplorerControls';
-import { PIN_CATEGORIES, MAIN_FEATURES } from '../utils/categories';
+import { PIN_CATEGORIES, MAIN_FEATURES, ADMIN_ONLY_CATEGORIES } from '../utils/categories';
 import { fetchDispatchedResponders } from '../utils/api';
 import { TRAFFIC_LEVELS, connectCctvToDetec, getTrafficLevel as getAiTrafficLevel, hasTrafficCoordinates, trafficNodeId } from '../utils/traffic';
 import { eventOccursOn, getCamerasNearVenue, getEventStatus, getVenueLocation } from '../utils/events';
@@ -226,9 +226,10 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
 
   const filteredPins = pins.filter(pin => {
     if (pin.status !== 'active') return false;
+    if (!activeFilter) return true; // 'all'
+
     const t = pin.type || pin.category || 'other';
-    if (activeFilter && t !== activeFilter) return false;
-    return true;
+    return t === activeFilter;
   });
   const linkedPins = useMemo(
     () => filteredPins.map(pin => {
@@ -243,6 +244,11 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
     ...linkedCameras,
     ...linkedPins.filter(pin => (pin.type || pin.category) === 'cctv').map(pin => ({ ...pin, id: pin.id || pin._id, name: pin.title, location:{ lat:Number(pin.lat), lng:Number(pin.lng) }, _communityPin:true }))
   ], [linkedCameras, linkedPins]);
+
+  // Determine visibility of non-pin entities based on activeFilter
+  const displayCameras = showCameras && (!activeFilter || activeFilter === 'cctv');
+  const displayEvents = !activeFilter || activeFilter === 'event';
+  const displayTrafficNodes = !activeFilter || activeFilter === 'traffic';
 
   const handleNavigateTo = async (targetLat, targetLng) => {
     if (isRouting) return;
@@ -315,11 +321,6 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
   };
 
   const defaultCenter = [13.9126, 100.5530];
-  const quickFilters = MAIN_FEATURES.filter(f => f.categories.length > 0);
-  const handleFilterClick = (feat) => {
-    const isActive = feat.categories.some(c => c.id === activeFilter);
-    setActiveFilter(isActive ? null : feat.categories[0]?.id);
-  };
 
   const handleMapSelect = (position) => {
     if (limitedBounds) {
@@ -390,21 +391,21 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
               <img src="/images/mascot.png" alt="" style={{width:16,height:16,objectFit:'contain'}} />
               ทั้งหมด
             </button>
-            {quickFilters.map(feat => {
-              const isActive = feat.categories.some(c => c.id === activeFilter);
-              return (
-                <button key={feat.id} onClick={() => handleFilterClick(feat)}
-                  style={{
-                    flexShrink:0, display:'flex', alignItems:'center', gap:6,
-                    padding:'8px 16px', borderRadius:999, border:'none', cursor:'pointer',
-                    fontSize:12, fontWeight:700,
-                    background: isActive ? feat.color : '#f3f4f6',
-                    color: isActive ? '#fff' : '#4b5563',
-                  }}>
-                  {feat.emoji} {feat.label}
-                </button>
-              );
-            })}
+            {PIN_CATEGORIES.map(cat => {
+                const isActive = activeFilter === cat.id;
+                return (
+                  <button key={cat.id} onClick={() => setActiveFilter(isActive ? null : cat.id)}
+                    style={{
+                      flexShrink:0, display:'flex', alignItems:'center', gap:6,
+                      padding:'8px 16px', borderRadius:999, border:'none', cursor:'pointer',
+                      fontSize:12, fontWeight:700,
+                      background: isActive ? (cat.color || '#3b82f6') : '#f3f4f6',
+                      color: isActive ? '#fff' : '#4b5563',
+                    }}>
+                    {cat.emoji} {cat.label}
+                  </button>
+                );
+              })}
           </div>
 
           {/* ปุ่มปิด ✕ */}
@@ -426,8 +427,8 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
       <div style={{ position:'absolute', inset:0, overflow:'hidden' }}>
         {show3D ? (
           <Free3DMap
-            cameras={showCameras ? linkedCameras : []}
-            trafficNodes={trafficNodes}
+            cameras={displayCameras ? linkedCameras : []}
+            trafficNodes={displayTrafficNodes ? trafficNodes : []}
             onCameraClick={setSelectedCamera}
             pins={linkedPins}
             userPosition={lat && lng ? [lat, lng] : defaultCenter}
@@ -470,11 +471,11 @@ export default function MapView({ onAddPin, onEmergency, onBack, pinFormOpen, is
           <MapController onReady={setMapInstance} bounds={limitedBounds} />
           <MapClickHandler onSelect={handleMapSelect} />
           {flyTo && <FlyToUser position={flyTo} />}
-          {showCameras && linkedCameras.map(camera => <CameraPin key={camera.id} camera={camera} onSelect={setSelectedCamera} highlighted={nearbyCameraIds.includes(camera.id)} registerMarker={registerMarker} />)}
-          {visibleEvents.map(event => <EventPin key={event.id} event={event} now={now} highlighted={selectedDate ? eventOccursOn(event, selectedDate) : false} nearbyCount={getCamerasNearVenue(event, searchableCameras, 300).length} onNearby={showNearbyCameras} registerMarker={registerMarker} onNavigate={handleNavigateTo} />)}
+          {displayCameras && linkedCameras.map(camera => <CameraPin key={camera.id} camera={camera} onSelect={setSelectedCamera} highlighted={nearbyCameraIds.includes(camera.id)} registerMarker={registerMarker} />)}
+          {displayEvents && visibleEvents.map(event => <EventPin key={event.id} event={event} now={now} highlighted={selectedDate ? eventOccursOn(event, selectedDate) : false} nearbyCount={getCamerasNearVenue(event, searchableCameras, 300).length} onNearby={showNearbyCameras} registerMarker={registerMarker} onNavigate={handleNavigateTo} />)}
 
           {/* 🚦 AI Traffic Nodes from Detec */}
-          {trafficNodes.filter(hasTrafficCoordinates).map((node, index) => {
+          {displayTrafficNodes && trafficNodes.filter(hasTrafficCoordinates).map((node, index) => {
             const level = getAiTrafficLevel(node);
             const traffic = TRAFFIC_LEVELS[level];
             return <React.Fragment key={`ai-traffic-${trafficNodeId(node, index)}`}>
