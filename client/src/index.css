@@ -1105,9 +1105,8 @@
 
 .map-filter-chip > span:last-child {
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.25;
+  white-space: normal;
 }
 
 .map-filter-clear {
